@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { Moon, Sun, Plane } from "lucide-react";
 
 const nav = [
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/course", label: "Curso" },
   { to: "/simulator", label: "Simulador" },
-  { to: "/flycoach", label: "FlyCoach AI" },
-  { to: "/certificate", label: "Certificado" },
+  { to: "/weather-lab", label: "Weather Lab" },
+  { to: "/flycoach", label: "FlyCoach" },
 ];
 
 export function SiteHeader() {
