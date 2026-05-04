@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, useRef, useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import ReactMarkdown from "react-markdown";
 import { PageShell } from "@/components/PageShell";
-import { Sparkles, MessageCircle, Map, CloudSun, Target, BookOpen } from "lucide-react";
+import { askFlyCoach } from "@/server/flycoach.functions";
+import { Sparkles, Send, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/flycoach")({
   head: () => ({
@@ -9,75 +13,141 @@ export const Route = createFileRoute("/flycoach")({
       {
         name: "description",
         content:
-          "FlyCoach AI explica conceptos, repregunta, hace roleplay y te corrige usando solo fuentes oficiales FAA.",
-      },
-      { property: "og:title", content: "FlyCoach AI — Tutor Part 107" },
-      {
-        property: "og:description",
-        content: "Tu tutor 24/7 basado en el ACS y la Remote Pilot Study Guide.",
+          "Tutor IA para FAA Part 107 que cita solo fuentes oficiales (14 CFR, ACS, AIM).",
       },
     ],
   }),
   component: FlyCoach,
 });
 
-const modes = [
-  { icon: BookOpen, t: "Explain like I'm new", d: "Analogías simples para conceptos densos." },
-  { icon: MessageCircle, t: "Quiz me", d: "Mini quizzes infinitos sobre cualquier tema." },
-  { icon: Map, t: "Map coach", d: "Te guía por sectional charts paso a paso." },
-  { icon: CloudSun, t: "Weather decoder", d: "METAR/TAF descifrados visualmente." },
-  { icon: Target, t: "Mistake coach", d: "Detecta tus patrones de error y los rompe." },
-  { icon: Sparkles, t: "Exam readiness", d: "Te dice cuándo estás listo de verdad." },
+type Msg = { role: "user" | "assistant"; content: string };
+
+const SUGGESTIONS = [
+  "¿Qué dice 14 CFR 107.51 sobre velocidad y altitud?",
+  "Decodifica este METAR: KJFK 121751Z 18012KT 10SM FEW050 28/19 A3001",
+  "¿Cuándo necesito autorización LAANC?",
+  "Explícame Class B vs Class C en términos simples",
 ];
 
 function FlyCoach() {
+  const ask = useServerFn(askFlyCoach);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const send = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+    const next: Msg[] = [...messages, { role: "user", content: trimmed }];
+    setMessages(next);
+    setInput("");
+    setLoading(true);
+    try {
+      const { reply } = await ask({ data: { messages: next } });
+      setMessages([...next, { role: "assistant", content: reply }]);
+    } catch {
+      setMessages([
+        ...next,
+        { role: "assistant", content: "FlyCoach no está disponible. Intenta de nuevo." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <PageShell>
-      <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
+      <section className="mx-auto flex max-w-3xl flex-col px-6 pt-12 md:pt-16">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">
-          Tutor IA
+          Tutor IA · Part 107
         </div>
-        <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
-          Conoce a <span className="text-gradient">FlyCoach</span>.
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-5xl">
+          <span className="text-gradient">FlyCoach</span>
         </h1>
-        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          Un tutor que solo cita fuentes oficiales FAA. Si no sabe algo, lo dice.
-          Si te equivocas, te enseña. Si dudas, te repregunta.
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Pregunta cualquier cosa del Part 107. Cita siempre la fuente oficial.
         </p>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {modes.map((m) => (
-            <div key={m.t} className="glass rounded-3xl p-5 transition hover:-translate-y-0.5">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--gradient-sky)] text-primary-foreground">
-                <m.icon className="h-5 w-5" />
+        <div className="glass-strong mt-6 flex min-h-[60vh] flex-col rounded-3xl p-4 shadow-glass md:p-6">
+          <div className="flex-1 space-y-4 overflow-y-auto">
+            {messages.length === 0 && (
+              <div className="space-y-3 py-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4 text-primary" /> Sugerencias para empezar
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="rounded-2xl border border-border bg-card/60 p-3 text-left text-sm transition hover:bg-accent"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="mt-4 font-display text-lg font-semibold">{m.t}</div>
-              <div className="text-sm text-muted-foreground">{m.d}</div>
-            </div>
-          ))}
+            )}
+
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={
+                  m.role === "user"
+                    ? "ml-auto max-w-[85%] rounded-2xl bg-primary px-4 py-2.5 text-sm text-primary-foreground"
+                    : "max-w-[90%] rounded-2xl border border-border bg-card/70 px-4 py-3 text-sm"
+                }
+              >
+                {m.role === "assistant" ? (
+                  <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-code:text-foreground">
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  m.content
+                )}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card/70 px-4 py-2.5 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> FlyCoach está pensando…
+              </div>
+            )}
+            <div ref={endRef} />
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(input);
+            }}
+            className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card/60 p-2"
+          >
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Pregúntale a FlyCoach…"
+              className="flex-1 bg-transparent px-2 py-1.5 text-sm outline-none"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="grid h-9 w-9 place-items-center rounded-xl bg-foreground text-background transition hover:opacity-90 disabled:opacity-40"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
         </div>
 
-        <div className="mt-12 glass-strong rounded-3xl p-6 shadow-elevated">
-          <div className="flex items-center gap-2 text-xs font-medium text-primary">
-            <Sparkles className="h-4 w-4" /> Conversación de ejemplo
-          </div>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="rounded-2xl bg-accent/60 p-3">
-              <span className="font-medium">Tú:</span> ¿Por qué necesito autorización para
-              volar cerca de un Class D si está apagada la torre?
-            </div>
-            <div className="rounded-2xl border border-border bg-card/70 p-3">
-              <span className="font-medium text-primary">FlyCoach:</span> Cuando la torre
-              está cerrada, el espacio aéreo Class D usualmente revierte a Class E o G,
-              dependiendo de la carta. Revisa el segmento de la sectional con el
-              asterisco (*) junto a la frecuencia. Bajo 14 CFR 107.41, autorización ATC
-              solo aplica cuando el espacio sigue siendo controlado.
-              <div className="mt-2 text-xs text-muted-foreground">
-                Fuente: 14 CFR 107.41 · Remote Pilot Study Guide cap. 3
-              </div>
-            </div>
-          </div>
-        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          FlyCoach puede equivocarse. Verifica siempre con la fuente oficial FAA.
+        </p>
       </section>
     </PageShell>
   );
