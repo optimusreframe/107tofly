@@ -45,7 +45,7 @@ function Certificate() {
   const onIssue = async () => {
     setBusy(true); setError(null);
     try {
-      const res = await issue({});
+      const res = await issue();
       if (!res.ok) setError(res.reason ?? "No cumples los requisitos aún.");
       else {
         const { data } = await supabase.from("certificates").select("*").eq("id", res.id).maybeSingle();
