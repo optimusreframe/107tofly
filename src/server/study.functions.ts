@@ -245,7 +245,7 @@ export const issueCertificate = createServerFn({ method: "POST" })
   });
 
 // ============ HELPERS ============
-async function recomputeProgress(supabase: ReturnType<typeof requireSupabaseAuth>["__type__"]["supabase"] extends infer S ? S : any, userId: string) {
+async function recomputeProgress(supabase: any, userId: string) {
   const [{ data: attempts }, { data: cards }, { data: lessons }, { data: sims }] = await Promise.all([
     supabase.from("quiz_attempts").select("score").eq("user_id", userId),
     supabase.from("flashcards").select("repetitions"),
