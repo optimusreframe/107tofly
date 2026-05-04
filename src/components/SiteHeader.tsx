@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Plane } from "lucide-react";
+import { Moon, Sun, Plane, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard" },
@@ -13,6 +14,7 @@ const nav = [
 
 export function SiteHeader() {
   const [dark, setDark] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -59,12 +61,22 @@ export function SiteHeader() {
             >
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <Link
-              to="/course"
-              className="hidden rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 sm:inline-flex"
-            >
-              Empezar
-            </Link>
+            {user ? (
+              <button
+                onClick={() => signOut()}
+                aria-label="Sign out"
+                className="hidden h-9 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 text-sm text-foreground transition hover:bg-accent sm:inline-flex"
+              >
+                <LogOut className="h-4 w-4" /> Salir
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                className="hidden rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 sm:inline-flex"
+              >
+                Acceder
+              </Link>
+            )}
           </div>
         </div>
       </div>
