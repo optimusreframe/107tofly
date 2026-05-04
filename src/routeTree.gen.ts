@@ -11,11 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherLabRouteImport } from './routes/weather-lab'
 import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MapLabRouteImport } from './routes/map-lab'
 import { Route as LessonRouteImport } from './routes/lesson'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
 import { Route as FlashcardsRouteImport } from './routes/flashcards'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -24,6 +26,7 @@ import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -33,6 +36,11 @@ const WeatherLabRoute = WeatherLabRouteImport.update({
 const SimulatorRoute = SimulatorRouteImport.update({
   id: '/simulator',
   path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -58,6 +66,11 @@ const MapLabRoute = MapLabRouteImport.update({
 const LessonRoute = LessonRouteImport.update({
   id: '/lesson',
   path: '/lesson',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlycoachRoute = FlycoachRouteImport.update({
@@ -100,6 +113,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyIdRoute = VerifyIdRouteImport.update({
+  id: '/verify/$id',
+  path: '/verify/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,13 +128,16 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/verify/$id': typeof VerifyIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -127,13 +148,16 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/verify/$id': typeof VerifyIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -145,13 +169,16 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/verify/$id': typeof VerifyIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,13 +191,16 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
+    | '/forgot-password'
     | '/lesson'
     | '/map-lab'
     | '/mission'
     | '/onboarding'
     | '/practice'
+    | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/verify/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -181,13 +211,16 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
+    | '/forgot-password'
     | '/lesson'
     | '/map-lab'
     | '/mission'
     | '/onboarding'
     | '/practice'
+    | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/verify/$id'
   id:
     | '__root__'
     | '/'
@@ -198,13 +231,16 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
+    | '/forgot-password'
     | '/lesson'
     | '/map-lab'
     | '/mission'
     | '/onboarding'
     | '/practice'
+    | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/verify/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -216,13 +252,16 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   FlashcardsRoute: typeof FlashcardsRoute
   FlycoachRoute: typeof FlycoachRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LessonRoute: typeof LessonRoute
   MapLabRoute: typeof MapLabRoute
   MissionRoute: typeof MissionRoute
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SimulatorRoute: typeof SimulatorRoute
   WeatherLabRoute: typeof WeatherLabRoute
+  VerifyIdRoute: typeof VerifyIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -239,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/simulator'
       fullPath: '/simulator'
       preLoaderRoute: typeof SimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -274,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/lesson'
       fullPath: '/lesson'
       preLoaderRoute: typeof LessonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flycoach': {
@@ -332,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify/$id': {
+      id: '/verify/$id'
+      path: '/verify/$id'
+      fullPath: '/verify/$id'
+      preLoaderRoute: typeof VerifyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -344,13 +404,16 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   FlashcardsRoute: FlashcardsRoute,
   FlycoachRoute: FlycoachRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LessonRoute: LessonRoute,
   MapLabRoute: MapLabRoute,
   MissionRoute: MissionRoute,
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SimulatorRoute: SimulatorRoute,
   WeatherLabRoute: WeatherLabRoute,
+  VerifyIdRoute: VerifyIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
