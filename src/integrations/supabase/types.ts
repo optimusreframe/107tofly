@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          experience_level: string | null
+          id: string
+          locale: string | null
+          study_goal_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          experience_level?: string | null
+          id: string
+          locale?: string | null
+          study_goal_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          experience_level?: string | null
+          id?: string
+          locale?: string | null
+          study_goal_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          practice_pct: number
+          readiness: number
+          review_pct: number
+          streak: number
+          study_pct: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          practice_pct?: number
+          readiness?: number
+          review_pct?: number
+          streak?: number
+          study_pct?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          practice_pct?: number
+          readiness?: number
+          review_pct?: number
+          streak?: number
+          study_pct?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
