@@ -98,6 +98,9 @@ function Certificate() {
     doc.text(doc.splitTextToSize(disc, W - 140), W / 2, H - 70, { align: "center" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(9);
     doc.text(`Issued ${new Date(cert.issued_at).toLocaleDateString()}`, W / 2, H - 40, { align: "center" });
+    const verifyUrl = `${window.location.origin}/verify/${cert.id}`;
+    doc.setTextColor(125, 211, 252); doc.setFontSize(8);
+    doc.textWithLink(`Verify: ${verifyUrl}`, W / 2, H - 24, { align: "center", url: verifyUrl });
     doc.save(`107toFly-Certificate-${cert.id.slice(0, 8)}.pdf`);
   };
 

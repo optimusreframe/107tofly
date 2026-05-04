@@ -122,16 +122,23 @@ function AuthPage() {
             </button>
           </form>
 
-          <button
-            onClick={() => {
-              setMode(mode === "login" ? "signup" : "login");
-              setError(null);
-              setInfo(null);
-            }}
-            className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            {mode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-          </button>
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                setMode(mode === "login" ? "signup" : "login");
+                setError(null);
+                setInfo(null);
+              }}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              {mode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+            </button>
+            {mode === "login" && (
+              <Link to="/forgot-password" className="text-center text-xs text-muted-foreground hover:text-foreground">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            )}
+          </div>
         </div>
       </section>
     </PageShell>
