@@ -141,7 +141,7 @@ function Dashboard() {
                 </div>
               </div>
               <div className="flex gap-2">
-                {rings.map((r) => (
+                {ringValues.map((r) => (
                   <div key={r.label} className="relative grid place-items-center">
                     <Ring value={r.value} color={r.color} size={88} />
                     <div className="absolute text-center">
