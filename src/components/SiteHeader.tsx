@@ -5,11 +5,10 @@ import { useAuth } from "@/hooks/use-auth";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard" },
+  { to: "/practice", label: "Práctica" },
   { to: "/course", label: "Curso" },
-  { to: "/map-lab", label: "Map Lab" },
-  { to: "/weather-lab", label: "Weather" },
-  { to: "/mission", label: "Mission" },
   { to: "/simulator", label: "Simulador" },
+  { to: "/flycoach", label: "FlyCoach" },
 ];
 
 export function SiteHeader() {
