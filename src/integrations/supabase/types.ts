@@ -14,6 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificates: {
+        Row: {
+          display_name: string
+          final_score: number
+          hours_estimated: number
+          id: string
+          issued_at: string
+          modules_completed: number
+          user_id: string
+        }
+        Insert: {
+          display_name: string
+          final_score: number
+          hours_estimated?: number
+          id?: string
+          issued_at?: string
+          modules_completed: number
+          user_id: string
+        }
+        Update: {
+          display_name?: string
+          final_score?: number
+          hours_estimated?: number
+          id?: string
+          issued_at?: string
+          modules_completed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      exam_simulations: {
+        Row: {
+          correct: number
+          domain_breakdown: Json | null
+          duration_sec: number | null
+          finished_at: string | null
+          id: string
+          score: number
+          started_at: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          correct?: number
+          domain_breakdown?: Json | null
+          duration_sec?: number | null
+          finished_at?: string | null
+          id?: string
+          score?: number
+          started_at?: string
+          total?: number
+          user_id: string
+        }
+        Update: {
+          correct?: number
+          domain_breakdown?: Json | null
+          duration_sec?: number | null
+          finished_at?: string | null
+          id?: string
+          score?: number
+          started_at?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      flashcards: {
+        Row: {
+          back: string
+          created_at: string
+          due_date: string
+          ease: number
+          front: string
+          id: string
+          interval_days: number
+          last_reviewed_at: string | null
+          question_id: string | null
+          repetitions: number
+          topic: Database["public"]["Enums"]["question_topic"] | null
+          user_id: string
+        }
+        Insert: {
+          back: string
+          created_at?: string
+          due_date?: string
+          ease?: number
+          front: string
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          question_id?: string | null
+          repetitions?: number
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          user_id: string
+        }
+        Update: {
+          back?: string
+          created_at?: string
+          due_date?: string
+          ease?: number
+          front?: string
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          question_id?: string | null
+          repetitions?: number
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcards_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          lesson_slug: string
+          topic: Database["public"]["Enums"]["question_topic"] | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          lesson_slug: string
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          lesson_slug?: string
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -80,6 +223,138 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          acs_code: string
+          common_mistake: string | null
+          correct_index: number
+          created_at: string
+          difficulty: string
+          explanation: string
+          id: string
+          options: Json
+          question: string
+          source: string
+          tags: string[] | null
+          topic: Database["public"]["Enums"]["question_topic"]
+        }
+        Insert: {
+          acs_code: string
+          common_mistake?: string | null
+          correct_index: number
+          created_at?: string
+          difficulty?: string
+          explanation: string
+          id?: string
+          options: Json
+          question: string
+          source: string
+          tags?: string[] | null
+          topic: Database["public"]["Enums"]["question_topic"]
+        }
+        Update: {
+          acs_code?: string
+          common_mistake?: string | null
+          correct_index?: number
+          created_at?: string
+          difficulty?: string
+          explanation?: string
+          id?: string
+          options?: Json
+          question?: string
+          source?: string
+          tags?: string[] | null
+          topic?: Database["public"]["Enums"]["question_topic"]
+        }
+        Relationships: []
+      }
+      quiz_answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: string
+          selected_index: number
+          time_ms: number | null
+          user_id: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          question_id: string
+          selected_index: number
+          time_ms?: number | null
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          selected_index?: number
+          time_ms?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_attempts: {
+        Row: {
+          correct: number
+          duration_sec: number | null
+          finished_at: string | null
+          id: string
+          mode: string
+          score: number
+          started_at: string
+          topic: Database["public"]["Enums"]["question_topic"] | null
+          total: number
+          user_id: string
+        }
+        Insert: {
+          correct?: number
+          duration_sec?: number | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          score?: number
+          started_at?: string
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          total?: number
+          user_id: string
+        }
+        Update: {
+          correct?: number
+          duration_sec?: number | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          score?: number
+          started_at?: string
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -88,7 +363,17 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      question_topic:
+        | "regulations"
+        | "airspace"
+        | "sectional"
+        | "weather"
+        | "performance"
+        | "operations"
+        | "adm"
+        | "emergencies"
+        | "remote_id"
+        | "maintenance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -215,6 +500,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      question_topic: [
+        "regulations",
+        "airspace",
+        "sectional",
+        "weather",
+        "performance",
+        "operations",
+        "adm",
+        "emergencies",
+        "remote_id",
+        "maintenance",
+      ],
+    },
   },
 } as const

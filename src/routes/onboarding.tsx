@@ -1,7 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Check } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { saveOnboarding } from "@/server/study.functions";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -37,11 +40,35 @@ const steps = [
 ];
 
 function Onboarding() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const save = useServerFn(saveOnboarding);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
   const total = steps.length;
   const s = steps[step];
   const done = step >= total;
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth" });
+  }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (!done || saving || !user) return;
+    setSaving(true);
+    const goalMap: Record<string, number> = { "En 1 semana": 7, "En 4 semanas": 28, "En 2 meses": 60 };
+    const days = goalMap[answers.goal];
+    const goalDate = days ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : undefined;
+    const localeMap: Record<string, string> = { "Español": "es", "English": "en", "Both": "es" };
+    save({
+      data: {
+        experience_level: answers.experience ?? "Nunca volé",
+        study_goal_date: goalDate,
+        locale: localeMap[answers.language] ?? "es",
+      },
+    }).catch(() => undefined).finally(() => setSaving(false));
+  }, [done, user, answers, save, saving]);
 
   const pick = (opt: string) => {
     setAnswers((a) => ({ ...a, [s.key]: opt }));
