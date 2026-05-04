@@ -1,79 +1,82 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/PageShell";
-import { useMemo, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { fetchDueFlashcards, gradeFlashcard } from "@/server/study.functions";
 import { RotateCcw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/flashcards")({
   head: () => ({
     meta: [
       { title: "Flashcards — 107toFly" },
-      { name: "description", content: "Spaced repetition con tarjetas oficiales Part 107." },
+      { name: "description", content: "Spaced repetition con tarjetas Part 107 (algoritmo SM-2)." },
     ],
   }),
   component: Flashcards,
 });
 
-const cards = [
-  { front: "Altura máxima Part 107 sobre terreno", back: "400 ft AGL — salvo dentro de 400 ft de una estructura, donde puede subir 400 ft sobre la estructura. (14 CFR 107.51)" },
-  { front: "Visibilidad mínima del Remote PIC", back: "3 statute miles desde la control station. (14 CFR 107.51)" },
-  { front: "Distancia de las nubes", back: "500 ft por debajo y 2,000 ft horizontal. (14 CFR 107.51)" },
-  { front: "¿Qué es LAANC?", back: "Low Altitude Authorization and Notification Capability — autoriza vuelos casi en tiempo real en espacio controlado." },
-  { front: "Reportar accidente Part 107", back: "Dentro de 10 días si hay lesión seria, pérdida de consciencia o daño > $500 (excluye sUAS). (107.9)" },
-  { front: "Edad mínima Remote Pilot", back: "16 años. (14 CFR 107.61)" },
-];
-
 type Grade = "again" | "hard" | "good" | "easy";
+interface Card { id: string; front: string; back: string; topic: string | null; due_date: string; interval_days: number }
 
 function Flashcards() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const fetchDue = useServerFn(fetchDueFlashcards);
+  const grade = useServerFn(gradeFlashcard);
+
+  const [cards, setCards] = useState<Card[] | null>(null);
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [history, setHistory] = useState<{ id: number; grade: Grade }[]>([]);
+  const [reviewed, setReviewed] = useState(0);
 
-  const card = cards[idx];
-  const remaining = useMemo(() => cards.length - history.length, [history]);
+  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [loading, user, navigate]);
 
-  const grade = (g: Grade) => {
-    setHistory((h) => [...h, { id: idx, grade: g }]);
+  useEffect(() => {
+    if (!user) return;
+    fetchDue().then((d) => setCards(d as Card[]));
+  }, [user, fetchDue]);
+
+  if (loading || !user || cards === null) {
+    return <PageShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+  }
+
+  const reset = () => { fetchDue().then((d) => { setCards(d as Card[]); setIdx(0); setFlipped(false); setReviewed(0); }); };
+
+  const submit = async (g: Grade) => {
+    const card = cards[idx];
+    await grade({ data: { flashcard_id: card.id, grade: g } });
+    setReviewed((n) => n + 1);
     setFlipped(false);
-    setIdx((i) => (i + 1) % cards.length);
+    if (idx + 1 < cards.length) setIdx(idx + 1);
+    else setIdx(cards.length);
   };
 
-  const reset = () => {
-    setHistory([]);
-    setIdx(0);
-    setFlipped(false);
-  };
-
-  const done = remaining === 0 && history.length > 0;
+  const done = idx >= cards.length;
 
   return (
     <PageShell>
       <section className="mx-auto max-w-2xl px-6 pt-12 md:pt-16">
         <div className="flex items-center justify-between text-sm">
-          <div className="text-muted-foreground">
-            Tarjeta {Math.min(history.length + 1, cards.length)} de {cards.length}
-          </div>
-          <button
-            onClick={reset}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs hover:bg-accent"
-          >
-            <RotateCcw className="h-3 w-3" /> Reset
+          <div className="text-muted-foreground">{cards.length === 0 ? "Sin tarjetas vencidas" : `Tarjeta ${Math.min(idx + 1, cards.length)} de ${cards.length}`}</div>
+          <button onClick={reset} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs hover:bg-accent">
+            <RotateCcw className="h-3 w-3" /> Recargar
           </button>
         </div>
 
-        {done ? (
+        {cards.length === 0 ? (
+          <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
+            <Sparkles className="mx-auto h-10 w-10 text-primary" />
+            <h2 className="mt-3 font-display text-2xl font-semibold">No hay tarjetas para hoy</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Crea tarjetas desde Práctica guardando preguntas para repaso.</p>
+            <Link to="/practice" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">Ir a Práctica</Link>
+          </div>
+        ) : done ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
             <Sparkles className="mx-auto h-10 w-10 text-primary" />
             <h2 className="mt-3 font-display text-2xl font-semibold">¡Sesión completada!</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Repasaste {history.length} tarjetas. Tu próxima sesión se programó automáticamente.
-            </p>
-            <button
-              onClick={reset}
-              className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background"
-            >
-              Repetir
-            </button>
+            <p className="mt-2 text-sm text-muted-foreground">Repasaste {reviewed} tarjetas. Próximas vencen según SM-2.</p>
+            <Link to="/dashboard" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">Ir al Dashboard</Link>
           </div>
         ) : (
           <>
@@ -82,18 +85,11 @@ function Flashcards() {
               className="glass-strong mt-6 grid min-h-[280px] w-full place-items-center rounded-3xl p-10 text-center shadow-glass transition hover:shadow-elevated"
             >
               <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                  {flipped ? "Respuesta" : "Pregunta"}
-                </div>
-                <div className="mt-3 font-display text-2xl font-semibold leading-snug md:text-3xl">
-                  {flipped ? card.back : card.front}
-                </div>
-                {!flipped && (
-                  <div className="mt-6 text-xs text-muted-foreground">Toca para ver la respuesta</div>
-                )}
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">{flipped ? "Respuesta" : "Pregunta"}</div>
+                <div className="mt-3 font-display text-2xl font-semibold leading-snug md:text-3xl">{flipped ? cards[idx].back : cards[idx].front}</div>
+                {!flipped && <div className="mt-6 text-xs text-muted-foreground">Toca para ver la respuesta</div>}
               </div>
             </button>
-
             {flipped && (
               <div className="mt-4 grid grid-cols-4 gap-2">
                 {([
@@ -102,11 +98,7 @@ function Flashcards() {
                   { g: "good" as Grade, l: "Bien", c: "bg-primary text-primary-foreground" },
                   { g: "easy" as Grade, l: "Fácil", c: "bg-success text-success-foreground" },
                 ]).map((b) => (
-                  <button
-                    key={b.g}
-                    onClick={() => grade(b.g)}
-                    className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}
-                  >
+                  <button key={b.g} onClick={() => submit(b.g)} className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}>
                     {b.l}
                   </button>
                 ))}
