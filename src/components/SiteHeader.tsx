@@ -26,6 +26,14 @@ export function SiteHeader() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("locale").eq("id", user.id).maybeSingle().then(({ data }) => {
+      const loc = (data as { locale?: string } | null)?.locale;
+      if (loc && loc !== i18n.language) i18n.changeLanguage(loc);
+    });
+  }, [user, i18n]);
+
   const toggle = () => {
     const next = !dark;
     setDark(next);
