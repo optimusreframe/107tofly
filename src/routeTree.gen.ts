@@ -9,20 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WeatherLabRouteImport } from './routes/weather-lab'
 import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as LessonRouteImport } from './routes/lesson'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
+import { Route as FlashcardsRouteImport } from './routes/flashcards'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CourseRouteImport } from './routes/course'
 import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WeatherLabRoute = WeatherLabRouteImport.update({
+  id: '/weather-lab',
+  path: '/weather-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SimulatorRoute = SimulatorRouteImport.update({
   id: '/simulator',
   path: '/simulator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LessonRoute = LessonRouteImport.update({
+  id: '/lesson',
+  path: '/lesson',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FlycoachRoute = FlycoachRouteImport.update({
   id: '/flycoach',
   path: '/flycoach',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlashcardsRoute = FlashcardsRouteImport.update({
+  id: '/flashcards',
+  path: '/flashcards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CourseRoute = CourseRouteImport.update({
@@ -45,42 +69,93 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/dashboard': typeof DashboardRoute
+  '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
+  '/lesson': typeof LessonRoute
   '/simulator': typeof SimulatorRoute
+  '/weather-lab': typeof WeatherLabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/dashboard': typeof DashboardRoute
+  '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
+  '/lesson': typeof LessonRoute
   '/simulator': typeof SimulatorRoute
+  '/weather-lab': typeof WeatherLabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/dashboard': typeof DashboardRoute
+  '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
+  '/lesson': typeof LessonRoute
   '/simulator': typeof SimulatorRoute
+  '/weather-lab': typeof WeatherLabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/certificate' | '/course' | '/flycoach' | '/simulator'
+  fullPaths:
+    | '/'
+    | '/certificate'
+    | '/course'
+    | '/dashboard'
+    | '/flashcards'
+    | '/flycoach'
+    | '/lesson'
+    | '/simulator'
+    | '/weather-lab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/certificate' | '/course' | '/flycoach' | '/simulator'
-  id: '__root__' | '/' | '/certificate' | '/course' | '/flycoach' | '/simulator'
+  to:
+    | '/'
+    | '/certificate'
+    | '/course'
+    | '/dashboard'
+    | '/flashcards'
+    | '/flycoach'
+    | '/lesson'
+    | '/simulator'
+    | '/weather-lab'
+  id:
+    | '__root__'
+    | '/'
+    | '/certificate'
+    | '/course'
+    | '/dashboard'
+    | '/flashcards'
+    | '/flycoach'
+    | '/lesson'
+    | '/simulator'
+    | '/weather-lab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
+  DashboardRoute: typeof DashboardRoute
+  FlashcardsRoute: typeof FlashcardsRoute
   FlycoachRoute: typeof FlycoachRoute
+  LessonRoute: typeof LessonRoute
   SimulatorRoute: typeof SimulatorRoute
+  WeatherLabRoute: typeof WeatherLabRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/weather-lab': {
+      id: '/weather-lab'
+      path: '/weather-lab'
+      fullPath: '/weather-lab'
+      preLoaderRoute: typeof WeatherLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/simulator': {
       id: '/simulator'
       path: '/simulator'
@@ -88,11 +163,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SimulatorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lesson': {
+      id: '/lesson'
+      path: '/lesson'
+      fullPath: '/lesson'
+      preLoaderRoute: typeof LessonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/flycoach': {
       id: '/flycoach'
       path: '/flycoach'
       fullPath: '/flycoach'
       preLoaderRoute: typeof FlycoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flashcards': {
+      id: '/flashcards'
+      path: '/flashcards'
+      fullPath: '/flashcards'
+      preLoaderRoute: typeof FlashcardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/course': {
@@ -123,8 +219,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
+  DashboardRoute: DashboardRoute,
+  FlashcardsRoute: FlashcardsRoute,
   FlycoachRoute: FlycoachRoute,
+  LessonRoute: LessonRoute,
   SimulatorRoute: SimulatorRoute,
+  WeatherLabRoute: WeatherLabRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
