@@ -39,8 +39,8 @@ export const Route = createRootRoute({
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "107toFly" },
       { name: "twitter:description", content: "107toFly is a premium web app for mastering the FAA Part 107 Remote Pilot Certificate exam." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4fa45ae9-b7d0-48c0-a39c-0f8c644c436e/id-preview-0dc447e7--05e582d7-0ad6-4bbc-9030-1b49be8851a2.lovable.app-1777874714638.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4fa45ae9-b7d0-48c0-a39c-0f8c644c436e/id-preview-0dc447e7--05e582d7-0ad6-4bbc-9030-1b49be8851a2.lovable.app-1777874714638.png" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b9cd26b2-60ab-47ad-8e5d-e464b6030d6e" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b9cd26b2-60ab-47ad-8e5d-e464b6030d6e" },
     ],
     links: [
       {
