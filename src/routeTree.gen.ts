@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherLabRouteImport } from './routes/weather-lab'
 import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MapLabRouteImport } from './routes/map-lab'
@@ -32,6 +33,11 @@ const WeatherLabRoute = WeatherLabRouteImport.update({
 const SimulatorRoute = SimulatorRouteImport.update({
   id: '/simulator',
   path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeRoute = PracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
+  '/practice': typeof PracticeRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
+  '/practice': typeof PracticeRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
+  '/practice': typeof PracticeRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/map-lab'
     | '/mission'
     | '/onboarding'
+    | '/practice'
     | '/simulator'
     | '/weather-lab'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/map-lab'
     | '/mission'
     | '/onboarding'
+    | '/practice'
     | '/simulator'
     | '/weather-lab'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/map-lab'
     | '/mission'
     | '/onboarding'
+    | '/practice'
     | '/simulator'
     | '/weather-lab'
   fileRoutesById: FileRoutesById
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   MapLabRoute: typeof MapLabRoute
   MissionRoute: typeof MissionRoute
   OnboardingRoute: typeof OnboardingRoute
+  PracticeRoute: typeof PracticeRoute
   SimulatorRoute: typeof SimulatorRoute
   WeatherLabRoute: typeof WeatherLabRoute
 }
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/simulator'
       fullPath: '/simulator'
       preLoaderRoute: typeof SimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice': {
+      id: '/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   MapLabRoute: MapLabRoute,
   MissionRoute: MissionRoute,
   OnboardingRoute: OnboardingRoute,
+  PracticeRoute: PracticeRoute,
   SimulatorRoute: SimulatorRoute,
   WeatherLabRoute: WeatherLabRoute,
 }
