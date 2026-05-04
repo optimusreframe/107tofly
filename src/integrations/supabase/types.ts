@@ -157,6 +157,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lessons: {
+        Row: {
+          body_md: string
+          created_at: string
+          day: number
+          est_minutes: number
+          order_index: number
+          slug: string
+          sources: Json
+          summary: string
+          title: string
+          topic: Database["public"]["Enums"]["question_topic"] | null
+          week: number
+        }
+        Insert: {
+          body_md: string
+          created_at?: string
+          day: number
+          est_minutes?: number
+          order_index: number
+          slug: string
+          sources?: Json
+          summary: string
+          title: string
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          week: number
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          day?: number
+          est_minutes?: number
+          order_index?: number
+          slug?: string
+          sources?: Json
+          summary?: string
+          title?: string
+          topic?: Database["public"]["Enums"]["question_topic"] | null
+          week?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -227,6 +269,7 @@ export type Database = {
         Row: {
           acs_code: string
           common_mistake: string | null
+          content_hash: string
           correct_index: number
           created_at: string
           difficulty: string
@@ -241,6 +284,7 @@ export type Database = {
         Insert: {
           acs_code: string
           common_mistake?: string | null
+          content_hash: string
           correct_index: number
           created_at?: string
           difficulty?: string
@@ -255,6 +299,7 @@ export type Database = {
         Update: {
           acs_code?: string
           common_mistake?: string | null
+          content_hash?: string
           correct_index?: number
           created_at?: string
           difficulty?: string
