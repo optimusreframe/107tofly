@@ -54,24 +54,74 @@ function Ring({ value, color, size = 110 }: { value: number; color: string; size
   );
 }
 
+interface ProgressRow {
+  study_pct: number;
+  practice_pct: number;
+  review_pct: number;
+  readiness: number;
+  xp: number;
+  streak: number;
+}
+
 function Dashboard() {
-  const readiness = 78;
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const [progress, setProgress] = useState<ProgressRow | null>(null);
+  const [name, setName] = useState<string>("Pilot");
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth" });
+  }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("progress")
+      .select("study_pct,practice_pct,review_pct,readiness,xp,streak")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => data && setProgress(data as ProgressRow));
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.display_name) setName(data.display_name);
+      });
+  }, [user]);
+
+  const readiness = progress?.readiness ?? 0;
+  const ringValues = [
+    { label: "Estudio", value: progress?.study_pct ?? 0, color: "oklch(0.62 0.2 255)" },
+    { label: "Práctica", value: progress?.practice_pct ?? 0, color: "oklch(0.7 0.16 235)" },
+    { label: "Repaso", value: progress?.review_pct ?? 0, color: "oklch(0.68 0.16 155)" },
+  ];
+
+  if (loading || !user) {
+    return (
+      <PageShell>
+        <div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell>
       <section className="mx-auto max-w-6xl px-6 pt-12 md:pt-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="text-sm text-muted-foreground">Buenos días, Pilot</div>
+            <div className="text-sm text-muted-foreground">Hola, {name}</div>
             <h1 className="font-display text-3xl font-semibold tracking-tight md:text-5xl">
-              Día 12 · <span className="text-gradient">sigues volando</span>
+              Tu progreso · <span className="text-gradient">sigue volando</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1.5 text-sm font-medium text-warning-foreground">
-              <Flame className="h-4 w-4 text-warning" /> 12 días streak
+              <Flame className="h-4 w-4 text-warning" /> {progress?.streak ?? 0} días streak
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-sm font-medium text-primary">
-              <Trophy className="h-4 w-4" /> 1,840 XP
+              <Trophy className="h-4 w-4" /> {progress?.xp ?? 0} XP
             </span>
           </div>
         </div>
