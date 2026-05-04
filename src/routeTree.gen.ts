@@ -11,12 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherLabRouteImport } from './routes/weather-lab'
 import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as MissionRouteImport } from './routes/mission'
+import { Route as MapLabRouteImport } from './routes/map-lab'
 import { Route as LessonRouteImport } from './routes/lesson'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
 import { Route as FlashcardsRouteImport } from './routes/flashcards'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CourseRouteImport } from './routes/course'
 import { Route as CertificateRouteImport } from './routes/certificate'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
@@ -27,6 +31,21 @@ const WeatherLabRoute = WeatherLabRouteImport.update({
 const SimulatorRoute = SimulatorRouteImport.update({
   id: '/simulator',
   path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissionRoute = MissionRouteImport.update({
+  id: '/mission',
+  path: '/mission',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapLabRoute = MapLabRouteImport.update({
+  id: '/map-lab',
+  path: '/map-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LessonRoute = LessonRouteImport.update({
@@ -59,6 +78,11 @@ const CertificateRoute = CertificateRouteImport.update({
   path: '/certificate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -67,35 +91,47 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
   '/lesson': typeof LessonRoute
+  '/map-lab': typeof MapLabRoute
+  '/mission': typeof MissionRoute
+  '/onboarding': typeof OnboardingRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
   '/lesson': typeof LessonRoute
+  '/map-lab': typeof MapLabRoute
+  '/mission': typeof MissionRoute
+  '/onboarding': typeof OnboardingRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
   '/lesson': typeof LessonRoute
+  '/map-lab': typeof MapLabRoute
+  '/mission': typeof MissionRoute
+  '/onboarding': typeof OnboardingRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
 }
@@ -103,46 +139,62 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/achievements'
     | '/certificate'
     | '/course'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
     | '/lesson'
+    | '/map-lab'
+    | '/mission'
+    | '/onboarding'
     | '/simulator'
     | '/weather-lab'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/achievements'
     | '/certificate'
     | '/course'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
     | '/lesson'
+    | '/map-lab'
+    | '/mission'
+    | '/onboarding'
     | '/simulator'
     | '/weather-lab'
   id:
     | '__root__'
     | '/'
+    | '/achievements'
     | '/certificate'
     | '/course'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
     | '/lesson'
+    | '/map-lab'
+    | '/mission'
+    | '/onboarding'
     | '/simulator'
     | '/weather-lab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
   DashboardRoute: typeof DashboardRoute
   FlashcardsRoute: typeof FlashcardsRoute
   FlycoachRoute: typeof FlycoachRoute
   LessonRoute: typeof LessonRoute
+  MapLabRoute: typeof MapLabRoute
+  MissionRoute: typeof MissionRoute
+  OnboardingRoute: typeof OnboardingRoute
   SimulatorRoute: typeof SimulatorRoute
   WeatherLabRoute: typeof WeatherLabRoute
 }
@@ -161,6 +213,27 @@ declare module '@tanstack/react-router' {
       path: '/simulator'
       fullPath: '/simulator'
       preLoaderRoute: typeof SimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mission': {
+      id: '/mission'
+      path: '/mission'
+      fullPath: '/mission'
+      preLoaderRoute: typeof MissionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map-lab': {
+      id: '/map-lab'
+      path: '/map-lab'
+      fullPath: '/map-lab'
+      preLoaderRoute: typeof MapLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lesson': {
@@ -205,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CertificateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -217,12 +297,16 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
   DashboardRoute: DashboardRoute,
   FlashcardsRoute: FlashcardsRoute,
   FlycoachRoute: FlycoachRoute,
   LessonRoute: LessonRoute,
+  MapLabRoute: MapLabRoute,
+  MissionRoute: MissionRoute,
+  OnboardingRoute: OnboardingRoute,
   SimulatorRoute: SimulatorRoute,
   WeatherLabRoute: WeatherLabRoute,
 }
