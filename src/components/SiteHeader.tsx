@@ -5,9 +5,10 @@ import { Moon, Sun, Plane } from "lucide-react";
 const nav = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/course", label: "Curso" },
+  { to: "/map-lab", label: "Map Lab" },
+  { to: "/weather-lab", label: "Weather" },
+  { to: "/mission", label: "Mission" },
   { to: "/simulator", label: "Simulador" },
-  { to: "/weather-lab", label: "Weather Lab" },
-  { to: "/flycoach", label: "FlyCoach" },
 ];
 
 export function SiteHeader() {
