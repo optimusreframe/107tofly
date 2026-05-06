@@ -1,59 +1,91 @@
-# Completar Fase 7
+# Auditoría 107toFly + Plan de cierre
 
-## Estado verificado
-- DB: 37 preguntas, 0 lecciones. Tablas listas con `content_hash` único e índice.
-- Falta: seeds, UI de lecciones, a11y pass, manifest PWA.
+## 1. Estado real (verificado contra DB y código)
 
-## Ejecución (en orden)
+### Completo y funcional (full-stack)
+- **Auth**: `/auth`, `/forgot-password`, `/reset-password`, `use-auth` hook. Trigger `handle_new_user` crea `profiles` + `progress`. OK.
+- **Onboarding** → `saveOnboarding` server fn. OK.
+- **Dashboard** (`/dashboard`): lee `progress`, racha, XP. OK.
+- **Práctica** (`/practice`): `fetchPracticeQuestions` + `submitQuizAttempt` + `quiz_answers`. OK.
+- **Simulador UAG** (`/simulator`): 60 preguntas, `submitExamSimulation`, breakdown por dominio. OK.
+- **Flashcards** (`/flashcards`): SM-2, `gradeFlashcard`, `fetchDueFlashcards`, `createFlashcardFromQuestion`. OK.
+- **Certificado** (`/certificate`, `/verify/$id`): `issueCertificate`, verificación pública. OK.
+- **FlyCoach AI** (`/flycoach`): `askFlyCoach` con Lovable AI. OK.
+- **i18n** ES/EN, `SiteHeader`, `SiteFooter`, landing `/`.
+- **Schema**: tablas `profiles, progress, questions, quiz_attempts, quiz_answers, flashcards, exam_simulations, certificates, lessons, lesson_completions` con RLS.
 
-### 1. Seed 165 preguntas nuevas → total 200
-Insert masivo vía `supabase--read_query` no aplica (es read-only). Uso migración SQL con `INSERT ... ON CONFLICT (content_hash) DO NOTHING`.
+### Parcial (UI sin backend o backend sin UI)
+- **`/course`**: solo array estático de 28 días. **No** lee `lessons` ni marca progreso.
+- **`/lesson`**: una sola lección hardcoded. No hay ruta dinámica `/lessons/$slug` ni listado `/lessons`.
+- **`completeLesson`** server fn existe pero ninguna UI la llama.
+- **`/achievements`**: badges hardcoded, no leen `progress.xp` ni `lesson_completions`.
+- **Tabla `lessons`**: 0 filas. Migración `2be47e4b` creó schema pero no hizo seed.
+- **Banco preguntas**: 37 filas. Plan original pedía 200. Faltan ~163 (regulations 8→45, airspace 6→30, weather 5→25, etc.).
+- **`/map-lab`, `/weather-lab`, `/mission`**: interactivos pero no persisten resultados ni dan XP.
 
-Distribución:
-- regulations: 45 (Part 107 subparts A–D, waivers, registration)
-- airspace: 30 (clases B/C/D/E/G, sectional symbols, NOTAMs, LAANC)
-- weather: 25 (METAR, TAF, density altitude, fronts, stability)
-- loading_performance: 15 (CG, payload, battery, W&B)
-- operations: 25 (CRM, ADM, site survey, night ops básicas)
-- emergency: 10 (lost link, flyaway, fire, deconfliction)
-- night_operations: 5 (anti-collision lights, ilusiones)
-- maintenance: 5 (preflight, batteries LiPo, firmware)
-- radio_comm: 5 (CTAF, phraseology básica)
+### No creado
+- **PWA manifest** (`public/manifest.webmanifest`, link en `__root.tsx`, theme-color). No existe carpeta `public/`.
+- **Iconos PWA** 192/512.
+- **Pase de accesibilidad WCAG AA**: sin skip-link, sin `<main id>`, sin `aria-label` en toggles, sin atajos de teclado en flashcards/quizzes, sin `aria-live`.
+- **Server fns de lecciones**: `getLessons`, `getLesson(slug)` no existen.
+- **Link a "Plan 28 días" / lecciones** en `SiteHeader` y card en `dashboard`.
 
-Cada pregunta: `question`, 4 `options` (jsonb), `correct_index`, `explanation` ≥80 palabras citando fuente, `common_mistake`, `acs_code` (UA.I.A.K1 etc.), `source` ("14 CFR §107.51(b)", "AC 107-2A §5.7", "FAA-G-8082-22 p.42"), `difficulty`, `tags[]`, `content_hash` = md5(lower(trim(question))).
+---
 
-### 2. Seed 28 lecciones (4×7 días)
-Migración con INSERT en `lessons`. Cada lección:
-- Semana 1 — Fundamentos: certificación, elegibilidad, registro, Remote ID, responsabilidades PIC, sUAS overview, repaso.
-- Semana 2 — Espacio aéreo: clases A–G, sectional charts, símbolos, NOTAMs, LAANC, controlled vs uncontrolled, repaso.
-- Semana 3 — Meteorología: atmósfera estándar, METAR/TAF, density altitude, vientos/turbulencia, nubes/visibilidad, frentes, repaso.
-- Semana 4 — Operaciones: preflight/CRM, ADM/risk, performance/W&B, emergencias, night ops, comunicaciones, examen final.
+## 2. Plan para cerrar lo pendiente
 
-Campos: `slug`, `week`, `day`, `order_index`, `title`, `summary`, `body_md` (markdown 500–700 palabras con secciones: Objetivos / Conceptos / Ejemplos / Errores comunes / Fuentes), `topic`, `est_minutes` (20–35), `sources` jsonb.
+Orden de ejecución para minimizar riesgo:
 
-### 3. UI de lecciones
-- `bun add react-markdown remark-gfm`
-- `src/routes/lessons.index.tsx` → `/lessons`: grid agrupado por semana, día, badge "Completada" leyendo `lesson_completions`. Server fn `getLessons()` con `requireSupabaseAuth`.
-- `src/routes/lessons.$slug.tsx` → `/lessons/$slug`: render `body_md` con `react-markdown`+`remark-gfm`, sidebar TOC sticky en desktop, botón "Marcar completada" → insert en `lesson_completions` + `+15 XP` en `progress`. Nav prev/next por `order_index`.
-- Link "Plan 28 días" en `SiteHeader` y card en `dashboard`.
+### Paso 1 — Seed de contenido (migración SQL idempotente)
+- **165 preguntas nuevas** para llegar a 200, distribución por enum real:
+  regulations +37, airspace +24, weather +20, sectional +12, performance +12, operations +22, adm +12, emergencies +8, remote_id +8, maintenance +10.
+  Cada una: `question`, 4 `options` jsonb, `correct_index`, `explanation` ≥80 palabras citando fuente, `common_mistake`, `acs_code`, `source` (14 CFR §, AC 107-2A §, FAA-G-8082-22 p.), `difficulty`, `tags[]`, `content_hash = md5(lower(regexp_replace(question,'\s+',' ','g')))`. `ON CONFLICT (content_hash) DO NOTHING`.
+- **28 lecciones** (4 semanas × 7 días) en `lessons`: `slug, week, day, order_index, title, summary, body_md` (markdown 500-700 palabras: Objetivos / Conceptos / Ejemplos / Errores comunes / Fuentes), `topic`, `est_minutes` 20-35, `sources` jsonb. `ON CONFLICT (slug) DO NOTHING`.
 
-### 4. Accesibilidad (WCAG AA)
-- `__root.tsx`: skip-link "Saltar al contenido" + `<main id="main">` en PageShell.
-- `styles.css`: `:focus-visible` ring global (ya existe en button, extender a links/inputs).
-- Iconos-botón: `aria-label` en theme/lang toggle, menú móvil.
-- Flashcards: `Space` voltea, `1–4` califica SM-2, `aria-live="polite"` para feedback.
-- Quizzes: `role="radiogroup"`, navegación por flechas, `aria-live` para correcto/incorrecto.
+### Paso 2 — Backend de lecciones
+- `src/server/lessons.functions.ts`:
+  - `getLessons()` → lista todas + set de `lesson_completions` del usuario.
+  - `getLesson(slug)` → lección + flag completed.
+  - `completeLesson(slug)` ya existe en `study.functions.ts`; reutilizar; suma `+15 XP` a `progress`.
 
-### 5. PWA manifest (sin service worker)
-- `public/manifest.webmanifest` con name "107toFly", short_name, `display: "standalone"`, theme_color del token primary, icons 192/512.
-- `<link rel="manifest">` + `<meta name="theme-color">` en `__root.tsx` head.
-- **No** `vite-plugin-pwa`, **no** SW (rompe preview iframe). Solo Add-to-Home-Screen.
+### Paso 3 — UI de lecciones
+- `bun add react-markdown remark-gfm`.
+- `src/routes/lessons.index.tsx` (`/lessons`): grid agrupado por semana, badge "Completada", barra progreso (X/28).
+- `src/routes/lessons.$slug.tsx` (`/lessons/$slug`): render `body_md` con `react-markdown` + `remark-gfm`, TOC sticky en desktop, botón "Marcar completada", nav prev/next por `order_index`, lista de `sources`.
+- Reescribir `/course` para leer `lessons` reales y enlazar a `/lessons/$slug`.
+- Link "Lecciones" en `SiteHeader`, card en `/dashboard`.
 
-## Notas técnicas
-- Seeds van en migraciones (data + schema combinados es aceptable para semilla inicial idempotente con ON CONFLICT).
-- `content_hash` calculado en SQL: `md5(lower(regexp_replace(question, '\s+', ' ', 'g')))`.
-- Iconos PWA: reutilizar PNGs existentes en `public/` o generar placeholders 192/512 con color primary.
-- Server fns: `getLessons`, `getLesson(slug)`, `completeLesson(slug)` en `src/server/lessons.functions.ts`.
+### Paso 4 — Achievements dinámicos
+- `getAchievements()` server fn: cuenta `lesson_completions`, mejor score por topic en `quiz_attempts`, simulacros >85 en `exam_simulations`, racha de `progress`.
+- `/achievements`: derivar badges del resultado real, mostrar XP/nivel desde `progress.xp`.
 
-## Fuera de alcance
-- Mistake Coach con IA, offline real, tests e2e.
+### Paso 5 — Accesibilidad (WCAG AA)
+- `__root.tsx`: skip-link "Saltar al contenido"; `PageShell` envuelve `main` con `id="main"` y `tabIndex={-1}`.
+- `styles.css`: `:focus-visible` ring global a links/inputs/botones-icono.
+- `aria-label` en toggles theme/idioma/menú móvil.
+- Flashcards: `Space` voltea, teclas `1-4` califican SM-2, `aria-live="polite"` para feedback.
+- Quizzes/Simulator: `role="radiogroup"`, navegación con flechas, `aria-live` para correcto/incorrecto.
+
+### Paso 6 — PWA (sin service worker)
+- Crear carpeta `public/`. `public/manifest.webmanifest`: name "107toFly", short_name "107toFly", `display: standalone`, `theme_color` token primary, `background_color` background, start_url `/`, icons 192/512 PNG (placeholder color primary con texto "107").
+- `public/icon-192.png` y `public/icon-512.png` generados con script Node + sharp en `/tmp` y copiados a `public/`.
+- `__root.tsx` head: `<link rel="manifest" href="/manifest.webmanifest">`, `<meta name="theme-color">`, `apple-touch-icon`.
+- **Sin** `vite-plugin-pwa`, **sin** `sw.js` (rompe iframe preview).
+
+---
+
+## 3. Detalles técnicos
+
+- Seeds van en migraciones SQL (es semilla inicial idempotente; aceptable mezclar data + schema con ON CONFLICT).
+- `content_hash` calculado dentro del INSERT con `md5(lower(regexp_replace(question,'\s+',' ','g')))`.
+- Iconos PWA: generación local con `sharp` antes de escribir a `public/`; el Worker no necesita `sharp` en runtime.
+- Rutas TanStack: `lessons.index.tsx` y `lessons.$slug.tsx` (convención flat dot).
+- `useRouter` de `@tanstack/react-router`, no `Route.useRouter()`.
+
+## 4. Fuera de alcance (futuro)
+- Mistake Coach con IA sobre histórico de fallos.
+- Modo offline real (sync queue + service worker).
+- Tests e2e.
+- Persistencia de resultados de map-lab / weather-lab / mission con XP.
+
+¿Apruebas? Procedo en orden: seeds → backend lecciones → UI lecciones → achievements dinámicos → a11y → PWA manifest.
