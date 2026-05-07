@@ -135,7 +135,8 @@ export const getAchievements = createServerFn({ method: "GET" })
       "Remote PIC Ready",
       "Exam Ready Pilot",
     ];
-    const levelStep = 400;
+    const { levelXpStep, examReadyScore } = await getStudySettings();
+    const levelStep = Number(levelXpStep ?? 400);
     const levelIdx = Math.min(levels.length - 1, Math.floor(xp / levelStep));
     const nextXp = (levelIdx + 1) * levelStep;
 
