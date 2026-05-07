@@ -92,8 +92,9 @@ function AdminLandingPage() {
     try {
       const { contentText: _ct, id: _id, updated_at: _ua, ...rest } = draft;
       void _ct; void _id; void _ua;
-      const input = { ...rest, content: parsedContent } as Parameters<typeof upsertFn>[0]["data"]["input"];
-      await upsertFn({ data: { id: editing?.id, input } });
+      const input = { ...rest, content: parsedContent };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (upsertFn as any)({ data: { id: editing?.id, input } });
       toast.success(t("admin.common.saved"));
       setEditing(null); setDraft(null);
       refresh();

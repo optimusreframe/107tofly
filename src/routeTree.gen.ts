@@ -33,6 +33,7 @@ import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
+import { Route as AdminLandingRouteImport } from './routes/admin.landing'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -154,6 +155,11 @@ const AdminLessonsRoute = AdminLessonsRouteImport.update({
   path: '/lessons',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLandingRoute = AdminLandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/landing'
     | '/admin/lessons'
     | '/admin/questions'
     | '/admin/users'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/landing'
     | '/admin/lessons'
     | '/admin/questions'
     | '/admin/users'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/landing'
     | '/admin/lessons'
     | '/admin/questions'
     | '/admin/users'
@@ -509,16 +521,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLessonsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/landing': {
+      id: '/admin/landing'
+      path: '/landing'
+      fullPath: '/admin/landing'
+      preLoaderRoute: typeof AdminLandingRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminLandingRoute: typeof AdminLandingRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminLandingRoute: AdminLandingRoute,
   AdminLessonsRoute: AdminLessonsRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminUsersRoute: AdminUsersRoute,
