@@ -100,6 +100,8 @@ function Dashboard() {
         if (data?.display_name) setName(data.display_name);
       });
     fetchDue().then((d) => setDueCount(Array.isArray(d) ? d.length : 0)).catch(() => setDueCount(0));
+    fetchReadiness().then(setReadinessData).catch(() => setReadinessData(null));
+    fetchMastery().then(setMastery).catch(() => setMastery(null));
 
     // Build last-7-days activity from real signals (lessons + quizzes + sims)
     const since = new Date();
