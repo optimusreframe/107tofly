@@ -68,8 +68,8 @@ function Simulator() {
   }, [phase]);
 
   const start = async () => {
-    const qs = (await fetchQ({ data: { limit: EXAM_LEN } })) as Q[];
-    setQuestions(qs);
+    const res = await fetchQ({ data: { limit: EXAM_LEN, locale } });
+    setQuestions(res.questions as unknown as Q[]);
     setPicks({});
     setIdx(0);
     setTimeLeft(EXAM_SECONDS);
