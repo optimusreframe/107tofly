@@ -160,6 +160,69 @@ export type Database = {
           },
         ]
       }
+      landing_sections: {
+        Row: {
+          archived_at: string | null
+          body: string | null
+          content: Json
+          created_at: string
+          cta_href: string | null
+          cta_label: string | null
+          id: string
+          image_url: string | null
+          locale: string
+          published_at: string | null
+          section_key: string
+          sort_order: number
+          status: string
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+          updated_by: string | null
+          video_url: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          body?: string | null
+          content?: Json
+          created_at?: string
+          cta_href?: string | null
+          cta_label?: string | null
+          id?: string
+          image_url?: string | null
+          locale?: string
+          published_at?: string | null
+          section_key: string
+          sort_order?: number
+          status?: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          body?: string | null
+          content?: Json
+          created_at?: string
+          cta_href?: string | null
+          cta_label?: string | null
+          id?: string
+          image_url?: string | null
+          locale?: string
+          published_at?: string | null
+          section_key?: string
+          sort_order?: number
+          status?: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       lesson_completions: {
         Row: {
           completed_at: string
@@ -250,6 +313,66 @@ export type Database = {
           updated_by?: string | null
           version?: number
           week?: number
+        }
+        Relationships: []
+      }
+      media_assets: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          id: string
+          locale: string | null
+          metadata: Json
+          mime_type: string | null
+          owner_id: string | null
+          public_url: string | null
+          status: string
+          storage_path: string | null
+          tags: string[]
+          updated_at: string
+          usage_context: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          locale?: string | null
+          metadata?: Json
+          mime_type?: string | null
+          owner_id?: string | null
+          public_url?: string | null
+          status?: string
+          storage_path?: string | null
+          tags?: string[]
+          updated_at?: string
+          usage_context?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          locale?: string | null
+          metadata?: Json
+          mime_type?: string | null
+          owner_id?: string | null
+          public_url?: string | null
+          status?: string
+          storage_path?: string | null
+          tags?: string[]
+          updated_at?: string
+          usage_context?: string | null
         }
         Relationships: []
       }
