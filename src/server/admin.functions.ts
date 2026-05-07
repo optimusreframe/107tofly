@@ -795,7 +795,7 @@ export const getPublicLandingSections = createServerFn({ method: "GET" })
       cta_href: string | null;
       image_url: string | null;
       video_url: string | null;
-      content: Record<string, unknown>;
+      content: Record<string, object>;
       sort_order: number | null;
       fallback?: boolean;
     };
