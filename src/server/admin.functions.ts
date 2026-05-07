@@ -785,7 +785,7 @@ export const getPublicLandingSections = createServerFn({ method: "GET" })
         ? Promise.resolve({ data: [] as Array<Record<string, unknown>> })
         : supabaseAdmin.from("landing_sections" as never).select(cols).eq("locale", "en").eq("status", "published").order("sort_order", { ascending: true }),
     ]);
-    type Row = Record<string, unknown> & { section_key: string };
+    type Row = { section_key: string; sort_order?: number | null; fallback?: boolean; [k: string]: unknown };
     const bySection = new Map<string, Row>();
     for (const r of (enRows ?? []) as Row[]) bySection.set(r.section_key, { ...r, fallback: data.locale !== "en" });
     for (const r of (localized ?? []) as Row[]) bySection.set(r.section_key, { ...r, fallback: false });
