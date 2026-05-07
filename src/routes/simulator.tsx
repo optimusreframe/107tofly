@@ -179,7 +179,7 @@ function Simulator() {
     <StudentAppShell>
       <section className="mx-auto max-w-3xl px-6 pt-10">
         <div className="flex items-center justify-between text-xs">
-          <span className="uppercase tracking-wider text-muted-foreground">{q.acs_code} · {q.topic}</span>
+          <span className="uppercase tracking-wider text-muted-foreground">{q.acs_code} · {t(`student.topics.${q.topic}`, { defaultValue: q.topic })}</span>
           <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium ${timeLeft < 600 ? "bg-destructive/15 text-destructive" : "bg-card/60 text-foreground border border-border"}`}>
             <Clock className="h-3.5 w-3.5" /> {fmt(timeLeft)}
           </span>
@@ -187,7 +187,7 @@ function Simulator() {
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
           <div className="h-full bg-[var(--gradient-sky)] transition-all" style={{ width: `${((idx + 1) / questions.length) * 100}%` }} />
         </div>
-        <div className="mt-1 text-xs text-muted-foreground">Pregunta {idx + 1} / {questions.length} · {answered} contestadas</div>
+        <div className="mt-1 text-xs text-muted-foreground">{t("student.simulator.questionXofY", { i: idx + 1, n: questions.length, a: answered })}</div>
 
         <div className="glass-strong mt-5 rounded-3xl p-6 shadow-glass md:p-8">
           <h2 className="font-display text-xl font-semibold leading-snug md:text-2xl">{q.question}</h2>
@@ -207,7 +207,7 @@ function Simulator() {
           </div>
           <div className="mt-6 flex items-center justify-between">
             <button onClick={() => setIdx(Math.max(0, idx - 1))} disabled={idx === 0} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm disabled:opacity-40">
-              <ArrowLeft className="h-4 w-4" /> Anterior
+              <ArrowLeft className="h-4 w-4" /> {t("student.simulator.previous")}
             </button>
             {idx + 1 < questions.length ? (
               <button onClick={() => setIdx(idx + 1)} className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">
@@ -215,7 +215,7 @@ function Simulator() {
               </button>
             ) : (
               <button onClick={finish} className="inline-flex items-center gap-1.5 rounded-full bg-success px-5 py-2 text-sm font-medium text-success-foreground">
-                <Flag className="h-4 w-4" /> Entregar
+                <Flag className="h-4 w-4" /> {t("student.simulator.submit")}
               </button>
             )}
           </div>
