@@ -18,12 +18,8 @@ export const Route = createFileRoute("/certificate")({
   component: Certificate,
 });
 
-const reqs = [
-  "Módulos completados (estudio)",
-  "Promedio de quizzes ≥ 80%",
-  "Al menos 1 simulacro de 60 preguntas con score ≥ 85%",
-  "Cobertura de dominios ACS",
-];
+// reqs are i18n keys, resolved at render time
+const REQ_KEYS = ["modules", "quizAvg", "sim", "coverage"] as const;
 
 interface CertRow { id: string; display_name: string; final_score: number; modules_completed: number; hours_estimated: number; issued_at: string }
 
