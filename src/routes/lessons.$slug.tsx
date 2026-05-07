@@ -22,7 +22,8 @@ export const Route = createFileRoute("/lessons/$slug")({
 });
 
 function LessonDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const { slug } = Route.useParams();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -37,9 +38,9 @@ function LessonDetail() {
     if (!user) return;
     setData(null);
     setMsg(null);
-    getLesson({ data: { slug } }).then(setData);
-    getLessons().then(setAll);
-  }, [slug, user]);
+    getLesson({ data: { slug, locale } }).then(setData);
+    getLessons({ data: { locale } }).then(setAll);
+  }, [slug, user, locale]);
 
   if (loading || !user || !data) {
     return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
