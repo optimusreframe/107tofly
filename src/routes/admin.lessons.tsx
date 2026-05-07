@@ -33,6 +33,7 @@ type Lesson = {
   id: string; slug: string; title: string; summary: string; body_md: string;
   topic: string; week: number; day: number; order_index: number; est_minutes: number;
   status: string; locale: string; sources: unknown; updated_at?: string;
+  version?: number; updated_by?: string | null;
 };
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"];
@@ -180,9 +181,9 @@ function AdminLessonsPage() {
         </div>
 
         {!lessons ? (
-          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">Loading…</div>
+          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">{t("admin.common.loading")}</div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">No lessons found.</div>
+          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">{t("admin.common.empty")}</div>
         ) : isMobile ? (
           <div className="space-y-2">
             {filtered.map((l) => (
@@ -192,7 +193,7 @@ function AdminLessonsPage() {
                     <div className="font-medium">{l.title}</div>
                     <div className="text-xs text-muted-foreground">W{l.week}·D{l.day} · {l.topic}</div>
                   </div>
-                  <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status}</Badge>
+                  <Badge variant={l.status === "published" ? "default" : "secondary"}>{t(`admin.status.${l.status}`)}</Badge>
                 </div>
               </button>
             ))}
@@ -202,10 +203,10 @@ function AdminLessonsPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left">Title</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
                   <th className="px-3 py-2 text-left">W/D</th>
-                  <th className="px-3 py-2 text-left">Topic</th>
-                  <th className="px-3 py-2 text-left">Status</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.status")}</th>
                   <th className="px-3 py-2 text-left">Min</th>
                   <th className="px-3 py-2"></th>
                 </tr>
@@ -219,15 +220,15 @@ function AdminLessonsPage() {
                     </td>
                     <td className="px-3 py-2 tabular-nums">W{l.week}·D{l.day}</td>
                     <td className="px-3 py-2">{l.topic}</td>
-                    <td className="px-3 py-2"><Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status}</Badge></td>
+                    <td className="px-3 py-2"><Badge variant={l.status === "published" ? "default" : "secondary"}>{t(`admin.status.${l.status}`)}</Badge></td>
                     <td className="px-3 py-2 tabular-nums">{l.est_minutes}</td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex justify-end gap-1">
                         {l.status === "published" && (
-                          <Link to="/lessons/$slug" params={{ slug: l.slug }} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title="Open"><ExternalLink className="h-4 w-4" /></Link>
+                          <Link to="/lessons/$slug" params={{ slug: l.slug }} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={t("admin.lessons.openStudent")}><ExternalLink className="h-4 w-4" /></Link>
                         )}
-                        <button onClick={() => onDuplicate(l)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title="Duplicate"><Copy className="h-4 w-4" /></button>
-                        <button onClick={() => onArchive(l)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={l.status === "archived" ? "Restore" : "Archive"}>
+                        <button onClick={() => onDuplicate(l)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={t("admin.common.duplicate")}><Copy className="h-4 w-4" /></button>
+                        <button onClick={() => onArchive(l)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={l.status === "archived" ? t("admin.common.restore") : t("admin.common.archive")}>
                           {l.status === "archived" ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                         </button>
                       </div>
@@ -242,40 +243,51 @@ function AdminLessonsPage() {
 
       <Sheet open={!!draft} onOpenChange={(o) => { if (!o) { setDraft(null); setEditing(null); } }}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-3xl">
-          <SheetHeader><SheetTitle>{editing ? "Edit lesson" : "New lesson"}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>{editing ? t("admin.lessons.edit") : t("admin.lessons.new")}</SheetTitle></SheetHeader>
           {draft && (
             <div className="mt-4 grid gap-3">
+              {editing && (
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                  <Badge variant="secondary">{t("admin.common.version")} {editing.version ?? 1}</Badge>
+                  <Badge variant="secondary">{t(`admin.status.${editing.status}`)}</Badge>
+                  {editing.updated_at && <span>{t("admin.common.updated")}: {new Date(editing.updated_at).toLocaleString()}</span>}
+                  {editing.updated_by && <span>· {t("admin.common.updatedBy")}: {editing.updated_by.slice(0, 8)}</span>}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-xs"><span className="text-muted-foreground">Title</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.topic") /* title */}</span>
                   <Input value={draft.title ?? ""} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></label>
-                <label className="text-xs"><span className="text-muted-foreground">Slug</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.slug")}</span>
                   <Input value={draft.slug ?? ""} onChange={(e) => setDraft({ ...draft, slug: e.target.value })} /></label>
               </div>
-              <label className="text-xs"><span className="text-muted-foreground">Summary</span>
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.summary")}</span>
                 <Textarea rows={2} value={draft.summary ?? ""} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} /></label>
               <div className="grid grid-cols-4 gap-2">
-                <label className="text-xs"><span className="text-muted-foreground">Week</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.week")}</span>
                   <Input type="number" value={draft.week ?? 1} onChange={(e) => setDraft({ ...draft, week: Number(e.target.value) })} /></label>
-                <label className="text-xs"><span className="text-muted-foreground">Day</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.day")}</span>
                   <Input type="number" value={draft.day ?? 1} onChange={(e) => setDraft({ ...draft, day: Number(e.target.value) })} /></label>
-                <label className="text-xs"><span className="text-muted-foreground">Order</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.orderIndex")}</span>
                   <Input type="number" value={draft.order_index ?? 0} onChange={(e) => setDraft({ ...draft, order_index: Number(e.target.value) })} /></label>
-                <label className="text-xs"><span className="text-muted-foreground">Min</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.estMinutes")}</span>
                   <Input type="number" value={draft.est_minutes ?? 30} onChange={(e) => setDraft({ ...draft, est_minutes: Number(e.target.value) })} /></label>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <label className="text-xs"><span className="text-muted-foreground">Topic</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.topic")}</span>
                   <Select value={draft.topic ?? "regulations"} onValueChange={(v) => setDraft({ ...draft, topic: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{TOPICS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    <SelectContent>{TOPICS.map((tp) => <SelectItem key={tp} value={tp}>{tp}</SelectItem>)}</SelectContent>
                   </Select></label>
-                <label className="text-xs"><span className="text-muted-foreground">Status</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.status")}</span>
                   <Select value={draft.status ?? "draft"} onValueChange={(v) => setDraft({ ...draft, status: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`admin.status.${s}`)}</SelectItem>)}</SelectContent>
                   </Select></label>
-                <label className="text-xs"><span className="text-muted-foreground">Locale</span>
-                  <Input value={draft.locale ?? "en"} onChange={(e) => setDraft({ ...draft, locale: e.target.value })} /></label>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.locale")}</span>
+                  <Select value={draft.locale ?? "en"} onValueChange={(v) => setDraft({ ...draft, locale: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{LOCALES.map((lc) => <SelectItem key={lc} value={lc}>{lc}</SelectItem>)}</SelectContent>
+                  </Select></label>
               </div>
               <label className="text-xs"><span className="text-muted-foreground">Body (Markdown)</span>
                 <Textarea rows={10} value={draft.body_md ?? ""} onChange={(e) => setDraft({ ...draft, body_md: e.target.value })} className="font-mono text-xs" /></label>
