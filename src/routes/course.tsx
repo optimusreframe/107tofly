@@ -1,129 +1,88 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { CheckCircle2, Lock, PlayCircle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { getLessons } from "@/server/lessons.functions";
+
+type Lesson = Awaited<ReturnType<typeof getLessons>>[number];
 
 export const Route = createFileRoute("/course")({
   head: () => ({
     meta: [
       { title: "Curso 4 semanas — 107toFly" },
-      {
-        name: "description",
-        content:
-          "Ruta diaria de 2 h para aprobar el FAA Part 107: regulaciones, espacio aéreo, sectional charts, clima, performance, ADM y simulacros UAG.",
-      },
+      { name: "description", content: "Ruta diaria de 2h alineada al ACS Part 107: 28 lecciones reales con tracking de progreso." },
       { property: "og:title", content: "Curso 4 semanas — 107toFly" },
-      {
-        property: "og:description",
-        content: "28 días estructurados con lecciones, flashcards y simulacros UAG.",
-      },
+      { property: "og:description", content: "28 días con lecciones reales, fuentes oficiales y XP." },
     ],
   }),
   component: Course,
 });
 
-const weeks = [
-  {
-    title: "Semana 1 · Reglas y rol del Remote PIC",
-    days: [
-      "Panorama Part 107",
-      "Responsabilidades del Remote PIC",
-      "Limitaciones operacionales",
-      "Operaciones sobre personas",
-      "Remote ID y registro",
-      "Waivers y autorizaciones",
-      "Repaso + mini examen",
-    ],
-  },
-  {
-    title: "Semana 2 · Espacio aéreo y sectional charts",
-    days: [
-      "National Airspace System",
-      "Class B y Class C",
-      "Class D y Class E",
-      "Class G y zonas especiales",
-      "Sectional charts I",
-      "Sectional charts II",
-      "Repaso + práctica con mapas",
-    ],
-  },
-  {
-    title: "Semana 3 · Clima, performance y operaciones",
-    days: [
-      "Principios de clima",
-      "METAR",
-      "TAF",
-      "Fuentes meteorológicas",
-      "Loading & performance",
-      "Comunicaciones y aeropuertos",
-      "Repaso + mini examen técnico",
-    ],
-  },
-  {
-    title: "Semana 4 · Seguridad, emergencias y simulacros",
-    days: [
-      "ADM y gestión de riesgo",
-      "Fisiología",
-      "Emergencias",
-      "Mantenimiento y preflight",
-      "Simulacro completo #1",
-      "Repaso dirigido",
-      "Simulacro completo #2",
-    ],
-  },
-];
-
 function Course() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [lessons, setLessons] = useState<Lesson[] | null>(null);
+
+  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [loading, user, navigate]);
+  useEffect(() => { if (user) getLessons().then(setLessons); }, [user]);
+
+  if (loading || !user) {
+    return <PageShell><div className="mx-auto max-w-5xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+  }
+
+  const weeks = [1, 2, 3, 4];
+  const weekTitles: Record<number, string> = {
+    1: "Semana 1 · Reglas y Remote PIC",
+    2: "Semana 2 · Espacio aéreo y sectional charts",
+    3: "Semana 3 · Clima, performance y operaciones",
+    4: "Semana 4 · Seguridad, emergencias y simulacros",
+  };
+
   return (
     <PageShell>
       <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
-        <div className="text-xs font-medium uppercase tracking-wider text-primary">
-          Ruta de estudio
-        </div>
+        <div className="text-xs font-medium uppercase tracking-wider text-primary">Ruta de estudio</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
           4 semanas. <span className="text-gradient">2 horas al día.</span>
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          Una ruta calibrada al ACS oficial. Cada día combina microlección, ejemplos
-          guiados, práctica interactiva, flashcards y un quiz medible.
+          Ruta calibrada al ACS oficial. Cada día combina microlección, fuentes, flashcards y quiz.
         </p>
 
         <div className="mt-12 space-y-6">
-          {weeks.map((w, wi) => (
-            <div key={w.title} className="glass rounded-3xl p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl font-semibold">{w.title}</h2>
-                <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">
-                  Semana {wi + 1}
-                </span>
+          {weeks.map((wi) => {
+            const items = (lessons ?? []).filter((l) => l.week === wi);
+            return (
+              <div key={wi} className="glass rounded-3xl p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display text-xl font-semibold">{weekTitles[wi]}</h2>
+                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">Semana {wi}</span>
+                </div>
+                <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                  {items.length === 0 && <div className="text-sm text-muted-foreground">Cargando…</div>}
+                  {items.map((l) => {
+                    const prevDone = l.order_index === 1 || (lessons ?? []).some((x) => x.order_index === l.order_index - 1 && x.completed);
+                    const unlocked = l.completed || prevDone;
+                    return (
+                      <Link
+                        key={l.slug}
+                        to="/lessons/$slug"
+                        params={{ slug: l.slug }}
+                        className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/60 px-4 py-3 text-sm transition hover:bg-accent"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-mono">D{l.order_index}</span>
+                          <span className="truncate">{l.title}</span>
+                        </div>
+                        {l.completed ? <CheckCircle2 className="h-4 w-4 text-success" /> : unlocked ? <PlayCircle className="h-4 w-4 text-primary" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                {w.days.map((d, di) => {
-                  const unlocked = wi === 0 && di < 2;
-                  const done = wi === 0 && di === 0;
-                  return (
-                    <div
-                      key={d}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/60 px-4 py-3 text-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-7 w-7 place-items-center rounded-full bg-muted text-xs font-mono">
-                          D{wi * 7 + di + 1}
-                        </span>
-                        <span>{d}</span>
-                      </div>
-                      {done ? (
-                        <CheckCircle2 className="h-4 w-4 text-success" />
-                      ) : unlocked ? (
-                        <PlayCircle className="h-4 w-4 text-primary" />
-                      ) : (
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </PageShell>
