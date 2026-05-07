@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           display_name: string
@@ -207,6 +234,8 @@ export type Database = {
           experience_level: string | null
           id: string
           locale: string | null
+          membership_plan: string
+          membership_status: string
           study_goal_date: string | null
           updated_at: string
         }
@@ -217,6 +246,8 @@ export type Database = {
           experience_level?: string | null
           id: string
           locale?: string | null
+          membership_plan?: string
+          membership_status?: string
           study_goal_date?: string | null
           updated_at?: string
         }
@@ -227,6 +258,8 @@ export type Database = {
           experience_level?: string | null
           id?: string
           locale?: string | null
+          membership_plan?: string
+          membership_status?: string
           study_goal_date?: string | null
           updated_at?: string
         }
