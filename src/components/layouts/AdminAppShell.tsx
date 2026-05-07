@@ -100,7 +100,7 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
             >
               <ul className="flex min-w-max gap-1 px-3 py-2">
                 {ADMIN_NAV.map((item) => {
-                  const active = path === item.to;
+                  const active = item.to === "/admin" ? path === "/admin" : path === item.to || path.startsWith(item.to + "/");
                   const Icon = item.icon;
                   return (
                     <li key={item.to}>
