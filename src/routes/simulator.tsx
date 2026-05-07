@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
@@ -32,6 +33,7 @@ const EXAM_LEN = 60;
 const EXAM_SECONDS = 2 * 60 * 60;
 
 function Simulator() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const fetchQ = useServerFn(fetchPracticeQuestions);

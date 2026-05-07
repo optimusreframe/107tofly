@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { CheckCircle2, Lock, PlayCircle } from "lucide-react";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/course")({
 });
 
 function Course() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[] | null>(null);

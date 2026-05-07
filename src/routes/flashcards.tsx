@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
@@ -20,6 +21,7 @@ type Grade = "again" | "hard" | "good" | "easy";
 interface Card { id: string; front: string; back: string; topic: string | null; due_date: string; interval_days: number }
 
 function Flashcards() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const fetchDue = useServerFn(fetchDueFlashcards);

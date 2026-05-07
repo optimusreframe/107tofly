@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { Award, Plane, Map, CloudSun, Shield, Trophy, Sparkles, Target, Zap, BookMarked } from "lucide-react";
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/achievements")({
 });
 
 function Achievements() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState<Awaited<ReturnType<typeof getAchievements>> | null>(null);

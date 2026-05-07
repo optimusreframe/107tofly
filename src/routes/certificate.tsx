@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
@@ -27,6 +28,7 @@ const reqs = [
 interface CertRow { id: string; display_name: string; final_score: number; modules_completed: number; hours_estimated: number; issued_at: string }
 
 function Certificate() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const issue = useServerFn(issueCertificate);
