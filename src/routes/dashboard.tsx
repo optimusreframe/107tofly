@@ -77,12 +77,16 @@ function Dashboard() {
   const fetchDue = useServerFn(fetchDueFlashcards);
   const fetchReadiness = useServerFn(getStudentReadiness);
   const fetchMastery = useServerFn(getStudentTopicMastery);
+  const fetchNext = useServerFn(getNextLesson);
+  const fetchActivity = useServerFn(getStudentRecentActivity);
   const [progress, setProgress] = useState<ProgressRow | null>(null);
   const [name, setName] = useState<string>("Pilot");
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [activity, setActivity] = useState<number[] | null>(null);
   const [readinessData, setReadinessData] = useState<Readiness | null>(null);
   const [mastery, setMastery] = useState<Mastery | null>(null);
+  const [nextLesson, setNextLesson] = useState<NextLesson | null>(null);
+  const [recent, setRecent] = useState<ActivityItem[] | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
