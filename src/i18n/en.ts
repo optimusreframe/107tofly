@@ -443,12 +443,6 @@ export default {
       goDashboard: "Go to dashboard",
       another: "Another round",
     },
-    simulator: { next: "Next", finish: "Finish", loading: "Loading questions…" },
-    flashcards: {
-      done: "Session complete",
-      reviewed: "You reviewed {{n}} cards. Next reviews scheduled by SM-2.",
-    },
-    dashboard: { loadingActivity: "Loading activity…" },
     accessDenied: "Access denied",
     backToDashboard: "Back to dashboard",
     readiness: "Readiness",
