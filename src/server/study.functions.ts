@@ -104,13 +104,32 @@ export const completeLesson = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    // detect prior completion to keep XP idempotent per lesson
+    const { data: existing } = await supabase
+      .from("lesson_completions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("lesson_slug", data.lesson_slug)
+      .maybeSingle();
     await supabase.from("lesson_completions").upsert({
       user_id: userId,
       lesson_slug: data.lesson_slug,
       topic: data.topic,
     }, { onConflict: "user_id,lesson_slug" });
+    let xp_awarded_now = 0;
+    if (!existing) {
+      const { lessonCompletionXp } = await getStudySettings();
+      const { data: prog } = await supabase
+        .from("progress").select("xp").eq("user_id", userId).maybeSingle();
+      const newXp = (prog?.xp ?? 0) + Number(lessonCompletionXp ?? 15);
+      await supabase
+        .from("progress")
+        .update({ xp: newXp, updated_at: new Date().toISOString() })
+        .eq("user_id", userId);
+      xp_awarded_now = Number(lessonCompletionXp ?? 15);
+    }
     await recomputeProgress(supabase, userId);
-    return { ok: true };
+    return { ok: true, xp_awarded_now };
   });
 
 // ============ FLASHCARD: GRADE (SM-2 simplified) ============
