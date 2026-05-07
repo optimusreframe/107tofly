@@ -64,8 +64,11 @@ interface ProgressRow {
 function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const fetchDue = useServerFn(fetchDueFlashcards);
   const [progress, setProgress] = useState<ProgressRow | null>(null);
   const [name, setName] = useState<string>("Pilot");
+  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [activity, setActivity] = useState<number[] | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -87,7 +90,33 @@ function Dashboard() {
       .then(({ data }) => {
         if (data?.display_name) setName(data.display_name);
       });
-  }, [user]);
+    fetchDue().then((d) => setDueCount(Array.isArray(d) ? d.length : 0)).catch(() => setDueCount(0));
+
+    // Build last-7-days activity from real signals (lessons + quizzes + sims)
+    const since = new Date();
+    since.setDate(since.getDate() - 6);
+    since.setHours(0, 0, 0, 0);
+    const sinceIso = since.toISOString();
+    Promise.all([
+      supabase.from("lesson_completions").select("completed_at").eq("user_id", user.id).gte("completed_at", sinceIso),
+      supabase.from("quiz_attempts").select("started_at").eq("user_id", user.id).gte("started_at", sinceIso),
+      supabase.from("exam_simulations").select("started_at").eq("user_id", user.id).gte("started_at", sinceIso),
+    ]).then(([lc, qa, es]) => {
+      const counts = new Array(7).fill(0) as number[];
+      const bucket = (iso?: string | null) => {
+        if (!iso) return;
+        const d = new Date(iso);
+        d.setHours(0, 0, 0, 0);
+        const idx = Math.round((d.getTime() - since.getTime()) / (1000 * 60 * 60 * 24));
+        if (idx >= 0 && idx < 7) counts[idx] += 1;
+      };
+      (lc.data ?? []).forEach((r: { completed_at: string }) => bucket(r.completed_at));
+      (qa.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
+      (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
+      setActivity(counts);
+    }).catch(() => setActivity([]));
+  }, [user, fetchDue]);
+
 
   const readiness = progress?.readiness ?? 0;
   const ringValues = [
