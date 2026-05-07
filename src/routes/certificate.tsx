@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { issueCertificate } from "@/server/study.functions";
@@ -104,10 +104,10 @@ function Certificate() {
     doc.save(`107toFly-Certificate-${cert.id.slice(0, 8)}.pdf`);
   };
 
-  if (loading || !user) return <PageShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+  if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">Course Completion</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
@@ -180,6 +180,6 @@ function Certificate() {
           </div>
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

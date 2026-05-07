@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock } from "lucide-react";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getLesson, getLessons } from "@/server/lessons.functions";
 import { completeLesson } from "@/server/study.functions";
@@ -40,17 +40,17 @@ function LessonDetail() {
   }, [slug, user]);
 
   if (loading || !user || !data) {
-    return <PageShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
   }
 
   if (!data.lesson) {
     return (
-      <PageShell>
+      <StudentAppShell>
         <div className="mx-auto max-w-3xl px-6 pt-24">
           <h1 className="font-display text-3xl font-semibold">Lección no encontrada</h1>
           <Link to="/lessons" className="mt-4 inline-block text-primary underline">← Volver a lecciones</Link>
         </div>
-      </PageShell>
+      </StudentAppShell>
     );
   }
 
@@ -74,7 +74,7 @@ function LessonDetail() {
   };
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <article className="mx-auto max-w-3xl px-6 pt-12 md:pt-16">
         <Link to="/lessons" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Lecciones
@@ -139,6 +139,6 @@ function LessonDetail() {
           ) : <span />}
         </nav>
       </article>
-    </PageShell>
+    </StudentAppShell>
   );
 }

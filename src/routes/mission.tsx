@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useMemo, useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle, Plane } from "lucide-react";
 
@@ -55,7 +55,7 @@ function Mission() {
   const Icon = statusUi.icon;
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-6xl px-6 pt-12 md:pt-16">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">Mission Planner</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-5xl">
@@ -160,7 +160,7 @@ function Mission() {
           </div>
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }
 

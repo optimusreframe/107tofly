@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchDueFlashcards, gradeFlashcard } from "@/server/study.functions";
 import { RotateCcw, Sparkles } from "lucide-react";
@@ -73,14 +73,14 @@ function Flashcards() {
   }, [cards, idx, flipped]);
 
   if (loading || !user || cards === null) {
-    return <PageShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+    return <StudentAppShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
   }
 
 
   const done = idx >= cards.length;
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-2xl px-6 pt-12 md:pt-16">
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground">{cards.length === 0 ? "Sin tarjetas vencidas" : `Tarjeta ${Math.min(idx + 1, cards.length)} de ${cards.length}`}</div>
@@ -140,6 +140,6 @@ function Flashcards() {
           </>
         )}
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

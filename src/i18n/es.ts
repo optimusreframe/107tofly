@@ -6,8 +6,13 @@ export default {
     course: "Curso",
     simulator: "Simulador",
     flycoach: "FlyCoach",
+    flashcards: "Flashcards",
+    achievements: "Logros",
+    certificate: "Certificado",
     signin: "Acceder",
     signout: "Salir",
+    skip: "Saltar al contenido",
+    more: "Más",
   },
   common: {
     loading: "Cargando…",
