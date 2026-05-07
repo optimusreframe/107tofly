@@ -380,6 +380,38 @@ function Dashboard() {
               })}
             </div>
           )}
+
+          {/* Real recent activity list */}
+          <div className="mt-6">
+            {recent === null ? (
+              <div className="text-sm text-muted-foreground">{t("common.loading")}</div>
+            ) : recent.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                {t("dashboard.activity.none")}
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {recent.map((r, idx) => {
+                  const Icon = r.type === "lesson_completed" ? CheckCircle2 : r.type === "quiz_attempt" ? Target : r.type === "exam_simulation" ? Trophy : r.type === "certificate_issued" ? Award : Brain;
+                  const inner = (
+                    <div className="flex items-center gap-3 py-2.5">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-primary"><Icon className="h-4 w-4" /></span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">{t(`dashboard.activity.${r.type}`)} · {r.title}</div>
+                        {r.subtitle && <div className="truncate text-xs text-muted-foreground">{r.subtitle}</div>}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</div>
+                    </div>
+                  );
+                  return (
+                    <li key={idx}>
+                      {r.href ? <a href={r.href} className="block hover:bg-accent/40 rounded-xl px-2 -mx-2">{inner}</a> : inner}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
     </StudentAppShell>
