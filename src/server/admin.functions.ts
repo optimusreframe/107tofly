@@ -852,3 +852,194 @@ export const archiveAdminMediaAsset = createServerFn({ method: "POST" })
     await logAudit(context.userId, null, data.restore ? "media_restore" : "media_archive", { entity_id: data.id });
     return { asset: row };
   });
+
+// ============== APP SETTINGS ==============
+
+const SETTING_VALUE_SCHEMA = z.union([
+  z.string(), z.number(), z.boolean(), z.null(),
+  z.array(z.union([z.string(), z.number(), z.boolean()])),
+  z.record(z.string(), z.any()),
+]);
+
+export const getAdminSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("app_settings" as never)
+      .select("*")
+      .order("category", { ascending: true })
+      .order("key", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { settings: data ?? [] };
+  });
+
+export const updateAdminSetting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ key: z.string().min(1), value: SETTING_VALUE_SCHEMA }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: existing } = await supabaseAdmin
+      .from("app_settings" as never)
+      .select("category")
+      .eq("key", data.key)
+      .maybeSingle();
+    const { data: row, error } = await supabaseAdmin
+      .from("app_settings" as never)
+      .update({ value: data.value as never, updated_by: context.userId } as never)
+      .eq("key", data.key)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "setting_update", {
+      entity: "setting", key: data.key,
+      category: (existing as { category?: string } | null)?.category ?? null,
+    });
+    return { setting: row };
+  });
+
+export const updateAdminSettingsBulk = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ settings: z.record(z.string(), SETTING_VALUE_SCHEMA) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const keys = Object.keys(data.settings);
+    for (const key of keys) {
+      await supabaseAdmin
+        .from("app_settings" as never)
+        .update({ value: data.settings[key] as never, updated_by: context.userId } as never)
+        .eq("key", key);
+    }
+    await logAudit(context.userId, null, "settings_bulk_update", {
+      entity: "setting", keys,
+    });
+    return { ok: true, count: keys.length };
+  });
+
+export const getPublicSettings = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data } = await supabaseAdmin
+      .from("app_settings" as never)
+      .select("key, value, category")
+      .eq("is_public", true);
+    return { settings: data ?? [] };
+  });
+
+// ============== CERTIFICATES ADMIN ==============
+
+export const getAdminCertificates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const [certsRes, authRes] = await Promise.all([
+      supabaseAdmin
+        .from("certificates")
+        .select("*")
+        .order("issued_at", { ascending: false })
+        .limit(1000),
+      supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
+    ]);
+    const emailMap = new Map<string, string>();
+    for (const u of authRes.data?.users ?? []) {
+      if (u.id && u.email) emailMap.set(u.id, u.email);
+    }
+    const certs = (certsRes.data ?? []).map((c: Record<string, unknown>) => ({
+      ...c,
+      email: emailMap.get(c.user_id as string) ?? null,
+    }));
+    return { certificates: certs };
+  });
+
+export const getAdminCertificateDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: cert, error } = await supabaseAdmin
+      .from("certificates").select("*").eq("id", data.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!cert) return { certificate: null };
+    const userId = (cert as { user_id: string }).user_id;
+    const [authRes, qaRes, esRes, lcRes, audit] = await Promise.all([
+      supabaseAdmin.auth.admin.getUserById(userId),
+      supabaseAdmin.from("quiz_attempts").select("score").eq("user_id", userId),
+      supabaseAdmin.from("exam_simulations").select("score").eq("user_id", userId).order("finished_at", { ascending: false }).limit(1),
+      supabaseAdmin.from("lesson_completions").select("id", { count: "exact", head: true }).eq("user_id", userId),
+      supabaseAdmin.from("admin_audit_logs").select("*").eq("target_user_id", userId).in("action", ["certificate_revoke","certificate_reissue"]).order("created_at", { ascending: false }).limit(20),
+    ]);
+    const totalLessons = await supabaseAdmin.from("lessons").select("*", { count: "exact", head: true });
+    const quizScores = (qaRes.data ?? []).map((r: { score: number | null }) => Number(r.score ?? 0));
+    const quizAvg = quizScores.length ? quizScores.reduce((a, b) => a + b, 0) / quizScores.length : null;
+    const latestExam = (esRes.data?.[0] as { score: number | null } | undefined)?.score ?? null;
+    const lessonsDone = lcRes.count ?? 0;
+    const totalLessonCount = totalLessons.count ?? 0;
+    const completionPct = totalLessonCount ? Math.round((lessonsDone / totalLessonCount) * 100) : 0;
+    return {
+      certificate: cert,
+      email: authRes.data?.user?.email ?? null,
+      quizAverage: quizAvg,
+      latestExamScore: latestExam,
+      courseCompletionPct: completionPct,
+      auditLogs: audit.data ?? [],
+    };
+  });
+
+export const revokeAdminCertificate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), reason: z.string().min(1).max(500) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: row, error } = await supabaseAdmin
+      .from("certificates")
+      .update({
+        status: "revoked",
+        revoked_at: new Date().toISOString(),
+        revoked_by: context.userId,
+        revoke_reason: data.reason,
+      } as never)
+      .eq("id", data.id)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, (row as { user_id: string }).user_id, "certificate_revoke", {
+      entity: "certificate", certificate_id: data.id, reason: data.reason,
+    });
+    return { certificate: row };
+  });
+
+export const reissueAdminCertificate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: src, error: e1 } = await supabaseAdmin
+      .from("certificates").select("*").eq("id", data.id).maybeSingle();
+    if (e1 || !src) throw new Error(e1?.message ?? "not found");
+    const s = src as Record<string, unknown>;
+    // Revoke the old one (if active)
+    if (s.status === "active") {
+      await supabaseAdmin.from("certificates").update({
+        status: "revoked",
+        revoked_at: new Date().toISOString(),
+        revoked_by: context.userId,
+        revoke_reason: "Reissued",
+      } as never).eq("id", data.id);
+    }
+    const { data: row, error } = await supabaseAdmin.from("certificates").insert({
+      user_id: s.user_id,
+      display_name: s.display_name,
+      final_score: s.final_score,
+      modules_completed: s.modules_completed,
+      hours_estimated: s.hours_estimated,
+      status: "active",
+    } as never).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, (row as { user_id: string }).user_id, "certificate_reissue", {
+      entity: "certificate", certificate_id: (row as { id: string }).id, source_id: data.id,
+    });
+    return { certificate: row };
+  });
