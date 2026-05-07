@@ -37,13 +37,10 @@ function Flashcards() {
     fetchDue().then((d) => setCards(d as Card[]));
   }, [user, fetchDue]);
 
-  if (loading || !user || cards === null) {
-    return <PageShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
-  }
-
   const reset = () => { fetchDue().then((d) => { setCards(d as Card[]); setIdx(0); setFlipped(false); setReviewed(0); }); };
 
   const submit = async (g: Grade) => {
+    if (!cards || idx >= cards.length) return;
     const card = cards[idx];
     await grade({ data: { flashcard_id: card.id, grade: g } });
     setReviewed((n) => n + 1);
@@ -51,6 +48,34 @@ function Flashcards() {
     if (idx + 1 < cards.length) setIdx(idx + 1);
     else setIdx(cards.length);
   };
+
+  // Keyboard shortcuts: Space = flip, 1-4 = grade
+  useEffect(() => {
+    if (!cards || cards.length === 0 || idx >= cards.length) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setFlipped((f) => !f);
+        return;
+      }
+      if (!flipped) return;
+      const map: Record<string, Grade> = { "1": "again", "2": "hard", "3": "good", "4": "easy" };
+      const g = map[e.key];
+      if (g) {
+        e.preventDefault();
+        void submit(g);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cards, idx, flipped]);
+
+  if (loading || !user || cards === null) {
+    return <PageShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+  }
+
 
   const done = idx >= cards.length;
 
@@ -63,6 +88,13 @@ function Flashcards() {
             <RotateCcw className="h-3 w-3" /> Recargar
           </button>
         </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Atajos: <kbd className="rounded bg-muted px-1">Espacio</kbd> voltea ·
+          {" "}<kbd className="rounded bg-muted px-1">1</kbd> Otra vez ·
+          {" "}<kbd className="rounded bg-muted px-1">2</kbd> Difícil ·
+          {" "}<kbd className="rounded bg-muted px-1">3</kbd> Bien ·
+          {" "}<kbd className="rounded bg-muted px-1">4</kbd> Fácil
+        </p>
 
         {cards.length === 0 ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
@@ -87,19 +119,20 @@ function Flashcards() {
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">{flipped ? "Respuesta" : "Pregunta"}</div>
                 <div className="mt-3 font-display text-2xl font-semibold leading-snug md:text-3xl">{flipped ? cards[idx].back : cards[idx].front}</div>
-                {!flipped && <div className="mt-6 text-xs text-muted-foreground">Toca para ver la respuesta</div>}
+                {!flipped && <div className="mt-6 text-xs text-muted-foreground">Toca o presiona <kbd className="rounded bg-muted px-1.5 py-0.5">Espacio</kbd> para voltear</div>}
               </div>
             </button>
             {flipped && (
-              <div className="mt-4 grid grid-cols-4 gap-2">
+              <div className="mt-4 grid grid-cols-4 gap-2" aria-live="polite">
                 {([
-                  { g: "again" as Grade, l: "Otra vez", c: "bg-destructive text-destructive-foreground" },
-                  { g: "hard" as Grade, l: "Difícil", c: "bg-warning text-warning-foreground" },
-                  { g: "good" as Grade, l: "Bien", c: "bg-primary text-primary-foreground" },
-                  { g: "easy" as Grade, l: "Fácil", c: "bg-success text-success-foreground" },
+                  { g: "again" as Grade, l: "Otra vez", k: "1", c: "bg-destructive text-destructive-foreground" },
+                  { g: "hard" as Grade, l: "Difícil", k: "2", c: "bg-warning text-warning-foreground" },
+                  { g: "good" as Grade, l: "Bien", k: "3", c: "bg-primary text-primary-foreground" },
+                  { g: "easy" as Grade, l: "Fácil", k: "4", c: "bg-success text-success-foreground" },
                 ]).map((b) => (
-                  <button key={b.g} onClick={() => submit(b.g)} className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}>
-                    {b.l}
+                  <button key={b.g} onClick={() => submit(b.g)} aria-keyshortcuts={b.k} className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}>
+                    <span className="block">{b.l}</span>
+                    <span className="mt-0.5 block text-[10px] opacity-75">{b.k}</span>
                   </button>
                 ))}
               </div>

@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { fetchDueFlashcards } from "@/server/study.functions";
 import {
   Flame,
   Sparkles,
@@ -25,11 +27,7 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const rings = [
-  { label: "Estudio", value: 78, color: "oklch(0.62 0.2 255)" },
-  { label: "Práctica", value: 64, color: "oklch(0.7 0.16 235)" },
-  { label: "Repaso", value: 92, color: "oklch(0.68 0.16 155)" },
-];
+const DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
 
 function Ring({ value, color, size = 110 }: { value: number; color: string; size?: number }) {
   const r = size / 2 - 8;
@@ -66,8 +64,11 @@ interface ProgressRow {
 function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const fetchDue = useServerFn(fetchDueFlashcards);
   const [progress, setProgress] = useState<ProgressRow | null>(null);
   const [name, setName] = useState<string>("Pilot");
+  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [activity, setActivity] = useState<number[] | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -89,7 +90,33 @@ function Dashboard() {
       .then(({ data }) => {
         if (data?.display_name) setName(data.display_name);
       });
-  }, [user]);
+    fetchDue().then((d) => setDueCount(Array.isArray(d) ? d.length : 0)).catch(() => setDueCount(0));
+
+    // Build last-7-days activity from real signals (lessons + quizzes + sims)
+    const since = new Date();
+    since.setDate(since.getDate() - 6);
+    since.setHours(0, 0, 0, 0);
+    const sinceIso = since.toISOString();
+    Promise.all([
+      supabase.from("lesson_completions").select("completed_at").eq("user_id", user.id).gte("completed_at", sinceIso),
+      supabase.from("quiz_attempts").select("started_at").eq("user_id", user.id).gte("started_at", sinceIso),
+      supabase.from("exam_simulations").select("started_at").eq("user_id", user.id).gte("started_at", sinceIso),
+    ]).then(([lc, qa, es]) => {
+      const counts = new Array(7).fill(0) as number[];
+      const bucket = (iso?: string | null) => {
+        if (!iso) return;
+        const d = new Date(iso);
+        d.setHours(0, 0, 0, 0);
+        const idx = Math.round((d.getTime() - since.getTime()) / (1000 * 60 * 60 * 24));
+        if (idx >= 0 && idx < 7) counts[idx] += 1;
+      };
+      (lc.data ?? []).forEach((r: { completed_at: string }) => bucket(r.completed_at));
+      (qa.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
+      (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
+      setActivity(counts);
+    }).catch(() => setActivity([]));
+  }, [user, fetchDue]);
+
 
   const readiness = progress?.readiness ?? 0;
   const ringValues = [
@@ -172,24 +199,25 @@ function Dashboard() {
 
           {/* Next lesson */}
           <Link
-            to="/lesson"
+            to="/lessons"
             className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
           >
             <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
             <div>
-              <div className="text-xs uppercase tracking-wider text-primary">Siguiente lección</div>
+              <div className="text-xs uppercase tracking-wider text-primary">Plan de estudio</div>
               <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
-                Class B y autorizaciones LAANC
+                Continúa con tu plan de 28 días
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                25 min · 14 CFR 107.41 · ACS UA.I.B.K1
+                Lecciones diarias · ACS Part 107
               </p>
             </div>
             <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <PlayCircle className="h-5 w-5" /> Continuar
+              <PlayCircle className="h-5 w-5" /> Ver lecciones
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </div>
           </Link>
+
         </div>
 
         {/* Action grid */}
@@ -199,8 +227,10 @@ function Dashboard() {
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
           >
             <Brain className="h-5 w-5 text-primary" />
-            <div className="mt-3 font-display text-lg font-semibold">8 flashcards vencen hoy</div>
-            <div className="text-sm text-muted-foreground">Spaced repetition · 4 min</div>
+            <div className="mt-3 font-display text-lg font-semibold">
+              {dueCount === null ? "Flashcards" : dueCount === 0 ? "Sin tarjetas vencidas" : `${dueCount} ${dueCount === 1 ? "flashcard vence hoy" : "flashcards vencen hoy"}`}
+            </div>
+            <div className="text-sm text-muted-foreground">Spaced repetition · SM-2</div>
           </Link>
           <Link
             to="/simulator"
@@ -236,17 +266,29 @@ function Dashboard() {
               <Clock className="h-3.5 w-3.5" /> Últimos 7 días
             </span>
           </div>
-          <div className="mt-4 flex h-24 items-end gap-2">
-            {[40, 65, 30, 80, 55, 90, 70].map((v, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-md bg-[var(--gradient-sky)]"
-                  style={{ height: `${v}%` }}
-                />
-                <div className="text-[10px] text-muted-foreground">{["L","M","X","J","V","S","D"][i]}</div>
-              </div>
-            ))}
-          </div>
+          {activity === null ? (
+            <div className="mt-4 text-sm text-muted-foreground">Cargando actividad…</div>
+          ) : activity.every((v) => v === 0) ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Aún no hay suficiente actividad. Completa una lección o un quiz para empezar a ver tu progreso aquí.
+            </div>
+          ) : (
+            <div className="mt-4 flex h-24 items-end gap-2" role="img" aria-label="Actividad de los últimos 7 días">
+              {activity.map((v, i) => {
+                const max = Math.max(...activity, 1);
+                const pct = (v / max) * 100;
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-md bg-[var(--gradient-sky)]"
+                      style={{ height: `${Math.max(pct, v > 0 ? 8 : 2)}%`, opacity: v === 0 ? 0.25 : 1 }}
+                    />
+                    <div className="text-[10px] text-muted-foreground">{DAY_LABELS[i]}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </PageShell>
