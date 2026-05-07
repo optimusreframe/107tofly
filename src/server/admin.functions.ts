@@ -436,7 +436,9 @@ export const createAdminLesson = createServerFn({ method: "POST" })
   .inputValidator((d) => lessonInputSchema.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const payload: Record<string, unknown> = {
+    const conflicts = await checkLessonConflicts(data);
+    if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
+    if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
       ...data,
       sources: data.sources as never,
       media_assets: data.media_assets as never,
@@ -454,7 +456,9 @@ export const updateAdminLesson = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string().uuid(), input: lessonInputSchema.partial() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const patch: Record<string, unknown> = {
+    const conflicts = await checkLessonConflicts(data.input, data.id);
+    if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
+    if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
       ...data.input,
       updated_by: context.userId,
     };
