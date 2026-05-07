@@ -85,32 +85,32 @@ function Flashcards() {
     <StudentAppShell>
       <section className="mx-auto max-w-2xl px-6 pt-12 md:pt-16">
         <div className="flex items-center justify-between text-sm">
-          <div className="text-muted-foreground">{cards.length === 0 ? "Sin tarjetas vencidas" : `Tarjeta ${Math.min(idx + 1, cards.length)} de ${cards.length}`}</div>
+          <div className="text-muted-foreground">{cards.length === 0 ? t("student.flashcards.noDue") : t("student.flashcards.cardOf", { i: Math.min(idx + 1, cards.length), n: cards.length })}</div>
           <button onClick={reset} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs hover:bg-accent">
-            <RotateCcw className="h-3 w-3" /> Recargar
+            <RotateCcw className="h-3 w-3" /> {t("student.flashcards.reload")}
           </button>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Atajos: <kbd className="rounded bg-muted px-1">Espacio</kbd> voltea ·
-          {" "}<kbd className="rounded bg-muted px-1">1</kbd> Otra vez ·
-          {" "}<kbd className="rounded bg-muted px-1">2</kbd> Difícil ·
-          {" "}<kbd className="rounded bg-muted px-1">3</kbd> Bien ·
-          {" "}<kbd className="rounded bg-muted px-1">4</kbd> Fácil
+          {t("student.flashcards.shortcuts")} <kbd className="rounded bg-muted px-1">Space</kbd> {t("student.flashcards.flips")} ·
+          {" "}<kbd className="rounded bg-muted px-1">1</kbd> {t("student.flashcards.again")} ·
+          {" "}<kbd className="rounded bg-muted px-1">2</kbd> {t("student.flashcards.hard")} ·
+          {" "}<kbd className="rounded bg-muted px-1">3</kbd> {t("student.flashcards.good")} ·
+          {" "}<kbd className="rounded bg-muted px-1">4</kbd> {t("student.flashcards.easy")}
         </p>
 
         {cards.length === 0 ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
             <Sparkles className="mx-auto h-10 w-10 text-primary" />
-            <h2 className="mt-3 font-display text-2xl font-semibold">No hay tarjetas para hoy</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Crea tarjetas desde Práctica guardando preguntas para repaso.</p>
-            <Link to="/practice" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">Ir a Práctica</Link>
+            <h2 className="mt-3 font-display text-2xl font-semibold">{t("student.flashcards.noCardsToday")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("student.flashcards.createFromPractice")}</p>
+            <Link to="/practice" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">{t("student.flashcards.goPractice")}</Link>
           </div>
         ) : done ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
             <Sparkles className="mx-auto h-10 w-10 text-primary" />
             <h2 className="mt-3 font-display text-2xl font-semibold">{t("student.flashcards.done")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{t("student.flashcards.reviewed", { n: reviewed })}</p>
-            <Link to="/dashboard" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">Ir al Dashboard</Link>
+            <Link to="/dashboard" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">{t("student.flashcards.goDashboard")}</Link>
           </div>
         ) : (
           <>
@@ -119,18 +119,18 @@ function Flashcards() {
               className="glass-strong mt-6 grid min-h-[280px] w-full place-items-center rounded-3xl p-10 text-center shadow-glass transition hover:shadow-elevated"
             >
               <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">{flipped ? "Respuesta" : "Pregunta"}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">{flipped ? t("student.flashcards.answer") : t("student.flashcards.question")}</div>
                 <div className="mt-3 font-display text-2xl font-semibold leading-snug md:text-3xl">{flipped ? cards[idx].back : cards[idx].front}</div>
-                {!flipped && <div className="mt-6 text-xs text-muted-foreground">Toca o presiona <kbd className="rounded bg-muted px-1.5 py-0.5">Espacio</kbd> para voltear</div>}
+                {!flipped && <div className="mt-6 text-xs text-muted-foreground">{t("student.flashcards.tapToFlip")} <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd> {t("student.flashcards.toFlip")}</div>}
               </div>
             </button>
             {flipped && (
               <div className="mt-4 grid grid-cols-4 gap-2" aria-live="polite">
                 {([
-                  { g: "again" as Grade, l: "Otra vez", k: "1", c: "bg-destructive text-destructive-foreground" },
-                  { g: "hard" as Grade, l: "Difícil", k: "2", c: "bg-warning text-warning-foreground" },
-                  { g: "good" as Grade, l: "Bien", k: "3", c: "bg-primary text-primary-foreground" },
-                  { g: "easy" as Grade, l: "Fácil", k: "4", c: "bg-success text-success-foreground" },
+                  { g: "again" as Grade, l: t("student.flashcards.again"), k: "1", c: "bg-destructive text-destructive-foreground" },
+                  { g: "hard" as Grade, l: t("student.flashcards.hard"), k: "2", c: "bg-warning text-warning-foreground" },
+                  { g: "good" as Grade, l: t("student.flashcards.good"), k: "3", c: "bg-primary text-primary-foreground" },
+                  { g: "easy" as Grade, l: t("student.flashcards.easy"), k: "4", c: "bg-success text-success-foreground" },
                 ]).map((b) => (
                   <button key={b.g} onClick={() => submit(b.g)} aria-keyshortcuts={b.k} className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}>
                     <span className="block">{b.l}</span>
