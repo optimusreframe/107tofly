@@ -73,20 +73,33 @@ function Certificate() {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
-    // background
-    doc.setFillColor(15, 23, 42);
+
+    // Style presets — minimal differences in palette/border/title
+    const style = templateStyle;
+    const palette = style === "minimal"
+      ? { bg: [255, 255, 255] as [number, number, number], fg: [17, 24, 39] as [number, number, number], muted: [107, 114, 128] as [number, number, number], border: [17, 24, 39] as [number, number, number], link: [37, 99, 235] as [number, number, number] }
+      : style === "classic"
+        ? { bg: [250, 245, 230] as [number, number, number], fg: [60, 40, 20] as [number, number, number], muted: [120, 100, 80] as [number, number, number], border: [160, 120, 60] as [number, number, number], link: [120, 80, 30] as [number, number, number] }
+        : { bg: [15, 23, 42] as [number, number, number], fg: [226, 232, 240] as [number, number, number], muted: [148, 163, 184] as [number, number, number], border: [96, 165, 250] as [number, number, number], link: [125, 211, 252] as [number, number, number] };
+    const titleText = style === "classic"
+      ? "107toFly — Certificate of Completion"
+      : style === "minimal"
+        ? "Certificate of Completion · 107toFly"
+        : "107toFly · Course Completion Certificate";
+
+    doc.setFillColor(...palette.bg);
     doc.rect(0, 0, W, H, "F");
-    // border
-    doc.setDrawColor(96, 165, 250);
-    doc.setLineWidth(2);
+    doc.setDrawColor(...palette.border);
+    doc.setLineWidth(style === "classic" ? 3 : 2);
     doc.rect(24, 24, W - 48, H - 48);
-    doc.setTextColor(226, 232, 240);
+    if (style === "classic") doc.rect(34, 34, W - 68, H - 68);
+    doc.setTextColor(...palette.fg);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("107toFly · Course Completion Certificate", W / 2, 80, { align: "center" });
+    doc.text(titleText, W / 2, 80, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
-    doc.text("This certifies that", W / 2, 140, { align: "center" });
+    doc.text(t("student.certificate.thisCertifies"), W / 2, 140, { align: "center" });
     doc.setFont("helvetica", "bold");
     doc.setFontSize(36);
     doc.text(cert.display_name, W / 2, 200, { align: "center" });
@@ -94,27 +107,25 @@ function Certificate() {
     doc.setFontSize(12);
     doc.text("has successfully completed the 107toFly Part 107 Preparation Program,", W / 2, 240, { align: "center" });
     doc.text("aligned with the FAA ACS, Remote Pilot Study Guide and 14 CFR Part 107 / 89.", W / 2, 258, { align: "center" });
-    // stats
     const y = 330;
-    doc.setFontSize(10); doc.setTextColor(148, 163, 184);
+    doc.setFontSize(10); doc.setTextColor(...palette.muted);
     doc.text("FINAL SCORE", W / 2 - 180, y, { align: "center" });
     doc.text("HOURS", W / 2, y, { align: "center" });
     doc.text("CERTIFICATE ID", W / 2 + 180, y, { align: "center" });
-    doc.setFontSize(20); doc.setTextColor(226, 232, 240); doc.setFont("helvetica", "bold");
+    doc.setFontSize(20); doc.setTextColor(...palette.fg); doc.setFont("helvetica", "bold");
     doc.text(`${Math.round(cert.final_score)}%`, W / 2 - 180, y + 28, { align: "center" });
     doc.text(`${cert.hours_estimated}h`, W / 2, y + 28, { align: "center" });
     doc.setFontSize(11);
     doc.text(`107F-${cert.id.slice(0, 8).toUpperCase()}`, W / 2 + 180, y + 28, { align: "center" });
-    // disclaimer
-    doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(148, 163, 184);
-    const disc = "This certificate is NOT an FAA Remote Pilot Certificate and does not replace the official FAA UAG knowledge test or the IACRA certification process.";
-    doc.text(doc.splitTextToSize(disc, W - 140), W / 2, H - 70, { align: "center" });
+    // disclaimer (runtime)
+    doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(...palette.muted);
+    doc.text(doc.splitTextToSize(disclaimer, W - 140), W / 2, H - 70, { align: "center" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(9);
     doc.text(`Issued ${new Date(cert.issued_at).toLocaleDateString()}`, W / 2, H - 40, { align: "center" });
     const verifyUrl = `${window.location.origin}/verify/${cert.id}`;
-    doc.setTextColor(125, 211, 252); doc.setFontSize(8);
+    doc.setTextColor(...palette.link); doc.setFontSize(8);
     doc.textWithLink(`Verify: ${verifyUrl}`, W / 2, H - 24, { align: "center", url: verifyUrl });
-    doc.save(`107toFly-Certificate-${cert.id.slice(0, 8)}.pdf`);
+    doc.save(`107toFly-Certificate-${cert.id.slice(0, 8)}-${style}.pdf`);
   };
 
   if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
