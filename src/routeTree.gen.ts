@@ -32,7 +32,9 @@ import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
+import { Route as AdminMediaRouteImport } from './routes/admin.media'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
+import { Route as AdminLandingRouteImport } from './routes/admin.landing'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -149,9 +151,19 @@ const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   path: '/questions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMediaRoute = AdminMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLessonsRoute = AdminLessonsRouteImport.update({
   id: '/lessons',
   path: '/lessons',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLandingRoute = AdminLandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -174,7 +186,9 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
@@ -200,7 +214,9 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
@@ -227,7 +243,9 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
@@ -255,7 +273,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/landing'
     | '/admin/lessons'
+    | '/admin/media'
     | '/admin/questions'
     | '/admin/users'
     | '/lessons/$slug'
@@ -281,7 +301,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/landing'
     | '/admin/lessons'
+    | '/admin/media'
     | '/admin/questions'
     | '/admin/users'
     | '/lessons/$slug'
@@ -307,7 +329,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/landing'
     | '/admin/lessons'
+    | '/admin/media'
     | '/admin/questions'
     | '/admin/users'
     | '/lessons/$slug'
@@ -502,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/media': {
+      id: '/admin/media'
+      path: '/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/lessons': {
       id: '/admin/lessons'
       path: '/lessons'
@@ -509,17 +540,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLessonsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/landing': {
+      id: '/admin/landing'
+      path: '/landing'
+      fullPath: '/admin/landing'
+      preLoaderRoute: typeof AdminLandingRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminLandingRoute: typeof AdminLandingRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
+  AdminMediaRoute: typeof AdminMediaRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminLandingRoute: AdminLandingRoute,
   AdminLessonsRoute: AdminLessonsRoute,
+  AdminMediaRoute: AdminMediaRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminUsersRoute: AdminUsersRoute,
 }

@@ -22,8 +22,8 @@ export const ADMIN_NAV = [
   { to: "/admin/lessons", label: "Lessons", icon: BookOpen, ready: true },
   { to: "/admin/questions", label: "Questions", icon: ListChecks, ready: true },
   { to: "/admin/certificates", label: "Certificates", icon: Award, ready: false },
-  { to: "/admin/landing", label: "Landing", icon: Globe, ready: false },
-  { to: "/admin/media", label: "Media", icon: ImageIcon, ready: false },
+  { to: "/admin/landing", label: "Landing", icon: Globe, ready: true },
+  { to: "/admin/media", label: "Media", icon: ImageIcon, ready: true },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, ready: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, ready: false },
 ] as const;

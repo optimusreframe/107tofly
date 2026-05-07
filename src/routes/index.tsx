@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Plane,
   Map,
@@ -12,6 +14,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { QuizDemo } from "@/components/QuizDemo";
+import { getPublicLandingSections } from "@/server/admin.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -80,6 +83,25 @@ const modules = [
 ];
 
 function Index() {
+  const { i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
+  const [cms, setCms] = useState<Record<string, { title?: string | null; subtitle?: string | null; body?: string | null; cta_label?: string | null; cta_href?: string | null; image_url?: string | null; content?: Record<string, unknown> | null }>>({});
+
+  useEffect(() => {
+    let alive = true;
+    getPublicLandingSections({ data: { locale } })
+      .then((r) => {
+        if (!alive) return;
+        const map: typeof cms = {};
+        for (const s of r.sections as Array<{ section_key: string } & typeof cms[string]>) map[s.section_key] = s;
+        setCms(map);
+      })
+      .catch(() => { /* silent fallback */ });
+    return () => { alive = false; };
+  }, [locale]);
+
+  const hero = cms.hero;
+
   return (
     <PageShell>
       {/* Hero */}
@@ -93,14 +115,17 @@ function Index() {
               Alineado al FAA ACS · Part 107
             </div>
             <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
-              From zero to{" "}
-              <span className="text-gradient">Remote Pilot</span>
-              <br />
-              ready.
+              {hero?.title ? (
+                hero.title
+              ) : (
+                <>From zero to{" "}
+                <span className="text-gradient">Remote Pilot</span>
+                <br />
+                ready.</>
+              )}
             </h1>
             <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto
-              app-like para dominar el examen FAA Part 107 con confianza.
+              {hero?.subtitle ?? hero?.body ?? "Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto app-like para dominar el examen FAA Part 107 con confianza."}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
