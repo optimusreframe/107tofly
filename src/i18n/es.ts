@@ -9,6 +9,7 @@ export default {
     flashcards: "Flashcards",
     achievements: "Logros",
     certificate: "Certificado",
+    settings: "Configuración",
     signin: "Acceder",
     signout: "Salir",
     skip: "Saltar al contenido",
