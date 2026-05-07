@@ -23,6 +23,7 @@ import { useDeviceMode } from "@/hooks/use-device-mode";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteFooter } from "@/components/SiteFooter";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 
 const PRIMARY = [
   { to: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
