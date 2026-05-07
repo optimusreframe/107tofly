@@ -73,7 +73,7 @@ export const getLessonQuiz = createServerFn({ method: "POST" })
     const shuffled = [...rows].sort(() => Math.random() - 0.5).slice(0, Math.min(QUIZ_SIZE, Math.max(rows.length, 0)));
     const annotated = shuffled.map((r) => ({
       ...r,
-      options: (r.options ?? []) as unknown[],
+      options: (Array.isArray(r.options) ? r.options : []) as string[],
       fallback: locale !== "en" && r.locale !== locale,
     }));
 
