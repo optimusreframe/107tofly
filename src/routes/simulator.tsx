@@ -38,6 +38,8 @@ function Simulator() {
   const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const runtime = usePublicRuntime();
+  const passScore = Number((runtime?.study as Record<string, unknown> | undefined)?.["study.exam_pass_score"] ?? 70);
   const fetchQ = useServerFn(fetchPracticeQuestions);
   const submitSim = useServerFn(submitExamSimulation);
 
