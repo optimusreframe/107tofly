@@ -73,7 +73,7 @@ function Flashcards() {
   }, [cards, idx, flipped]);
 
   if (loading || !user || cards === null) {
-    return <StudentAppShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
 

@@ -35,7 +35,7 @@ function Achievements() {
   useEffect(() => { if (user) getAchievements().then(setData); }, [user]);
 
   if (loading || !user || !data) {
-    return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
   const pct = Math.min(100, Math.round((data.xp / Math.max(1, data.nextXp)) * 100));

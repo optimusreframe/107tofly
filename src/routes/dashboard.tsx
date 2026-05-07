@@ -140,7 +140,7 @@ function Dashboard() {
   if (loading || !user) {
     return (
       <StudentAppShell>
-        <div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div>
+        <div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div>
       </StudentAppShell>
     );
   }

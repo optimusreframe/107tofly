@@ -95,7 +95,7 @@ function Simulator() {
   const answered = useMemo(() => Object.keys(picks).length, [picks]);
 
   if (loading || !user) {
-    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
   if (phase === "intro") {

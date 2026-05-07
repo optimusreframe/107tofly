@@ -104,7 +104,7 @@ function Certificate() {
     doc.save(`107toFly-Certificate-${cert.id.slice(0, 8)}.pdf`);
   };
 
-  if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+  if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
 
   return (
     <StudentAppShell>

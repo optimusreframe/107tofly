@@ -28,7 +28,7 @@ function Course() {
   useEffect(() => { if (user) getLessons().then(setLessons); }, [user]);
 
   if (loading || !user) {
-    return <StudentAppShell><div className="mx-auto max-w-5xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-5xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
   const weeks = [1, 2, 3, 4];
@@ -60,7 +60,7 @@ function Course() {
                   <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">Semana {wi}</span>
                 </div>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                  {items.length === 0 && <div className="text-sm text-muted-foreground">Cargando…</div>}
+                  {items.length === 0 && <div className="text-sm text-muted-foreground">{t("common.loading")}</div>}
                   {items.map((l) => {
                     const prevDone = l.order_index === 1 || (lessons ?? []).some((x) => x.order_index === l.order_index - 1 && x.completed);
                     const unlocked = l.completed || prevDone;

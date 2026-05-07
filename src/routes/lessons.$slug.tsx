@@ -40,7 +40,7 @@ function LessonDetail() {
   }, [slug, user]);
 
   if (loading || !user || !data) {
-    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
   if (!data.lesson) {
