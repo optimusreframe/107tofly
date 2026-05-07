@@ -146,7 +146,10 @@ function Dashboard() {
       (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
       setActivity(counts);
     }).catch(() => setActivity([]));
-  }, [user, fetchDue, fetchReadiness, fetchMastery]);
+
+    fetchNext().then(setNextLesson).catch(() => setNextLesson(null));
+    fetchActivity().then(setRecent).catch(() => setRecent([]));
+  }, [user, fetchDue, fetchReadiness, fetchMastery, fetchNext, fetchActivity]);
 
 
   const readiness = readinessData?.score ?? progress?.readiness ?? 0;
