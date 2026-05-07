@@ -17,7 +17,7 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const locale = data.locale ?? "en";
-    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale";
+    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale,translation_group_id";
     const buildQ = (loc: "en"|"es") => {
       let q = supabase.from("questions").select(cols).eq("status","published").eq("locale", loc).limit(data.limit);
       if (data.topic) q = q.eq("topic", data.topic);
@@ -32,12 +32,19 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
     }
     if (rows.length < data.limit) {
       const need = data.limit - rows.length;
-      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale","en").limit(need);
+      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale","en").limit(need * 2);
       if (data.topic) q = q.eq("topic", data.topic);
       const r = await q;
       if (r.error) throw r.error;
-      const have = new Set(rows.map((x) => x.id as string));
-      const extra = ((r.data ?? []) as Array<Record<string, unknown>>).filter((x) => !have.has(x.id as string));
+      const haveIds = new Set(rows.map((x) => x.id as string));
+      const haveGroups = new Set(rows.map((x) => (x.translation_group_id as string | null) ?? (x.id as string)));
+      const extra = ((r.data ?? []) as Array<Record<string, unknown>>).filter((x) => {
+        const gid = (x.translation_group_id as string | null) ?? (x.id as string);
+        if (haveIds.has(x.id as string)) return false;
+        if (haveGroups.has(gid)) return false;
+        haveGroups.add(gid);
+        return true;
+      }).slice(0, need);
       if (extra.length > 0 && locale !== "en") fallback = true;
       rows = [...rows, ...extra];
     }
