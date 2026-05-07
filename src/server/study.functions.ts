@@ -10,15 +10,37 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
     topic: z.enum(TOPICS).optional(),
     limit: z.number().min(1).max(60).default(10),
+    locale: z.enum(["en","es"]).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    let q = supabase.from("questions").select("id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index").eq("status","published").limit(data.limit);
-    if (data.topic) q = q.eq("topic", data.topic);
-    const { data: rows, error } = await q;
-    if (error) throw error;
-    // shuffle
-    return [...(rows ?? [])].sort(() => Math.random() - 0.5);
+    const locale = data.locale ?? "en";
+    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale";
+    const buildQ = (loc: "en"|"es") => {
+      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale", loc).limit(data.limit);
+      if (data.topic) q = q.eq("topic", data.topic);
+      return q;
+    };
+    let rows: Array<Record<string, unknown>> = [];
+    let fallback = false;
+    if (locale !== "en") {
+      const r = await buildQ(locale);
+      if (r.error) throw r.error;
+      rows = (r.data ?? []) as Array<Record<string, unknown>>;
+    }
+    if (rows.length < data.limit) {
+      const need = data.limit - rows.length;
+      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale","en").limit(need);
+      if (data.topic) q = q.eq("topic", data.topic);
+      const r = await q;
+      if (r.error) throw r.error;
+      const have = new Set(rows.map((x) => x.id as string));
+      const extra = ((r.data ?? []) as Array<Record<string, unknown>>).filter((x) => !have.has(x.id as string));
+      if (extra.length > 0 && locale !== "en") fallback = true;
+      rows = [...rows, ...extra];
+    }
+    const shuffled = [...rows].sort(() => Math.random() - 0.5).map((r) => ({ ...r, fallback: locale !== "en" && r.locale !== locale }));
+    return { questions: shuffled, fallback };
   });
 
 // ============ SUBMIT QUIZ ATTEMPT ============
