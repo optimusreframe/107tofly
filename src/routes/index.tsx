@@ -83,6 +83,25 @@ const modules = [
 ];
 
 function Index() {
+  const { i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
+  const [cms, setCms] = useState<Record<string, { title?: string | null; subtitle?: string | null; body?: string | null; cta_label?: string | null; cta_href?: string | null; image_url?: string | null; content?: Record<string, unknown> | null }>>({});
+
+  useEffect(() => {
+    let alive = true;
+    getPublicLandingSections({ data: { locale } })
+      .then((r) => {
+        if (!alive) return;
+        const map: typeof cms = {};
+        for (const s of r.sections as Array<{ section_key: string } & typeof cms[string]>) map[s.section_key] = s;
+        setCms(map);
+      })
+      .catch(() => { /* silent fallback */ });
+    return () => { alive = false; };
+  }, [locale]);
+
+  const hero = cms.hero;
+
   return (
     <PageShell>
       {/* Hero */}
