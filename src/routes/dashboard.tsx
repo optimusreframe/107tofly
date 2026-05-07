@@ -6,6 +6,7 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchDueFlashcards, getStudentReadiness, getStudentTopicMastery } from "@/server/study.functions";
+import { getNextLesson, getStudentRecentActivity, type ActivityItem } from "@/server/student-settings.functions";
 import {
   Flame,
   Sparkles,
@@ -16,10 +17,14 @@ import {
   PlayCircle,
   Brain,
   Target,
+  CheckCircle2,
+  GraduationCap,
+  Award,
 } from "lucide-react";
 
 type Mastery = Awaited<ReturnType<typeof getStudentTopicMastery>>;
 type Readiness = Awaited<ReturnType<typeof getStudentReadiness>>;
+type NextLesson = Awaited<ReturnType<typeof getNextLesson>>;
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -72,12 +77,16 @@ function Dashboard() {
   const fetchDue = useServerFn(fetchDueFlashcards);
   const fetchReadiness = useServerFn(getStudentReadiness);
   const fetchMastery = useServerFn(getStudentTopicMastery);
+  const fetchNext = useServerFn(getNextLesson);
+  const fetchActivity = useServerFn(getStudentRecentActivity);
   const [progress, setProgress] = useState<ProgressRow | null>(null);
   const [name, setName] = useState<string>("Pilot");
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [activity, setActivity] = useState<number[] | null>(null);
   const [readinessData, setReadinessData] = useState<Readiness | null>(null);
   const [mastery, setMastery] = useState<Mastery | null>(null);
+  const [nextLesson, setNextLesson] = useState<NextLesson | null>(null);
+  const [recent, setRecent] = useState<ActivityItem[] | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -137,7 +146,10 @@ function Dashboard() {
       (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
       setActivity(counts);
     }).catch(() => setActivity([]));
-  }, [user, fetchDue, fetchReadiness, fetchMastery]);
+
+    fetchNext().then(setNextLesson).catch(() => setNextLesson(null));
+    fetchActivity().then(setRecent).catch(() => setRecent([]));
+  }, [user, fetchDue, fetchReadiness, fetchMastery, fetchNext, fetchActivity]);
 
 
   const readiness = readinessData?.score ?? progress?.readiness ?? 0;
@@ -241,25 +253,61 @@ function Dashboard() {
           </div>
 
           {/* Next lesson */}
-          <Link
-            to="/lessons"
-            className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
-          >
-            <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
-            <div>
-              <div className="text-xs uppercase tracking-wider text-primary">{t("student.plan.title")}</div>
-              <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
-                {t("student.dashboard.continueTitle" as never, { defaultValue: t("student.plan.continueTitle") })}
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("student.plan.continueSubtitle")}
-              </p>
+          {nextLesson?.allCompleted ? (
+            <Link
+              to="/certificate"
+              className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
+            >
+              <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
+              <div>
+                <div className="text-xs uppercase tracking-wider text-success">{t("dashboard.courseCompleted")}</div>
+                <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
+                  <Award className="mr-2 inline h-6 w-6 text-success" />
+                  {t("dashboard.courseCompleted")}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">{t("dashboard.courseCompletedDesc")}</p>
+              </div>
+              <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                <GraduationCap className="h-5 w-5" /> {t("nav.certificate")}
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          ) : nextLesson?.lesson ? (
+            <Link
+              to="/lessons/$slug"
+              params={{ slug: nextLesson.lesson.slug }}
+              className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
+            >
+              <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
+              <div>
+                <div className="text-xs uppercase tracking-wider text-primary">{t("dashboard.nextLesson")}</div>
+                <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">{nextLesson.lesson.title}</h3>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{t("student.plan.weekShort", { n: nextLesson.lesson.week })} · D{nextLesson.lesson.day}</span>
+                  {nextLesson.lesson.topic && <span>· {t(`student.topics.${nextLesson.lesson.topic}`, { defaultValue: nextLesson.lesson.topic })}</span>}
+                  <span>· {nextLesson.lesson.est_minutes} min</span>
+                </div>
+                {nextLesson.lesson.quiz_passed ? (
+                  <div className="mt-2 inline-flex items-center gap-1 text-xs text-success">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {t("dailyQuiz.passed")} · {t("dailyQuiz.statusBestScore", { n: nextLesson.lesson.quiz_best_score ?? 0 })}
+                  </div>
+                ) : nextLesson.lesson.quiz_best_score ? (
+                  <div className="mt-2 text-xs text-warning">
+                    {t("dailyQuiz.statusBestScore", { n: nextLesson.lesson.quiz_best_score })}
+                  </div>
+                ) : null}
+              </div>
+              <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                <PlayCircle className="h-5 w-5" /> {t("dashboard.continueLesson")}
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          ) : (
+            <div className="glass-strong rounded-3xl p-6 shadow-glass">
+              <div className="text-xs uppercase tracking-wider text-primary">{t("dashboard.nextLesson")}</div>
+              <div className="mt-2 text-sm text-muted-foreground">{t("common.loading")}</div>
             </div>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <PlayCircle className="h-5 w-5" /> {t("student.plan.seeLessons")}
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </div>
-          </Link>
+          )}
 
         </div>
 
@@ -332,6 +380,38 @@ function Dashboard() {
               })}
             </div>
           )}
+
+          {/* Real recent activity list */}
+          <div className="mt-6">
+            {recent === null ? (
+              <div className="text-sm text-muted-foreground">{t("common.loading")}</div>
+            ) : recent.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                {t("dashboard.activity.none")}
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {recent.map((r, idx) => {
+                  const Icon = r.type === "lesson_completed" ? CheckCircle2 : r.type === "quiz_attempt" ? Target : r.type === "exam_simulation" ? Trophy : r.type === "certificate_issued" ? Award : Brain;
+                  const inner = (
+                    <div className="flex items-center gap-3 py-2.5">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-primary"><Icon className="h-4 w-4" /></span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">{t(`dashboard.activity.${r.type}`)} · {r.title}</div>
+                        {r.subtitle && <div className="truncate text-xs text-muted-foreground">{r.subtitle}</div>}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</div>
+                    </div>
+                  );
+                  return (
+                    <li key={idx}>
+                      {r.href ? <a href={r.href} className="block hover:bg-accent/40 rounded-xl px-2 -mx-2">{inner}</a> : inner}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
     </StudentAppShell>

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherLabRouteImport } from './routes/weather-lab'
 import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -47,6 +48,11 @@ const WeatherLabRoute = WeatherLabRouteImport.update({
 const SimulatorRoute = SimulatorRouteImport.update({
   id: '/simulator',
   path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/reset-password'
+    | '/settings'
     | '/simulator'
     | '/weather-lab'
     | '/admin/analytics'
@@ -329,6 +339,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/reset-password'
+    | '/settings'
     | '/simulator'
     | '/weather-lab'
     | '/admin/analytics'
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/reset-password'
+    | '/settings'
     | '/simulator'
     | '/weather-lab'
     | '/admin/analytics'
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
   SimulatorRoute: typeof SimulatorRoute
   WeatherLabRoute: typeof WeatherLabRoute
   LessonsSlugRoute: typeof LessonsSlugRoute
@@ -413,6 +426,13 @@ declare module '@tanstack/react-router' {
       path: '/simulator'
       fullPath: '/simulator'
       preLoaderRoute: typeof SimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -648,6 +668,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
   SimulatorRoute: SimulatorRoute,
   WeatherLabRoute: WeatherLabRoute,
   LessonsSlugRoute: LessonsSlugRoute,

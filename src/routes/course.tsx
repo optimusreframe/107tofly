@@ -77,6 +77,11 @@ function Course() {
                         <div className="flex items-center gap-3 min-w-0">
                           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-mono">D{l.order_index}</span>
                           <span className="truncate">{l.title}</span>
+                          {l.quiz_passed ? (
+                            <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] text-success">{t("dailyQuiz.passed")}</span>
+                          ) : l.quiz_attempts > 0 ? (
+                            <span className="rounded-full bg-warning/15 px-1.5 py-0.5 text-[10px] text-warning">{l.quiz_best_score}%</span>
+                          ) : null}
                         </div>
                         {l.completed ? <CheckCircle2 className="h-4 w-4 text-success" /> : unlocked ? <PlayCircle className="h-4 w-4 text-primary" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
                       </Link>

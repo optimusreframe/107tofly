@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   Languages,
+  Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,6 +34,7 @@ const PRIMARY = [
   { to: "/flycoach", icon: Sparkles, key: "nav.flycoach" },
   { to: "/achievements", icon: Trophy, key: "nav.achievements" },
   { to: "/certificate", icon: Award, key: "nav.certificate" },
+  { to: "/settings", icon: Settings, key: "nav.settings" },
 ] as const;
 
 const MOBILE_TABS = [

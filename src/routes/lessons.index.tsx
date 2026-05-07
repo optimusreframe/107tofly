@@ -87,6 +87,11 @@ function LessonsPage() {
                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                               <Clock className="h-3 w-3" /> {l.est_minutes} min
                               {l.fallback && <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px]" title={t("student.fallbackToEn")}>EN</span>}
+                              {l.quiz_passed ? (
+                                <span className="ml-1 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] text-success">{t("dailyQuiz.passed")}</span>
+                              ) : l.quiz_attempts > 0 ? (
+                                <span className="ml-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-[10px] text-warning">{t("dailyQuiz.statusBestScore", { n: l.quiz_best_score })}</span>
+                              ) : null}
                             </div>
                           </div>
                         </div>

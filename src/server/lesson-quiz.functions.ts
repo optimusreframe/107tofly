@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { touchDailyActivity } from "./streak.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
 const QUIZ_SIZE = 6;
@@ -221,6 +222,7 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         .eq("user_id", userId);
       xp_awarded_now = QUIZ_XP;
     }
+    await touchDailyActivity(supabase, userId);
 
     return {
       attempt_id: attempt.id,

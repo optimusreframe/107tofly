@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { touchDailyActivity } from "./streak.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
 
@@ -294,6 +295,8 @@ async function recomputeProgress(supabase: any, userId: string) {
     xp,
     updated_at: new Date().toISOString(),
   }).eq("user_id", userId);
+
+  await touchDailyActivity(supabase, userId);
 }
 
 // ============ STUDENT READINESS / TOPIC MASTERY ============

@@ -470,43 +470,59 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          daily_goal_minutes: number | null
           display_name: string | null
           experience_level: string | null
           id: string
           locale: string | null
           membership_plan: string
           membership_status: string
+          preferred_language: string | null
+          preferred_theme: string | null
           study_goal_date: string | null
+          study_plan: string | null
+          target_exam_date: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          daily_goal_minutes?: number | null
           display_name?: string | null
           experience_level?: string | null
           id: string
           locale?: string | null
           membership_plan?: string
           membership_status?: string
+          preferred_language?: string | null
+          preferred_theme?: string | null
           study_goal_date?: string | null
+          study_plan?: string | null
+          target_exam_date?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          daily_goal_minutes?: number | null
           display_name?: string | null
           experience_level?: string | null
           id?: string
           locale?: string | null
           membership_plan?: string
           membership_status?: string
+          preferred_language?: string | null
+          preferred_theme?: string | null
           study_goal_date?: string | null
+          study_plan?: string | null
+          target_exam_date?: string | null
           updated_at?: string
         }
         Relationships: []
       }
       progress: {
         Row: {
+          last_activity_date: string | null
           practice_pct: number
           readiness: number
           review_pct: number
@@ -517,6 +533,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          last_activity_date?: string | null
           practice_pct?: number
           readiness?: number
           review_pct?: number
@@ -527,6 +544,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          last_activity_date?: string | null
           practice_pct?: number
           readiness?: number
           review_pct?: number
