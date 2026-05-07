@@ -450,6 +450,7 @@ export const getStudentReadiness = createServerFn({ method: "GET" })
     return {
       score,
       status,
+      readyThreshold: ready,
       breakdown: {
         studyPct: Math.round(studyPct),
         quizAvg: Math.round(quizAvg),
