@@ -265,26 +265,119 @@ export const issueCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: sims } = await supabase.from("exam_simulations")
-      .select("score,finished_at").eq("user_id", userId).order("finished_at", { ascending: false }).limit(5);
+    const flags = await getFeatureFlags();
+    if (!flags.certificatesEnabled) {
+      return { ok: false, reason: "CERTIFICATES_DISABLED" };
+    }
+    const cs = await getCertificateSettings();
+    const minLatest = Number(cs.minLatestExamScore ?? 85);
+    const requiredSims = Number(cs.requiredExamSimulations ?? 2);
+    const minQuizAvg = Number(cs.minQuizAverage ?? 80);
+    const minCoursePct = Number(cs.minCourseCompletionPercent ?? 100);
+    const estHours = Number(cs.estimatedHours ?? 56);
+
+    const [{ data: sims }, { data: completions }, { count: lessonsTotal }, { data: attempts }] = await Promise.all([
+      supabase.from("exam_simulations")
+        .select("score,finished_at").eq("user_id", userId).order("finished_at", { ascending: false }).limit(20),
+      supabase.from("lesson_completions").select("lesson_slug").eq("user_id", userId),
+      supabase.from("lessons").select("*", { count: "exact", head: true }),
+      supabase.from("quiz_attempts").select("score").eq("user_id", userId),
+    ]);
     const latest = sims?.[0];
-    const passingSims = (sims ?? []).filter(s => Number(s.score) >= 85).length;
-    if (!latest || Number(latest.score) < 85 || passingSims < 1) {
-      return { ok: false, reason: "Necesitas un simulacro con score ≥ 85% para emitir tu certificado." };
+    const passingSims = (sims ?? []).filter((s) => Number(s.score) >= minLatest).length;
+    const quizAvg = attempts && attempts.length
+      ? attempts.reduce((s: number, a: { score: number }) => s + Number(a.score), 0) / attempts.length
+      : 0;
+    const totalLessons = (lessonsTotal as number | null) ?? 0;
+    const coursePct = totalLessons > 0 ? Math.round(((completions?.length ?? 0) / totalLessons) * 100) : 0;
+
+    const reasons: string[] = [];
+    if (!latest || Number(latest.score) < minLatest) reasons.push(`latest_exam<${minLatest}`);
+    if (passingSims < requiredSims) reasons.push(`sims<${requiredSims}`);
+    if (quizAvg < minQuizAvg) reasons.push(`quiz_avg<${minQuizAvg}`);
+    if (coursePct < minCoursePct) reasons.push(`course<${minCoursePct}%`);
+    if (reasons.length > 0) {
+      return {
+        ok: false,
+        reason: "REQUIREMENTS_NOT_MET",
+        details: reasons,
+        currentReqs: {
+          minLatestExamScore: minLatest,
+          requiredExamSimulations: requiredSims,
+          minQuizAverage: minQuizAvg,
+          minCourseCompletionPercent: minCoursePct,
+        },
+        progress: {
+          latestSim: latest ? Math.round(Number(latest.score)) : 0,
+          passingSims,
+          quizAvg: Math.round(quizAvg),
+          coursePct,
+        },
+      };
     }
     const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", userId).single();
     const { data: progress } = await supabase.from("progress").select("readiness").eq("user_id", userId).single();
-    const { data: completions } = await supabase.from("lesson_completions").select("lesson_slug").eq("user_id", userId);
 
     const { data: cert, error } = await supabase.from("certificates").insert({
       user_id: userId,
       display_name: profile?.display_name ?? "Pilot",
-      final_score: Number(latest.score),
+      final_score: Number(latest!.score),
       modules_completed: completions?.length ?? 0,
-      hours_estimated: 56,
+      hours_estimated: estHours,
     }).select("id").single();
     if (error) throw error;
     return { ok: true, id: cert!.id, readiness: progress?.readiness ?? 0 };
+  });
+
+// ============ CERTIFICATE REQUIREMENTS (status snapshot for UI) ============
+export const getCertificateRequirementsStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const cs = await getCertificateSettings();
+    const flags = await getFeatureFlags();
+    const minLatest = Number(cs.minLatestExamScore ?? 85);
+    const requiredSims = Number(cs.requiredExamSimulations ?? 2);
+    const minQuizAvg = Number(cs.minQuizAverage ?? 80);
+    const minCoursePct = Number(cs.minCourseCompletionPercent ?? 100);
+
+    const [{ data: sims }, { data: completions }, { count: lessonsTotal }, { data: attempts }] = await Promise.all([
+      supabase.from("exam_simulations").select("score").eq("user_id", userId),
+      supabase.from("lesson_completions").select("lesson_slug").eq("user_id", userId),
+      supabase.from("lessons").select("*", { count: "exact", head: true }),
+      supabase.from("quiz_attempts").select("score").eq("user_id", userId),
+    ]);
+    const latestPass = (sims ?? []).filter((s) => Number(s.score) >= minLatest).length;
+    const quizAvg = attempts && attempts.length
+      ? attempts.reduce((s: number, a: { score: number }) => s + Number(a.score), 0) / attempts.length
+      : 0;
+    const totalLessons = (lessonsTotal as number | null) ?? 0;
+    const coursePct = totalLessons > 0 ? Math.round(((completions?.length ?? 0) / totalLessons) * 100) : 0;
+    const bestSim = sims && sims.length ? Math.max(...sims.map((s) => Number(s.score))) : 0;
+
+    return {
+      enabled: !!flags.certificatesEnabled,
+      requirements: {
+        minLatestExamScore: minLatest,
+        requiredExamSimulations: requiredSims,
+        minQuizAverage: minQuizAvg,
+        minCourseCompletionPercent: minCoursePct,
+        estimatedHours: Number(cs.estimatedHours ?? 56),
+        templateStyle: String(cs.templateStyle ?? "premium"),
+      },
+      progress: {
+        bestSim: Math.round(bestSim),
+        passingSims: latestPass,
+        quizAvg: Math.round(quizAvg),
+        coursePct,
+      },
+      meets: {
+        latestExam: bestSim >= minLatest,
+        sims: latestPass >= requiredSims,
+        quizAvg: quizAvg >= minQuizAvg,
+        course: coursePct >= minCoursePct,
+      },
+    };
   });
 
 // ============ HELPERS ============
