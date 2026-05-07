@@ -559,6 +559,7 @@ export type Database = {
       questions: {
         Row: {
           acs_code: string
+          ai_translation_metadata: Json
           archived_at: string | null
           common_mistake: string | null
           content_hash: string
@@ -572,15 +573,20 @@ export type Database = {
           published_at: string | null
           question: string
           source: string
+          source_question_id: string | null
           status: string
           tags: string[] | null
           topic: Database["public"]["Enums"]["question_topic"]
+          translated_from_locale: string | null
+          translation_group_id: string | null
+          translation_status: string
           updated_at: string
           updated_by: string | null
           version: number
         }
         Insert: {
           acs_code: string
+          ai_translation_metadata?: Json
           archived_at?: string | null
           common_mistake?: string | null
           content_hash: string
@@ -594,15 +600,20 @@ export type Database = {
           published_at?: string | null
           question: string
           source: string
+          source_question_id?: string | null
           status?: string
           tags?: string[] | null
           topic: Database["public"]["Enums"]["question_topic"]
+          translated_from_locale?: string | null
+          translation_group_id?: string | null
+          translation_status?: string
           updated_at?: string
           updated_by?: string | null
           version?: number
         }
         Update: {
           acs_code?: string
+          ai_translation_metadata?: Json
           archived_at?: string | null
           common_mistake?: string | null
           content_hash?: string
@@ -616,14 +627,26 @@ export type Database = {
           published_at?: string | null
           question?: string
           source?: string
+          source_question_id?: string | null
           status?: string
           tags?: string[] | null
           topic?: Database["public"]["Enums"]["question_topic"]
+          translated_from_locale?: string | null
+          translation_group_id?: string | null
+          translation_status?: string
           updated_at?: string
           updated_by?: string | null
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "questions_source_question_id_fkey"
+            columns: ["source_question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_answers: {
         Row: {

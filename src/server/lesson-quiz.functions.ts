@@ -18,6 +18,7 @@ type QuestionRow = {
   common_mistake: string | null;
   correct_index: number;
   locale: string;
+  translation_group_id: string | null;
 };
 
 // ============ GET LESSON QUIZ ============
@@ -45,7 +46,7 @@ export const getLessonQuiz = createServerFn({ method: "POST" })
     const topic = (lesson.topic as string | null) ?? null;
     if (!topic) return { lesson: { id: lesson.id, slug: lesson.slug, topic: null }, questions: [], fallback: false, topic: null };
 
-    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale";
+    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale,translation_group_id";
     const fetchByLocale = async (loc: "en" | "es") => {
       const { data: rows, error } = await supabase
         .from("questions")
@@ -64,8 +65,15 @@ export const getLessonQuiz = createServerFn({ method: "POST" })
     }
     if (rows.length < QUIZ_SIZE) {
       const en = await fetchByLocale("en");
-      const have = new Set(rows.map((r) => r.id));
-      const extra = en.filter((r) => !have.has(r.id));
+      const haveIds = new Set(rows.map((r) => r.id));
+      const haveGroups = new Set(rows.map((r) => r.translation_group_id ?? r.id));
+      const extra = en.filter((r) => {
+        const gid = r.translation_group_id ?? r.id;
+        if (haveIds.has(r.id)) return false;
+        if (haveGroups.has(gid)) return false;
+        haveGroups.add(gid);
+        return true;
+      });
       if (extra.length > 0 && locale !== "en") fallback = true;
       rows = [...rows, ...extra];
     }
