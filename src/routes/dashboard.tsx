@@ -193,7 +193,7 @@ function Dashboard() {
         </div>
 
         {/* Action grid */}
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link
             to="/flashcards"
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
