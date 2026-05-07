@@ -9,7 +9,8 @@ export const getLessons = createServerFn({ method: "GET" })
     const [{ data: lessons, error }, { data: completions }] = await Promise.all([
       supabase
         .from("lessons")
-        .select("slug,title,summary,week,day,order_index,topic,est_minutes")
+        .select("slug,title,summary,week,day,order_index,topic,est_minutes,status")
+        .eq("status", "published")
         .order("order_index", { ascending: true }),
       supabase
         .from("lesson_completions")
