@@ -23,6 +23,16 @@ export default {
     back: "Back",
     submit: "Submit",
   },
+  runtime: {
+    flycoachDisabled: "FlyCoach is temporarily disabled.",
+    certificatesDisabled: "Certificates are temporarily disabled.",
+    maintenanceMode: "Maintenance mode is active. Some features may be unavailable.",
+    featureDisabled: "This feature is temporarily disabled.",
+    currentRequirements: "Current requirements",
+    requiredScore: "Required score",
+    requiredSimulations: "Required simulations",
+    requiredCourse: "Required course completion",
+  },
   admin: {
     nav: {
       overview: "Overview",
