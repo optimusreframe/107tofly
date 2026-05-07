@@ -672,3 +672,183 @@ export const duplicateAdminQuestion = createServerFn({ method: "POST" })
     await logAudit(context.userId, null, "question_duplicate", { entity: "question", entity_id: row.id, source_id: src.id });
     return { question: row };
   });
+
+// ============== LANDING CMS ==============
+
+const landingInputSchema = z.object({
+  section_key: z.string().min(1).max(80),
+  locale: z.enum(["en", "es"]),
+  title: z.string().nullable().optional(),
+  subtitle: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
+  cta_label: z.string().nullable().optional(),
+  cta_href: z.string().nullable().optional(),
+  image_url: z.string().nullable().optional(),
+  video_url: z.string().nullable().optional(),
+  content: z.record(z.string(), z.any()).optional(),
+  status: z.enum(["draft", "published", "archived"]).optional(),
+  sort_order: z.number().int().optional(),
+});
+
+export const getAdminLandingSections = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("landing_sections" as never)
+      .select("*")
+      .order("locale", { ascending: true })
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { sections: data ?? [] };
+  });
+
+export const upsertAdminLandingSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid().optional(), input: landingInputSchema }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const patch: Record<string, unknown> = { ...data.input, updated_by: context.userId };
+    if (data.input.status === "published") patch.published_at = new Date().toISOString();
+    if (data.input.status === "archived") patch.archived_at = new Date().toISOString();
+    let row;
+    if (data.id) {
+      const r = await supabaseAdmin.from("landing_sections" as never).update(patch as never).eq("id", data.id).select("*").single();
+      if (r.error) throw new Error(r.error.message);
+      row = r.data;
+    } else {
+      const r = await supabaseAdmin.from("landing_sections" as never).insert(patch as never).select("*").single();
+      if (r.error) throw new Error(r.error.message);
+      row = r.data;
+    }
+    await logAudit(context.userId, null, "landing_update", { entity: "landing_section", entity_id: (row as { id: string }).id, section_key: data.input.section_key, locale: data.input.locale });
+    return { section: row };
+  });
+
+export const publishAdminLandingSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: row, error } = await supabaseAdmin
+      .from("landing_sections" as never)
+      .update({ status: "published", published_at: new Date().toISOString(), updated_by: context.userId } as never)
+      .eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "landing_publish", { entity_id: data.id });
+    return { section: row };
+  });
+
+export const archiveAdminLandingSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), restore: z.boolean().optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const patch = data.restore
+      ? { status: "draft", archived_at: null, updated_by: context.userId }
+      : { status: "archived", archived_at: new Date().toISOString(), updated_by: context.userId };
+    const { data: row, error } = await supabaseAdmin.from("landing_sections" as never).update(patch as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, data.restore ? "landing_restore" : "landing_archive", { entity_id: data.id });
+    return { section: row };
+  });
+
+export const duplicateAdminLandingSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), targetLocale: z.enum(["en", "es"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: src, error: e1 } = await supabaseAdmin.from("landing_sections" as never).select("*").eq("id", data.id).maybeSingle();
+    if (e1 || !src) throw new Error(e1?.message ?? "not found");
+    const s = src as Record<string, unknown>;
+    const copy = {
+      section_key: s.section_key, locale: data.targetLocale,
+      title: s.title, subtitle: s.subtitle, body: s.body,
+      cta_label: s.cta_label, cta_href: s.cta_href,
+      image_url: s.image_url, video_url: s.video_url,
+      content: s.content, status: "draft", sort_order: s.sort_order,
+      updated_by: context.userId,
+    };
+    const { data: row, error } = await supabaseAdmin.from("landing_sections" as never).upsert(copy as never, { onConflict: "section_key,locale" }).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "landing_duplicate", { source_id: data.id, target_locale: data.targetLocale });
+    return { section: row };
+  });
+
+export const getPublicLandingSections = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ locale: z.enum(["en", "es"]) }).parse(d))
+  .handler(async ({ data }) => {
+    const { data: rows } = await supabaseAdmin
+      .from("landing_sections" as never)
+      .select("section_key, locale, title, subtitle, body, cta_label, cta_href, image_url, video_url, content, sort_order")
+      .eq("locale", data.locale)
+      .eq("status", "published")
+      .order("sort_order", { ascending: true });
+    return { sections: rows ?? [] };
+  });
+
+// ============== MEDIA LIBRARY ==============
+
+const mediaInputSchema = z.object({
+  file_name: z.string().min(1).max(255),
+  file_type: z.string().min(1).max(40),
+  mime_type: z.string().max(120).nullable().optional(),
+  file_size: z.number().int().nullable().optional(),
+  storage_path: z.string().nullable().optional(),
+  public_url: z.string().url().nullable().optional(),
+  alt_text: z.string().nullable().optional(),
+  caption: z.string().nullable().optional(),
+  locale: z.enum(["en", "es"]).optional(),
+  tags: z.array(z.string()).optional(),
+  usage_context: z.string().nullable().optional(),
+  status: z.enum(["active", "archived"]).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
+});
+
+export const getAdminMediaAssets = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("media_assets" as never)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return { assets: data ?? [] };
+  });
+
+export const createAdminMediaAsset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ input: mediaInputSchema }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const payload = { ...data.input, owner_id: context.userId };
+    const { data: row, error } = await supabaseAdmin.from("media_assets" as never).insert(payload as never).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "media_create", { entity_id: (row as { id: string }).id });
+    return { asset: row };
+  });
+
+export const updateAdminMediaAsset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), input: mediaInputSchema.partial() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: row, error } = await supabaseAdmin.from("media_assets" as never).update(data.input as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "media_update", { entity_id: data.id });
+    return { asset: row };
+  });
+
+export const archiveAdminMediaAsset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), restore: z.boolean().optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const patch = { status: data.restore ? "active" : "archived" };
+    const { data: row, error } = await supabaseAdmin.from("media_assets" as never).update(patch as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, data.restore ? "media_restore" : "media_archive", { entity_id: data.id });
+    return { asset: row };
+  });
