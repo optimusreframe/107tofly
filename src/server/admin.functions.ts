@@ -503,7 +503,7 @@ export const duplicateAdminLesson = createServerFn({ method: "POST" })
     const baseSlug = `${src.slug}-copy`;
     let slug = baseSlug; let n = 1;
     while (true) {
-      const { data: ex } = await supabaseAdmin.from("lessons").select("id").eq("slug", slug).maybeSingle();
+      const { data: ex } = await supabaseAdmin.from("lessons").select("id").eq("slug", slug).eq("locale", (src as { locale?: string }).locale ?? "en").maybeSingle();
       if (!ex) break;
       n += 1; slug = `${baseSlug}-${n}`;
     }
