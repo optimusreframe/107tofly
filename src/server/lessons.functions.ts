@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getStudySettings } from "./runtime-settings.server";
 
 export const getLessons = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
