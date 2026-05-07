@@ -273,3 +273,99 @@ async function recomputeProgress(supabase: any, userId: string) {
     updated_at: new Date().toISOString(),
   }).eq("user_id", userId);
 }
+
+// ============ STUDENT READINESS / TOPIC MASTERY ============
+export const getStudentReadiness = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [{ data: lessons }, { data: attempts }, { data: sims }, { data: cards }] = await Promise.all([
+      supabase.from("lesson_completions").select("id").eq("user_id", userId),
+      supabase.from("quiz_attempts").select("score, finished_at").eq("user_id", userId),
+      supabase.from("exam_simulations").select("score, finished_at").eq("user_id", userId).order("finished_at", { ascending: false }).limit(5),
+      supabase.from("flashcards").select("repetitions, due_date").eq("user_id", userId),
+    ]);
+    const lessonsTotal = 28;
+    const studyPct = Math.min(100, ((lessons?.length ?? 0) / lessonsTotal) * 100);
+    const quizAvg = attempts && attempts.length ? attempts.reduce((s, a) => s + Number(a.score), 0) / attempts.length : 0;
+    const bestSim = sims && sims.length ? Math.max(...sims.map((s) => Number(s.score))) : 0;
+    const fcRetention = cards && cards.length
+      ? (cards.filter((c) => (c.repetitions ?? 0) >= 2).length / cards.length) * 100
+      : 0;
+    const hasActivity = (lessons?.length ?? 0) + (attempts?.length ?? 0) + (sims?.length ?? 0) > 0;
+    const activityPct = hasActivity ? 100 : 0;
+
+    const score = Math.round(
+      0.30 * studyPct +
+      0.30 * quizAvg +
+      0.25 * bestSim +
+      0.10 * fcRetention +
+      0.05 * activityPct
+    );
+    let status: "foundation" | "building" | "almost" | "ready";
+    if (score < 50) status = "foundation";
+    else if (score < 70) status = "building";
+    else if (score < 85) status = "almost";
+    else status = "ready";
+
+    return {
+      score,
+      status,
+      breakdown: {
+        studyPct: Math.round(studyPct),
+        quizAvg: Math.round(quizAvg),
+        bestSim: Math.round(bestSim),
+        fcRetention: Math.round(fcRetention),
+      },
+      counts: {
+        lessons: lessons?.length ?? 0,
+        attempts: attempts?.length ?? 0,
+        sims: sims?.length ?? 0,
+        flashcards: cards?.length ?? 0,
+      },
+    };
+  });
+
+export const getStudentTopicMastery = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [{ data: attempts }, { data: answers }, { data: questions }] = await Promise.all([
+      supabase.from("quiz_attempts").select("id, topic, score").eq("user_id", userId),
+      supabase.from("quiz_answers").select("question_id, is_correct").eq("user_id", userId),
+      supabase.from("questions").select("id, topic"),
+    ]);
+    const qById = new Map<string, string>();
+    for (const q of questions ?? []) qById.set(q.id, (q.topic as string) ?? "unknown");
+
+    const ansByTopic = new Map<string, { total: number; correct: number }>();
+    for (const a of answers ?? []) {
+      const t = qById.get(a.question_id) ?? "unknown";
+      const cur = ansByTopic.get(t) ?? { total: 0, correct: 0 };
+      cur.total += 1;
+      if (a.is_correct) cur.correct += 1;
+      ansByTopic.set(t, cur);
+    }
+
+    return TOPICS.map((topic) => {
+      const tAttempts = (attempts ?? []).filter((a) => a.topic === topic);
+      const avgScore = tAttempts.length ? tAttempts.reduce((s, a) => s + Number(a.score), 0) / tAttempts.length : 0;
+      const ans = ansByTopic.get(topic) ?? { total: 0, correct: 0 };
+      const correctRate = ans.total ? (ans.correct / ans.total) * 100 : 0;
+      const mastery = ans.total >= 3 ? Math.round(correctRate) : Math.round(avgScore);
+      let status: "weak" | "improving" | "strong";
+      if (mastery >= 80) status = "strong";
+      else if (mastery >= 60) status = "improving";
+      else status = "weak";
+      return {
+        topic,
+        attempts: tAttempts.length,
+        averageScore: Math.round(avgScore),
+        correctRate: Math.round(correctRate),
+        totalAnswers: ans.total,
+        mastery,
+        status,
+        hasData: ans.total > 0 || tAttempts.length > 0,
+      };
+    });
+  });
