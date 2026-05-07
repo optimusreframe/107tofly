@@ -115,14 +115,17 @@ function Index() {
               Alineado al FAA ACS · Part 107
             </div>
             <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
-              From zero to{" "}
-              <span className="text-gradient">Remote Pilot</span>
-              <br />
-              ready.
+              {hero?.title ? (
+                hero.title
+              ) : (
+                <>From zero to{" "}
+                <span className="text-gradient">Remote Pilot</span>
+                <br />
+                ready.</>
+              )}
             </h1>
             <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto
-              app-like para dominar el examen FAA Part 107 con confianza.
+              {hero?.subtitle ?? hero?.body ?? "Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto app-like para dominar el examen FAA Part 107 con confianza."}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
