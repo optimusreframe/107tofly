@@ -64,14 +64,34 @@ function AdminLessonsPage() {
   const updateFn = useServerFn(updateAdminLesson);
   const archiveFn = useServerFn(archiveAdminLesson);
   const dupFn = useServerFn(duplicateAdminLesson);
+  const generateEsFn = useServerFn(generateLessonSpanishDraft);
+  const saveEsFn = useServerFn(saveLessonSpanishTranslation);
+  const publishEsFn = useServerFn(publishLessonTranslation);
+  const reviewEsFn = useServerFn(markLessonTranslationReviewed);
 
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [topicFilter, setTopicFilter] = useState<string>("all");
+  const [localeFilter, setLocaleFilter] = useState<string>("all");
+  const [translationFilter, setTranslationFilter] = useState<string>("all");
   const [editing, setEditing] = useState<Lesson | null>(null);
   const [draft, setDraft] = useState<Partial<Lesson> | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // ES translation review state
+  const [esReview, setEsReview] = useState<null | {
+    sourceLesson: Lesson;
+    existingEs: Lesson | null;
+    title: string;
+    summary: string;
+    body_md: string;
+    warnings: string[];
+    meta: Record<string, unknown>;
+  }>(null);
+  const [aiLoadingId, setAiLoadingId] = useState<string | null>(null);
+  const [esSaving, setEsSaving] = useState(false);
+  const [overwritePublished, setOverwritePublished] = useState(false);
 
   useEffect(() => { if (!authLoading && !user) navigate({ to: "/auth" }); }, [authLoading, user, navigate]);
 
@@ -81,16 +101,55 @@ function AdminLessonsPage() {
   };
   useEffect(refresh, [isAdmin]); // eslint-disable-line
 
+  // Index ES lessons by translation_group_id of EN lessons
+  const esByGroupId = useMemo(() => {
+    const m = new Map<string, Lesson>();
+    for (const l of lessons ?? []) {
+      if (l.locale === "es" && l.translation_group_id) m.set(l.translation_group_id, l);
+    }
+    return m;
+  }, [lessons]);
+
+  const getEsForEn = (en: Lesson): Lesson | null => {
+    const gid = en.translation_group_id ?? en.id;
+    return esByGroupId.get(gid) ?? null;
+  };
+
+  const translationBadgeForEn = (en: Lesson): { key: string; tone: "default" | "secondary" | "destructive" | "outline" } => {
+    const es = getEsForEn(en);
+    if (!es) return { key: "esMissing", tone: "outline" };
+    if (es.status === "published") return { key: "esReady", tone: "default" };
+    if (es.translation_status === "reviewed" || es.status === "review") return { key: "esReviewed", tone: "secondary" };
+    if (es.translation_status === "needs_review") return { key: "esNeedsReview", tone: "destructive" };
+    return { key: "esDraft", tone: "secondary" };
+  };
+
   const filtered = useMemo(() => {
     if (!lessons) return [];
     const q = search.trim().toLowerCase();
     return lessons.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (topicFilter !== "all" && l.topic !== topicFilter) return false;
+      if (localeFilter !== "all" && l.locale !== localeFilter) return false;
+      if (translationFilter !== "all") {
+        if (translationFilter === "missingEs") {
+          if (l.locale !== "en" || getEsForEn(l)) return false;
+        } else if (translationFilter === "original") {
+          if (l.translation_status !== "original" || l.locale !== "en") return false;
+        } else if (translationFilter === "aiDraft") {
+          if (l.translation_status !== "ai_draft") return false;
+        } else if (translationFilter === "reviewed") {
+          if (l.translation_status !== "reviewed") return false;
+        } else if (translationFilter === "published2") {
+          if (l.translation_status !== "published") return false;
+        } else if (translationFilter === "needsReview") {
+          if (l.translation_status !== "needs_review") return false;
+        }
+      }
       if (q && !`${l.title} ${l.slug} ${l.summary}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [lessons, search, statusFilter, topicFilter]);
+  }, [lessons, search, statusFilter, topicFilter, localeFilter, translationFilter, esByGroupId]);
 
   const counts = useMemo(() => {
     const c = { total: lessons?.length ?? 0, published: 0, draft: 0, archived: 0 };
