@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchDueFlashcards } from "@/server/study.functions";
+import { fetchDueFlashcards, getStudentReadiness, getStudentTopicMastery } from "@/server/study.functions";
 import {
   Flame,
   Sparkles,
@@ -16,6 +17,9 @@ import {
   Brain,
   Target,
 } from "lucide-react";
+
+type Mastery = Awaited<ReturnType<typeof getStudentTopicMastery>>;
+type Readiness = Awaited<ReturnType<typeof getStudentReadiness>>;
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -62,13 +66,18 @@ interface ProgressRow {
 }
 
 function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const fetchDue = useServerFn(fetchDueFlashcards);
+  const fetchReadiness = useServerFn(getStudentReadiness);
+  const fetchMastery = useServerFn(getStudentTopicMastery);
   const [progress, setProgress] = useState<ProgressRow | null>(null);
   const [name, setName] = useState<string>("Pilot");
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [activity, setActivity] = useState<number[] | null>(null);
+  const [readinessData, setReadinessData] = useState<Readiness | null>(null);
+  const [mastery, setMastery] = useState<Mastery | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -91,6 +100,8 @@ function Dashboard() {
         if (data?.display_name) setName(data.display_name);
       });
     fetchDue().then((d) => setDueCount(Array.isArray(d) ? d.length : 0)).catch(() => setDueCount(0));
+    fetchReadiness().then(setReadinessData).catch(() => setReadinessData(null));
+    fetchMastery().then(setMastery).catch(() => setMastery(null));
 
     // Build last-7-days activity from real signals (lessons + quizzes + sims)
     const since = new Date();
@@ -115,10 +126,11 @@ function Dashboard() {
       (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
       setActivity(counts);
     }).catch(() => setActivity([]));
-  }, [user, fetchDue]);
+  }, [user, fetchDue, fetchReadiness, fetchMastery]);
 
 
-  const readiness = progress?.readiness ?? 0;
+  const readiness = readinessData?.score ?? progress?.readiness ?? 0;
+  const readinessStatusKey = readinessData?.status ?? (readiness >= 85 ? "ready" : readiness >= 70 ? "almost" : readiness >= 50 ? "building" : "foundation");
   const ringValues = [
     { label: "Estudio", value: progress?.study_pct ?? 0, color: "oklch(0.62 0.2 255)" },
     { label: "Práctica", value: progress?.practice_pct ?? 0, color: "oklch(0.7 0.16 235)" },
@@ -164,7 +176,7 @@ function Dashboard() {
                   {readiness}<span className="text-xl text-muted-foreground">/100</span>
                 </div>
                 <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-success">
-                  <TrendingUp className="h-4 w-4" /> Almost ready · sigue así
+                  <TrendingUp className="h-4 w-4" /> {t(`student.${readinessStatusKey}`)}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -179,21 +191,41 @@ function Dashboard() {
                 ))}
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { l: "Mapas", v: 92 },
-                { l: "Clima", v: 71 },
-                { l: "Reglas", v: 85 },
-                { l: "ADM", v: 64 },
-              ].map((d) => (
-                <div key={d.l} className="rounded-2xl border border-border bg-card/60 p-3">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{d.l}</div>
-                  <div className="font-display text-lg font-semibold">{d.v}%</div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full bg-[var(--gradient-sky)]" style={{ width: `${d.v}%` }} />
-                  </div>
+
+            {/* Topic mastery (real data) */}
+            <div className="mt-6">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("student.topicMastery")}</div>
+                {mastery && mastery.some((m) => m.status === "weak" && m.hasData) && (
+                  <Link to="/practice" search={{ mode: "weak" } as never} className="text-xs font-medium text-primary hover:underline">
+                    {t("student.practiceWeak")} →
+                  </Link>
+                )}
+              </div>
+              {!mastery ? (
+                <div className="text-sm text-muted-foreground">{t("common.loading")}</div>
+              ) : mastery.every((m) => !m.hasData) ? (
+                <div className="rounded-2xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                  {t("student.masteryEmpty")}
                 </div>
-              ))}
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {mastery.filter((m) => m.hasData).slice(0, 4).map((m) => (
+                    <div key={m.topic} className="rounded-2xl border border-border bg-card/60 p-3">
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        {t(`student.topics.${m.topic}`, { defaultValue: m.topic })}
+                      </div>
+                      <div className="font-display text-lg font-semibold">{m.mastery}%</div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full bg-[var(--gradient-sky)]" style={{ width: `${m.mastery}%` }} />
+                      </div>
+                      <div className={`mt-1 text-[10px] font-medium ${m.status === "strong" ? "text-success" : m.status === "weak" ? "text-destructive" : "text-warning"}`}>
+                        {t(`student.${m.status}`)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
