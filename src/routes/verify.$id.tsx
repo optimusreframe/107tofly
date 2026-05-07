@@ -92,7 +92,7 @@ function VerifyPage() {
               {isRevoked && cert.revoke_reason && (
                 <p className="text-xs text-destructive">{t("verify.reason", { defaultValue: "Reason" })}: {cert.revoke_reason}</p>
               )}
-              <p className="text-xs leading-relaxed text-muted-foreground">{t("verify.note")}</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">{note}</p>
             </div>
           ) : (
             <div className="mt-6 flex items-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-destructive">
