@@ -31,6 +31,7 @@ import { Route as LessonsIndexRouteImport } from './routes/lessons.index'
 import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
@@ -143,6 +144,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLessonsRoute = AdminLessonsRouteImport.update({
   id: '/lessons',
   path: '/lessons',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/lessons': typeof AdminLessonsRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/simulator'
     | '/weather-lab'
     | '/admin/lessons'
+    | '/admin/questions'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/simulator'
     | '/weather-lab'
     | '/admin/lessons'
+    | '/admin/questions'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/simulator'
     | '/weather-lab'
     | '/admin/lessons'
+    | '/admin/questions'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -483,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/lessons': {
       id: '/admin/lessons'
       path: '/lessons'
@@ -495,11 +514,13 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminLessonsRoute: typeof AdminLessonsRoute
+  AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminLessonsRoute: AdminLessonsRoute,
+  AdminQuestionsRoute: AdminQuestionsRoute,
   AdminUsersRoute: AdminUsersRoute,
 }
 
