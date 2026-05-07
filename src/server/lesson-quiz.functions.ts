@@ -13,7 +13,7 @@ type QuestionRow = {
   acs_code: string | null;
   source: string | null;
   question: string;
-  options: unknown[];
+  options: string[];
   explanation: string;
   common_mistake: string | null;
   correct_index: number;
