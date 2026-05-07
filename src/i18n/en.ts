@@ -1,6 +1,7 @@
 export default {
   nav: {
     dashboard: "Dashboard",
+    lessons: "Lessons",
     practice: "Practice",
     course: "Course",
     simulator: "Simulator",
