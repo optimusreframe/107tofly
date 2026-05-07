@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { ShieldCheck, ShieldX, Plane } from "lucide-react";
 
 export const Route = createFileRoute("/verify/$id")({
