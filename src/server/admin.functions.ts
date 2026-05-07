@@ -459,7 +459,12 @@ export const updateAdminLesson = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string().uuid(), input: lessonInputSchema.partial() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const conflicts = await checkLessonConflicts(data.input, data.id);
+    let lessonLocale = data.input.locale;
+    if (!lessonLocale) {
+      const { data: existing } = await supabaseAdmin.from("lessons").select("locale").eq("id", data.id).maybeSingle();
+      lessonLocale = (existing?.locale as string | undefined) ?? "en";
+    }
+    const conflicts = await checkLessonConflicts({ ...data.input, locale: lessonLocale }, data.id);
     if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
     if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
     const patch: Record<string, unknown> = {
