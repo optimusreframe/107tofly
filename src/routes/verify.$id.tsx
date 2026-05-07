@@ -22,6 +22,9 @@ type Cert = {
   modules_completed: number;
   hours_estimated: number;
   issued_at: string;
+  status?: string | null;
+  revoked_at?: string | null;
+  revoke_reason?: string | null;
 };
 
 function VerifyPage() {
@@ -33,7 +36,7 @@ function VerifyPage() {
   useEffect(() => {
     supabase
       .from("certificates")
-      .select("id,display_name,final_score,modules_completed,hours_estimated,issued_at")
+      .select("id,display_name,final_score,modules_completed,hours_estimated,issued_at,status,revoked_at,revoke_reason")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {
@@ -41,6 +44,8 @@ function VerifyPage() {
         setLoading(false);
       });
   }, [id]);
+
+  const isRevoked = cert?.status === "revoked";
 
   return (
     <PageShell>
@@ -60,16 +65,26 @@ function VerifyPage() {
             <p className="mt-6 text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : cert ? (
             <div className="mt-6 space-y-4">
-              <div className="flex items-center gap-2 rounded-2xl border border-success/40 bg-success/10 px-4 py-3 text-success">
-                <ShieldCheck className="h-5 w-5" />
-                <span className="text-sm font-medium">{t("verify.valid")}</span>
-              </div>
+              {isRevoked ? (
+                <div className="flex items-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-destructive">
+                  <ShieldX className="h-5 w-5" />
+                  <span className="text-sm font-medium">{t("verify.revoked", { defaultValue: "Certificate revoked" })}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-2xl border border-success/40 bg-success/10 px-4 py-3 text-success">
+                  <ShieldCheck className="h-5 w-5" />
+                  <span className="text-sm font-medium">{t("verify.valid")}</span>
+                </div>
+              )}
               <dl className="grid grid-cols-2 gap-4 text-sm">
                 <Row label={t("verify.holder")} value={cert.display_name} />
                 <Row label={t("verify.score")} value={`${cert.final_score}%`} />
                 <Row label={t("verify.modules")} value={String(cert.modules_completed)} />
                 <Row label={t("verify.issued")} value={new Date(cert.issued_at).toLocaleDateString()} />
               </dl>
+              {isRevoked && cert.revoke_reason && (
+                <p className="text-xs text-destructive">{t("verify.reason", { defaultValue: "Reason" })}: {cert.revoke_reason}</p>
+              )}
               <p className="text-xs leading-relaxed text-muted-foreground">{t("verify.note")}</p>
             </div>
           ) : (
