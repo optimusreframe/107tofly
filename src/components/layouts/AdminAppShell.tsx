@@ -49,14 +49,15 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
             </div>
             <nav className="flex-1 space-y-0.5 px-3 py-2">
               {ADMIN_NAV.map((item) => {
-                const active = path === item.to;
+                const active = item.to === "/admin" ? path === "/admin" : path === item.to || path.startsWith(item.to + "/");
                 const Icon = item.icon;
-                const cls = `flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                  active ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                const cls = `relative flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                  active ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                 } ${!item.ready ? "opacity-60 pointer-events-none" : ""}`;
                 return (
                   <Link key={item.to} to={item.to} aria-disabled={!item.ready} aria-current={active ? "page" : undefined} className={cls}>
-                    <span className="flex items-center gap-3"><Icon className="h-4 w-4" />{t(item.labelKey)}</span>
+                    {active && <span aria-hidden className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />}
+                    <span className="flex items-center gap-3"><Icon className={`h-4 w-4 ${active ? "text-primary" : ""}`} />{t(item.labelKey)}</span>
                     {!item.ready && <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] uppercase tracking-wide">soon</span>}
                   </Link>
                 );
