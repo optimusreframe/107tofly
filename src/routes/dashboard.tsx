@@ -199,24 +199,25 @@ function Dashboard() {
 
           {/* Next lesson */}
           <Link
-            to="/lesson"
+            to="/lessons"
             className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
           >
             <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
             <div>
-              <div className="text-xs uppercase tracking-wider text-primary">Siguiente lección</div>
+              <div className="text-xs uppercase tracking-wider text-primary">Plan de estudio</div>
               <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
-                Class B y autorizaciones LAANC
+                Continúa con tu plan de 28 días
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                25 min · 14 CFR 107.41 · ACS UA.I.B.K1
+                Lecciones diarias · ACS Part 107
               </p>
             </div>
             <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <PlayCircle className="h-5 w-5" /> Continuar
+              <PlayCircle className="h-5 w-5" /> Ver lecciones
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </div>
           </Link>
+
         </div>
 
         {/* Action grid */}
@@ -226,8 +227,10 @@ function Dashboard() {
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
           >
             <Brain className="h-5 w-5 text-primary" />
-            <div className="mt-3 font-display text-lg font-semibold">8 flashcards vencen hoy</div>
-            <div className="text-sm text-muted-foreground">Spaced repetition · 4 min</div>
+            <div className="mt-3 font-display text-lg font-semibold">
+              {dueCount === null ? "Flashcards" : dueCount === 0 ? "Sin tarjetas vencidas" : `${dueCount} ${dueCount === 1 ? "flashcard vence hoy" : "flashcards vencen hoy"}`}
+            </div>
+            <div className="text-sm text-muted-foreground">Spaced repetition · SM-2</div>
           </Link>
           <Link
             to="/simulator"
@@ -263,17 +266,29 @@ function Dashboard() {
               <Clock className="h-3.5 w-3.5" /> Últimos 7 días
             </span>
           </div>
-          <div className="mt-4 flex h-24 items-end gap-2">
-            {[40, 65, 30, 80, 55, 90, 70].map((v, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-md bg-[var(--gradient-sky)]"
-                  style={{ height: `${v}%` }}
-                />
-                <div className="text-[10px] text-muted-foreground">{["L","M","X","J","V","S","D"][i]}</div>
-              </div>
-            ))}
-          </div>
+          {activity === null ? (
+            <div className="mt-4 text-sm text-muted-foreground">Cargando actividad…</div>
+          ) : activity.every((v) => v === 0) ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Aún no hay suficiente actividad. Completa una lección o un quiz para empezar a ver tu progreso aquí.
+            </div>
+          ) : (
+            <div className="mt-4 flex h-24 items-end gap-2" role="img" aria-label="Actividad de los últimos 7 días">
+              {activity.map((v, i) => {
+                const max = Math.max(...activity, 1);
+                const pct = (v / max) * 100;
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-md bg-[var(--gradient-sky)]"
+                      style={{ height: `${Math.max(pct, v > 0 ? 8 : 2)}%`, opacity: v === 0 ? 0.25 : 1 }}
+                    />
+                    <div className="text-[10px] text-muted-foreground">{DAY_LABELS[i]}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </PageShell>
