@@ -517,6 +517,79 @@ function AdminLessonsPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Sheet open={!!esReview} onOpenChange={(o) => { if (!o) { setEsReview(null); setOverwritePublished(false); } }}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-4xl">
+          <SheetHeader>
+            <SheetTitle>{t("admin.lessons.translation.review")} — {esReview?.sourceLesson.slug}</SheetTitle>
+          </SheetHeader>
+          {esReview && (
+            <div className="mt-4 grid gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                <Badge variant="outline">{t("admin.lessons.translation.translatedFromEn")}</Badge>
+                <Badge variant="secondary">W{esReview.sourceLesson.week}·D{esReview.sourceLesson.day}</Badge>
+                <Badge variant="secondary">{esReview.sourceLesson.topic}</Badge>
+                {esReview.existingEs && <Badge variant="default">{t(`admin.status.${esReview.existingEs.status}`)}</Badge>}
+                {esReview.existingEs?.status === "published" && (
+                  <Badge variant="destructive">{t("admin.lessons.translation.publishedExists")}</Badge>
+                )}
+              </div>
+              {esReview.warnings.length > 0 && (
+                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs">
+                  <div className="mb-1 font-medium">{t("admin.lessons.translation.aiWarnings")}</div>
+                  <ul className="list-disc pl-4">{esReview.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+                </div>
+              )}
+              <Tabs defaultValue="draft">
+                <TabsList>
+                  <TabsTrigger value="source">{t("admin.lessons.translation.tabSource")}</TabsTrigger>
+                  <TabsTrigger value="draft">{t("admin.lessons.translation.tabDraft")}</TabsTrigger>
+                  <TabsTrigger value="preview">{t("admin.lessons.translation.tabPreview")}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="source" className="mt-3 space-y-2">
+                  <div className="text-xs text-muted-foreground">{t("admin.common.title")}</div>
+                  <div className="rounded-md border border-border/60 bg-muted/30 p-2 text-sm">{esReview.sourceLesson.title}</div>
+                  <div className="text-xs text-muted-foreground">{t("admin.lessons.summary")}</div>
+                  <div className="rounded-md border border-border/60 bg-muted/30 p-2 text-sm">{esReview.sourceLesson.summary}</div>
+                  <div className="text-xs text-muted-foreground">{t("admin.lessons.bodyMd")}</div>
+                  <Textarea readOnly rows={18} value={esReview.sourceLesson.body_md} className="font-mono text-xs" />
+                </TabsContent>
+                <TabsContent value="draft" className="mt-3 space-y-2">
+                  <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.title")}</span>
+                    <Input value={esReview.title} onChange={(e) => setEsReview({ ...esReview, title: e.target.value })} /></label>
+                  <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.summary")}</span>
+                    <Textarea rows={2} value={esReview.summary} onChange={(e) => setEsReview({ ...esReview, summary: e.target.value })} /></label>
+                  <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.bodyMd")}</span>
+                    <Textarea rows={18} value={esReview.body_md} onChange={(e) => setEsReview({ ...esReview, body_md: e.target.value })} className="font-mono text-xs" /></label>
+                  <p className="text-[10px] text-muted-foreground">{t("admin.lessons.translation.preserveStructure")}</p>
+                </TabsContent>
+                <TabsContent value="preview" className="mt-3">
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{t("admin.lessons.translation.markdownPreview")}</div>
+                    <h2 className="font-display text-xl font-semibold">{esReview.title}</h2>
+                    <p className="mb-3 text-sm text-muted-foreground">{esReview.summary}</p>
+                    <article className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{esReview.body_md}</ReactMarkdown>
+                    </article>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              {esReview.existingEs?.status === "published" && (
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={overwritePublished} onChange={(e) => setOverwritePublished(e.target.checked)} />
+                  {t("admin.lessons.translation.confirmOverwrite")}
+                </label>
+              )}
+              <div className="sticky bottom-0 -mx-6 mt-2 flex flex-wrap justify-end gap-2 border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
+                <Button variant="ghost" onClick={() => { setEsReview(null); setOverwritePublished(false); }}>{t("admin.common.cancel")}</Button>
+                <Button variant="secondary" onClick={() => saveEs("draft")} disabled={esSaving}>{esSaving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}{t("admin.lessons.translation.saveDraft")}</Button>
+                <Button variant="secondary" onClick={() => saveEs("reviewed")} disabled={esSaving}>{t("admin.lessons.translation.saveReviewed")}</Button>
+                <Button onClick={() => saveEs("published")} disabled={esSaving}>{t("admin.lessons.translation.publish")}</Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </AdminAppShell>
   );
 }
