@@ -30,6 +30,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LessonsIndexRouteImport } from './routes/lessons.index'
 import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -136,11 +137,16 @@ const LessonsSlugRoute = LessonsSlugRouteImport.update({
   path: '/lessons/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
   '/lessons/': typeof LessonsIndexRoute
@@ -163,7 +170,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
   '/lessons': typeof LessonsIndexRoute
@@ -187,7 +195,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
   '/lessons/': typeof LessonsIndexRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
     | '/lessons/'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
     | '/lessons'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
     | '/lessons/'
@@ -282,7 +294,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
@@ -452,13 +464,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LessonsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminUsersRoute: typeof AdminUsersRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminUsersRoute: AdminUsersRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
