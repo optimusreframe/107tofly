@@ -339,6 +339,7 @@ export type Database = {
       }
       lessons: {
         Row: {
+          ai_translation_metadata: Json
           archived_at: string | null
           body_md: string
           created_at: string
@@ -350,17 +351,22 @@ export type Database = {
           order_index: number
           published_at: string | null
           slug: string
+          source_lesson_id: string | null
           sources: Json
           status: string
           summary: string
           title: string
           topic: Database["public"]["Enums"]["question_topic"] | null
+          translated_from_locale: string | null
+          translation_group_id: string | null
+          translation_status: string
           updated_at: string
           updated_by: string | null
           version: number
           week: number
         }
         Insert: {
+          ai_translation_metadata?: Json
           archived_at?: string | null
           body_md: string
           created_at?: string
@@ -372,17 +378,22 @@ export type Database = {
           order_index: number
           published_at?: string | null
           slug: string
+          source_lesson_id?: string | null
           sources?: Json
           status?: string
           summary: string
           title: string
           topic?: Database["public"]["Enums"]["question_topic"] | null
+          translated_from_locale?: string | null
+          translation_group_id?: string | null
+          translation_status?: string
           updated_at?: string
           updated_by?: string | null
           version?: number
           week: number
         }
         Update: {
+          ai_translation_metadata?: Json
           archived_at?: string | null
           body_md?: string
           created_at?: string
@@ -394,17 +405,29 @@ export type Database = {
           order_index?: number
           published_at?: string | null
           slug?: string
+          source_lesson_id?: string | null
           sources?: Json
           status?: string
           summary?: string
           title?: string
           topic?: Database["public"]["Enums"]["question_topic"] | null
+          translated_from_locale?: string | null
+          translation_group_id?: string | null
+          translation_status?: string
           updated_at?: string
           updated_by?: string | null
           version?: number
           week?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lessons_source_lesson_fk"
+            columns: ["source_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_assets: {
         Row: {
