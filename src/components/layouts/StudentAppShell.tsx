@@ -111,13 +111,14 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
                     key={item.to}
                     to={item.to}
                     aria-current={active ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                    className={`relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
                       active
                         ? "bg-accent text-foreground shadow-sm"
                         : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    {active && <span aria-hidden className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />}
+                    <Icon className={`h-4 w-4 ${active ? "text-primary" : ""}`} />
                     <span>{t(item.key)}</span>
                   </Link>
                 );
@@ -128,21 +129,21 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
             </div>
           </aside>
 
-          <div className="flex min-h-screen flex-1 flex-col">
+          <div className="flex min-h-screen flex-1 flex-col min-w-0">
             <header className="sticky top-0 z-40 flex h-14 items-center justify-end gap-2 border-b border-border/40 bg-background/60 px-4 backdrop-blur-xl">
-              <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center gap-1 rounded-full border border-border bg-card/60 px-3 text-xs font-medium hover:bg-accent">
+              <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center gap-1 rounded-full border border-border bg-card/60 px-3 text-xs font-medium hover:bg-accent transition">
                 <span className="flex items-center gap-1"><Languages className="h-3.5 w-3.5" />{lang}</span>
               </button>
-              <button onClick={toggle} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent">
+              <button onClick={toggle} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent transition">
                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
               {user && (
-                <button onClick={() => signOut()} aria-label="Sign out" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 text-sm hover:bg-accent">
+                <button onClick={() => signOut()} aria-label="Sign out" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 text-sm hover:bg-accent transition">
                   <LogOut className="h-4 w-4" /> {t("nav.signout")}
                 </button>
               )}
             </header>
-            <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+            <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none min-w-0">
               {children}
             </main>
             <SiteFooter />
@@ -150,7 +151,10 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
         </div>
       ) : (
         <>
-          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-border/40 bg-background/70 px-4 backdrop-blur-xl">
+          <header
+            className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-border/40 bg-background/70 px-4 backdrop-blur-xl"
+            style={{ paddingTop: "env(safe-area-inset-top)", height: "calc(3.5rem + env(safe-area-inset-top))" }}
+          >
             <Link to="/" className="flex items-center gap-2 font-display font-semibold">
               <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--gradient-sky)] text-primary-foreground">
                 <Plane className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -158,13 +162,13 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
               <span>107<span className="text-gradient">toFly</span></span>
             </Link>
             <div className="flex items-center gap-2">
-              <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center rounded-full border border-border bg-card/60 px-2 text-xs hover:bg-accent">
+              <button onClick={toggleLang} aria-label="Toggle language" className="grid h-10 min-w-10 place-items-center rounded-full border border-border bg-card/60 px-2 text-xs hover:bg-accent active:scale-95 transition">
                 <Languages className="h-3.5 w-3.5" />
               </button>
-              <button onClick={toggle} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent">
+              <button onClick={toggle} aria-label="Toggle theme" className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent active:scale-95 transition">
                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
-              <button onClick={() => setMenuOpen((s) => !s)} aria-label="Open menu" aria-expanded={menuOpen} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent">
+              <button onClick={() => setMenuOpen((s) => !s)} aria-label="Open menu" aria-expanded={menuOpen} className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent active:scale-95 transition">
                 <Menu className="h-4 w-4" />
               </button>
             </div>
@@ -175,18 +179,19 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
               <nav
                 aria-label="More navigation"
                 className="absolute right-3 top-16 w-64 rounded-2xl border border-border bg-card p-2 shadow-xl"
+                style={{ top: "calc(4rem + env(safe-area-inset-top))" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {PRIMARY.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <Link key={item.to} to={item.to} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-accent">
+                    <Link key={item.to} to={item.to} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-accent active:bg-accent/80">
                       <Icon className="h-4 w-4" /> {t(item.key)}
                     </Link>
                   );
                 })}
                 {user && (
-                  <button onClick={() => { setMenuOpen(false); signOut(); }} className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-accent">
+                  <button onClick={() => { setMenuOpen(false); signOut(); }} className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-accent">
                     <LogOut className="h-4 w-4" /> {t("nav.signout")}
                   </button>
                 )}
@@ -194,14 +199,19 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
             </div>
           )}
 
-          <main id="main-content" tabIndex={-1} className="pb-20 focus:outline-none">
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="focus:outline-none"
+            style={{ paddingBottom: isMobile ? "calc(5rem + env(safe-area-inset-bottom))" : undefined }}
+          >
             {children}
           </main>
 
           {isMobile && (
             <nav
               aria-label="Primary"
-              className="fixed inset-x-0 bottom-0 z-40 border-t border-border/40 bg-background/85 backdrop-blur-xl"
+              className="fixed inset-x-0 bottom-0 z-40 border-t border-border/40 bg-background/90 backdrop-blur-xl"
               style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
               <ul className="mx-auto grid max-w-md grid-cols-5">
@@ -213,12 +223,12 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
                       <Link
                         to={item.to}
                         aria-current={active ? "page" : undefined}
-                        className={`flex flex-col items-center gap-1 px-2 py-2.5 text-[11px] ${
-                          active ? "text-foreground" : "text-muted-foreground"
+                        className={`flex min-h-[56px] flex-col items-center justify-center gap-1 px-2 py-2 text-[10px] font-medium transition active:scale-95 ${
+                          active ? "text-primary" : "text-muted-foreground"
                         }`}
                       >
-                        <Icon className="h-5 w-5" />
-                        <span>{t(item.key)}</span>
+                        <Icon className={`h-5 w-5 ${active ? "scale-110" : ""} transition-transform`} />
+                        <span className="truncate">{t(item.key)}</span>
                       </Link>
                     </li>
                   );
@@ -227,7 +237,7 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
                   <button
                     onClick={() => setMenuOpen(true)}
                     aria-label="More"
-                    className="flex w-full flex-col items-center gap-1 px-2 py-2.5 text-[11px] text-muted-foreground"
+                    className="flex min-h-[56px] w-full flex-col items-center justify-center gap-1 px-2 py-2 text-[10px] font-medium text-muted-foreground active:scale-95"
                   >
                     <Menu className="h-5 w-5" />
                     <span>{t("nav.more", { defaultValue: "Más" })}</span>
