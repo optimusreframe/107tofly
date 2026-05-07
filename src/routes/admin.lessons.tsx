@@ -37,8 +37,10 @@ type Lesson = {
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"];
 const STATUSES = ["draft","review","published","archived"] as const;
+const LOCALES = ["en","es"] as const;
 
 function AdminLessonsPage() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
