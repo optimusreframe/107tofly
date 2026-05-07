@@ -17,7 +17,7 @@ export const getStudentSettings = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .maybeSingle();
     return {
-      email: context.claims?.email ?? null,
+      email: (context.claims as { email?: string } | undefined)?.email ?? null,
       profile: profile ?? null,
       progress: progress ?? null,
     };
