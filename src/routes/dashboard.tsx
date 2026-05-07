@@ -6,6 +6,7 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchDueFlashcards, getStudentReadiness, getStudentTopicMastery } from "@/server/study.functions";
+import { getNextLesson, getStudentRecentActivity, type ActivityItem } from "@/server/student-settings.functions";
 import {
   Flame,
   Sparkles,
@@ -16,10 +17,14 @@ import {
   PlayCircle,
   Brain,
   Target,
+  CheckCircle2,
+  GraduationCap,
+  Award,
 } from "lucide-react";
 
 type Mastery = Awaited<ReturnType<typeof getStudentTopicMastery>>;
 type Readiness = Awaited<ReturnType<typeof getStudentReadiness>>;
+type NextLesson = Awaited<ReturnType<typeof getNextLesson>>;
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
