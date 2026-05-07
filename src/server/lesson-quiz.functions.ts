@@ -139,10 +139,13 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
     const lessonId = (lesson?.id as string | undefined) ?? null;
     const topic = data.topic ?? ((lesson?.topic as string | undefined) ?? undefined);
 
+    const { quizPassScore, lessonQuizPassXp } = await getStudySettings();
+    const passThreshold = Number(quizPassScore ?? 70);
+    const quizXp = Number(lessonQuizPassXp ?? 20);
     const total = data.answers.length;
     const correct = data.answers.filter((a) => a.is_correct).length;
     const score = Math.round((correct / total) * 100);
-    const passed = score >= PASS_THRESHOLD;
+    const passed = score >= passThreshold;
 
     const { data: attempt, error: aerr } = await supabase
       .from("quiz_attempts")
