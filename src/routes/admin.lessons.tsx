@@ -289,22 +289,22 @@ function AdminLessonsPage() {
                     <SelectContent>{LOCALES.map((lc) => <SelectItem key={lc} value={lc}>{lc}</SelectItem>)}</SelectContent>
                   </Select></label>
               </div>
-              <label className="text-xs"><span className="text-muted-foreground">Body (Markdown)</span>
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.bodyMd")}</span>
                 <Textarea rows={10} value={draft.body_md ?? ""} onChange={(e) => setDraft({ ...draft, body_md: e.target.value })} className="font-mono text-xs" /></label>
-              <label className="text-xs"><span className="text-muted-foreground">Sources (JSON array)</span>
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.sources")} (JSON)</span>
                 <Textarea rows={3} value={typeof draft.sources === "string" ? draft.sources : JSON.stringify(draft.sources ?? [], null, 2)}
                   onChange={(e) => setDraft({ ...draft, sources: e.target.value as unknown as never })} className="font-mono text-xs" /></label>
 
               <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-                <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Preview</div>
+                <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{t("admin.lessons.markdownPreview")}</div>
                 <article className="prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft.body_md ?? ""}</ReactMarkdown>
                 </article>
               </div>
 
               <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
-                <Button variant="ghost" onClick={() => { setDraft(null); setEditing(null); }}>Cancel</Button>
-                <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />} Save</Button>
+                <Button variant="ghost" onClick={() => { setDraft(null); setEditing(null); }}>{t("admin.common.cancel")}</Button>
+                <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />} {t("admin.common.save")}</Button>
               </div>
             </div>
           )}
