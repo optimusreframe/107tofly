@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import { Shield, Search, Plus, Copy, Archive, RotateCcw, Save, Loader2, CheckCircle2 } from "lucide-react";
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
@@ -30,14 +31,16 @@ type Q = {
   id: string; question: string; options: string[]; correct_index: number;
   explanation: string; common_mistake: string | null; topic: string;
   difficulty: string; acs_code: string; source: string; tags: string[] | null;
-  status: string; locale: string;
+  status: string; locale: string; version?: number; updated_at?: string; updated_by?: string | null;
 };
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"];
-const DIFFS = ["easy","medium","hard"];
+const DIFFS = ["easy","medium","hard"] as const;
 const STATUSES = ["draft","reviewed","published","archived"] as const;
+const LOCALES = ["en","es"] as const;
 
 function AdminQuestionsPage() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
@@ -118,7 +121,7 @@ function AdminQuestionsPage() {
       };
       if (editing) await updateFn({ data: { id: editing.id, input: payload } });
       else await createFn({ data: payload });
-      toast.success(editing ? "Question updated" : "Question created");
+      toast.success(t(editing ? "admin.questions.updated" : "admin.questions.created"));
       setDraft(null); setEditing(null); refresh();
     } catch (e) { toast.error((e as Error).message); }
     finally { setSaving(false); }
@@ -127,12 +130,12 @@ function AdminQuestionsPage() {
   const onArchive = async (q: Q) => {
     try {
       await archiveFn({ data: { id: q.id, restore: q.status === "archived" } });
-      toast.success(q.status === "archived" ? "Restored" : "Archived");
+      toast.success(t(q.status === "archived" ? "admin.questions.restored" : "admin.questions.archived"));
       refresh();
     } catch (e) { toast.error((e as Error).message); }
   };
   const onDup = async (q: Q) => {
-    try { await dupFn({ data: { id: q.id } }); toast.success("Duplicated"); refresh(); }
+    try { await dupFn({ data: { id: q.id } }); toast.success(t("admin.questions.duplicated")); refresh(); }
     catch (e) { toast.error((e as Error).message); }
   };
 
@@ -152,35 +155,35 @@ function AdminQuestionsPage() {
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight">Questions</h1>
-            <p className="text-sm text-muted-foreground">{counts.total} total · {counts.published} published · {counts.draft} draft/reviewed · {counts.archived} archived</p>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">{t("admin.questions.title")}</h1>
+            <p className="text-sm text-muted-foreground">{counts.total} total · {counts.published} {t("admin.status.published").toLowerCase()} · {counts.draft} {t("admin.status.draft").toLowerCase()} · {counts.archived} {t("admin.status.archived").toLowerCase()}</p>
           </div>
-          <Button onClick={() => openEditor(null)}><Plus className="mr-1.5 h-4 w-4" /> New question</Button>
+          <Button onClick={() => openEditor(null)}><Plus className="mr-1.5 h-4 w-4" /> {t("admin.questions.new")}</Button>
         </header>
 
         <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search question, source, ACS, tags…" className="pl-9" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("admin.questions.searchPh")} className="pl-9" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All status</SelectItem>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            <SelectContent><SelectItem value="all">{t("admin.common.allStatus")}</SelectItem>{STATUSES.map(s => <SelectItem key={s} value={s}>{t(`admin.status.${s}`)}</SelectItem>)}</SelectContent>
           </Select>
           <Select value={topicFilter} onValueChange={setTopicFilter}>
             <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All topics</SelectItem>{TOPICS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            <SelectContent><SelectItem value="all">{t("admin.common.allTopics")}</SelectItem>{TOPICS.map(tp => <SelectItem key={tp} value={tp}>{tp}</SelectItem>)}</SelectContent>
           </Select>
           <Select value={diffFilter} onValueChange={setDiffFilter}>
             <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All diff.</SelectItem>{DIFFS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+            <SelectContent><SelectItem value="all">{t("admin.common.allDifficulty")}</SelectItem>{DIFFS.map(d => <SelectItem key={d} value={d}>{t(`admin.diff.${d}`)}</SelectItem>)}</SelectContent>
           </Select>
         </div>
 
         {!items ? (
-          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">Loading…</div>
+          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">{t("admin.common.loading")}</div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">No questions found.</div>
+          <div className="rounded-2xl border border-border/60 p-8 text-center text-sm text-muted-foreground">{t("admin.common.empty")}</div>
         ) : isMobile ? (
           <div className="space-y-2">
             {filtered.map((q) => (
@@ -188,8 +191,8 @@ function AdminQuestionsPage() {
                 <div className="text-sm line-clamp-2">{q.question}</div>
                 <div className="mt-2 flex flex-wrap gap-1">
                   <Badge variant="secondary">{q.topic}</Badge>
-                  <Badge variant="secondary">{q.difficulty}</Badge>
-                  <Badge variant={q.status === "published" ? "default" : "secondary"}>{q.status}</Badge>
+                  <Badge variant="secondary">{t(`admin.diff.${q.difficulty}`)}</Badge>
+                  <Badge variant={q.status === "published" ? "default" : "secondary"}>{t(`admin.status.${q.status}`)}</Badge>
                 </div>
               </button>
             ))}
@@ -199,11 +202,11 @@ function AdminQuestionsPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left">Question</th>
-                  <th className="px-3 py-2 text-left">Topic</th>
-                  <th className="px-3 py-2 text-left">Diff</th>
-                  <th className="px-3 py-2 text-left">ACS</th>
-                  <th className="px-3 py-2 text-left">Status</th>
+                  <th className="px-3 py-2 text-left">{t("admin.questions.question")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.difficulty")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.acsCode")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.status")}</th>
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
@@ -212,13 +215,13 @@ function AdminQuestionsPage() {
                   <tr key={q.id} className="border-t border-border/40 hover:bg-accent/30">
                     <td className="max-w-md px-3 py-2"><button onClick={() => openEditor(q)} className="text-left line-clamp-2 hover:underline">{q.question}</button></td>
                     <td className="px-3 py-2">{q.topic}</td>
-                    <td className="px-3 py-2">{q.difficulty}</td>
+                    <td className="px-3 py-2">{t(`admin.diff.${q.difficulty}`)}</td>
                     <td className="px-3 py-2 text-xs">{q.acs_code}</td>
-                    <td className="px-3 py-2"><Badge variant={q.status === "published" ? "default" : "secondary"}>{q.status}</Badge></td>
+                    <td className="px-3 py-2"><Badge variant={q.status === "published" ? "default" : "secondary"}>{t(`admin.status.${q.status}`)}</Badge></td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex justify-end gap-1">
-                        <button onClick={() => onDup(q)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title="Duplicate"><Copy className="h-4 w-4" /></button>
-                        <button onClick={() => onArchive(q)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={q.status === "archived" ? "Restore" : "Archive"}>
+                        <button onClick={() => onDup(q)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={t("admin.common.duplicate")}><Copy className="h-4 w-4" /></button>
+                        <button onClick={() => onArchive(q)} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={q.status === "archived" ? t("admin.common.restore") : t("admin.common.archive")}>
                           {q.status === "archived" ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                         </button>
                       </div>
@@ -234,13 +237,21 @@ function AdminQuestionsPage() {
 
       <Sheet open={!!draft} onOpenChange={(o) => { if (!o) { setDraft(null); setEditing(null); } }}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
-          <SheetHeader><SheetTitle>{editing ? "Edit question" : "New question"}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>{editing ? t("admin.questions.edit") : t("admin.questions.new")}</SheetTitle></SheetHeader>
           {draft && (
             <div className="mt-4 grid gap-3">
-              <label className="text-xs"><span className="text-muted-foreground">Question</span>
+              {editing && (
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                  <Badge variant="secondary">{t("admin.common.version")} {editing.version ?? 1}</Badge>
+                  <Badge variant="secondary">{t(`admin.status.${editing.status}`)}</Badge>
+                  {editing.updated_at && <span>{t("admin.common.updated")}: {new Date(editing.updated_at).toLocaleString()}</span>}
+                  {editing.updated_by && <span>· {t("admin.common.updatedBy")}: {editing.updated_by.slice(0, 8)}</span>}
+                </div>
+              )}
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.questions.question")}</span>
                 <Textarea rows={3} value={draft.question ?? ""} onChange={(e) => setDraft({ ...draft, question: e.target.value })} /></label>
               <div className="grid gap-2">
-                <span className="text-xs text-muted-foreground">Options (mark correct)</span>
+                <span className="text-xs text-muted-foreground">{t("admin.questions.options")}</span>
                 {[0,1,2,3].map((i) => (
                   <div key={i} className="flex items-center gap-2">
                     <input type="radio" checked={draft.correct_index === i} onChange={() => setDraft({ ...draft, correct_index: i })} className="h-4 w-4" />
@@ -251,40 +262,43 @@ function AdminQuestionsPage() {
                   </div>
                 ))}
               </div>
-              <label className="text-xs"><span className="text-muted-foreground">Explanation</span>
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.questions.explanation")}</span>
                 <Textarea rows={4} value={draft.explanation ?? ""} onChange={(e) => setDraft({ ...draft, explanation: e.target.value })} />
-                <span className="text-[10px] text-muted-foreground">{(draft.explanation ?? "").split(/\s+/).filter(Boolean).length} words (min 80 for published)</span>
+                <span className="text-[10px] text-muted-foreground">{t("admin.questions.explanationHint", { count: (draft.explanation ?? "").split(/\s+/).filter(Boolean).length })}</span>
               </label>
-              <label className="text-xs"><span className="text-muted-foreground">Common mistake</span>
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.questions.commonMistake")}</span>
                 <Textarea rows={2} value={draft.common_mistake ?? ""} onChange={(e) => setDraft({ ...draft, common_mistake: e.target.value })} /></label>
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-xs"><span className="text-muted-foreground">Topic</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.topic")}</span>
                   <Select value={draft.topic ?? "regulations"} onValueChange={(v) => setDraft({ ...draft, topic: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{TOPICS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    <SelectContent>{TOPICS.map(tp => <SelectItem key={tp} value={tp}>{tp}</SelectItem>)}</SelectContent>
                   </Select></label>
-                <label className="text-xs"><span className="text-muted-foreground">Difficulty</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.difficulty")}</span>
                   <Select value={draft.difficulty ?? "medium"} onValueChange={(v) => setDraft({ ...draft, difficulty: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{DIFFS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                    <SelectContent>{DIFFS.map(d => <SelectItem key={d} value={d}>{t(`admin.diff.${d}`)}</SelectItem>)}</SelectContent>
                   </Select></label>
-                <label className="text-xs"><span className="text-muted-foreground">ACS code</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.acsCode")}</span>
                   <Input value={draft.acs_code ?? ""} onChange={(e) => setDraft({ ...draft, acs_code: e.target.value })} /></label>
-                <label className="text-xs"><span className="text-muted-foreground">Source</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.source")}</span>
                   <Input value={draft.source ?? ""} onChange={(e) => setDraft({ ...draft, source: e.target.value })} /></label>
-                <label className="text-xs"><span className="text-muted-foreground">Status</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.status")}</span>
                   <Select value={draft.status ?? "draft"} onValueChange={(v) => setDraft({ ...draft, status: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{t(`admin.status.${s}`)}</SelectItem>)}</SelectContent>
                   </Select></label>
-                <label className="text-xs"><span className="text-muted-foreground">Locale</span>
-                  <Input value={draft.locale ?? "en"} onChange={(e) => setDraft({ ...draft, locale: e.target.value })} /></label>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.locale")}</span>
+                  <Select value={draft.locale ?? "en"} onValueChange={(v) => setDraft({ ...draft, locale: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{LOCALES.map(lc => <SelectItem key={lc} value={lc}>{lc}</SelectItem>)}</SelectContent>
+                  </Select></label>
               </div>
-              <label className="text-xs"><span className="text-muted-foreground">Tags (comma separated)</span>
+              <label className="text-xs"><span className="text-muted-foreground">{t("admin.questions.tags")}</span>
                 <Input value={(draft.tags ?? []).join(", ")} onChange={(e) => setDraft({ ...draft, tags: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} /></label>
 
               <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-                <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Preview as quiz</div>
+                <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{t("admin.questions.previewQuiz")}</div>
                 <div className="text-sm font-medium">{draft.question}</div>
                 <div className="mt-2 grid gap-1.5">
                   {(draft.options ?? []).map((o, i) => (
@@ -301,16 +315,16 @@ function AdminQuestionsPage() {
                 </div>
                 {previewIdx !== null && (
                   <div className="mt-3 space-y-2 text-xs">
-                    <div><span className="font-semibold">Explanation: </span>{draft.explanation}</div>
-                    {draft.common_mistake && <div><span className="font-semibold">Common mistake: </span>{draft.common_mistake}</div>}
-                    <div className="text-muted-foreground">Source: {draft.source} · ACS: {draft.acs_code}</div>
+                    <div><span className="font-semibold">{t("admin.questions.explanation")}: </span>{draft.explanation}</div>
+                    {draft.common_mistake && <div><span className="font-semibold">{t("admin.questions.commonMistake")}: </span>{draft.common_mistake}</div>}
+                    <div className="text-muted-foreground">{t("admin.common.source")}: {draft.source} · {t("admin.common.acsCode")}: {draft.acs_code}</div>
                   </div>
                 )}
               </div>
 
               <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
-                <Button variant="ghost" onClick={() => { setDraft(null); setEditing(null); }}>Cancel</Button>
-                <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />} Save</Button>
+                <Button variant="ghost" onClick={() => { setDraft(null); setEditing(null); }}>{t("admin.common.cancel")}</Button>
+                <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />} {t("admin.common.save")}</Button>
               </div>
             </div>
           )}

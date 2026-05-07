@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { md5 } from "js-md5";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -378,6 +379,34 @@ const lessonInputSchema = z.object({
   media_assets: z.array(z.any()).default([]),
 });
 
+async function checkLessonConflicts(
+  input: { week?: number; day?: number; order_index?: number },
+  excludeId?: string,
+) {
+  const conflicts: { weekDay?: { slug: string; title: string }; order?: { slug: string; title: string } } = {};
+  if (input.week != null && input.day != null) {
+    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("week", input.week).eq("day", input.day).neq("status", "archived");
+    if (excludeId) q = q.neq("id", excludeId);
+    const { data } = await q.maybeSingle();
+    if (data) conflicts.weekDay = { slug: data.slug, title: data.title };
+  }
+  if (input.order_index != null) {
+    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("order_index", input.order_index).neq("status", "archived");
+    if (excludeId) q = q.neq("id", excludeId);
+    const { data } = await q.maybeSingle();
+    if (data) conflicts.order = { slug: data.slug, title: data.title };
+  }
+  return conflicts;
+}
+
+export const checkAdminLessonConflicts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ week: z.number().int().optional(), day: z.number().int().optional(), order_index: z.number().int().optional(), excludeId: z.string().uuid().optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    return await checkLessonConflicts(data, data.excludeId);
+  });
+
 export const getAdminLessons = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -407,6 +436,9 @@ export const createAdminLesson = createServerFn({ method: "POST" })
   .inputValidator((d) => lessonInputSchema.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
+    const conflicts = await checkLessonConflicts(data);
+    if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
+    if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
     const payload: Record<string, unknown> = {
       ...data,
       sources: data.sources as never,
@@ -425,6 +457,9 @@ export const updateAdminLesson = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string().uuid(), input: lessonInputSchema.partial() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
+    const conflicts = await checkLessonConflicts(data.input, data.id);
+    if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
+    if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
     const patch: Record<string, unknown> = {
       ...data.input,
       updated_by: context.userId,
@@ -491,13 +526,13 @@ export const duplicateAdminLesson = createServerFn({ method: "POST" })
 // Questions CMS
 // ============================================================
 
-function normalizeHash(text: string): Promise<string> {
+// Content hash: keep MD5 of normalized question text for consistency with the
+// original seed migration (20260504070140) which stored md5(lower(regexp_replace(question,'\s+',' ','g'))).
+// We extend the input to include options to better detect near-duplicates created via the CMS,
+// but stay on md5/32-char hex so historical rows and new rows live in the same hash space.
+function normalizeHash(text: string): string {
   const norm = text.toLowerCase().replace(/\s+/g, " ").trim();
-  // Use Web Crypto to compute sha256 (md5 not available); store as content_hash
-  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(norm)).then((buf) => {
-    const arr = Array.from(new Uint8Array(buf));
-    return arr.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
-  });
+  return md5(norm);
 }
 
 const questionInputSchema = z.object({
@@ -552,7 +587,7 @@ export const createAdminQuestion = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     validateForPublish(data);
-    const content_hash = await normalizeHash(data.question + "|" + data.options.join("|"));
+    const content_hash = normalizeHash(data.question);
     const { data: dup } = await supabaseAdmin.from("questions").select("id").eq("content_hash", content_hash).maybeSingle();
     if (dup) throw new Error("A similar question already exists.");
     const payload: Record<string, unknown> = {
@@ -579,9 +614,8 @@ export const updateAdminQuestion = createServerFn({ method: "POST" })
     const merged = { ...existing, ...data.input } as z.infer<typeof questionInputSchema>;
     if (data.input.status) validateForPublish(merged);
     const patch: Record<string, unknown> = { ...data.input, updated_by: context.userId };
-    if (data.input.question || data.input.options) {
-      const text = (data.input.question ?? existing.question) + "|" + ((data.input.options ?? existing.options) as string[]).join("|");
-      const content_hash = await normalizeHash(text);
+    if (data.input.question) {
+      const content_hash = normalizeHash(data.input.question);
       const { data: dup } = await supabaseAdmin.from("questions").select("id").eq("content_hash", content_hash).neq("id", data.id).maybeSingle();
       if (dup) throw new Error("A similar question already exists.");
       patch.content_hash = content_hash;
@@ -615,8 +649,8 @@ export const duplicateAdminQuestion = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { data: src, error: e1 } = await supabaseAdmin.from("questions").select("*").eq("id", data.id).maybeSingle();
     if (e1 || !src) throw new Error(e1?.message ?? "not found");
-    const newQuestion = `${src.question} (Copy)`;
-    const content_hash = await normalizeHash(newQuestion + "|" + (src.options as string[]).join("|"));
+    const newQuestion = `${src.question} (Copy ${Date.now()})`;
+    const content_hash = normalizeHash(newQuestion);
     const copy: Record<string, unknown> = {
       question: newQuestion,
       options: src.options as never,
