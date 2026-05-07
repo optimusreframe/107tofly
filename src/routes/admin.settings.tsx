@@ -170,7 +170,7 @@ function AdminSettingsPage() {
       return (
         <div key={s.key} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-card/40 p-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-medium">{s.key}{isDirty && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
+            <div className="flex items-center gap-2 text-sm font-medium">{s.key}<ConnectedBadge k={s.key} />{isDirty && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
             {s.description && <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>}
             {s.key === "features.maintenance_mode" && val === true && (
               <p className="mt-2 flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="h-3 w-3" />{t("admin.settings.maintenanceWarn", { defaultValue: "Maintenance mode is on." })}</p>
