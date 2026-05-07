@@ -379,6 +379,34 @@ const lessonInputSchema = z.object({
   media_assets: z.array(z.any()).default([]),
 });
 
+async function checkLessonConflicts(
+  input: { week?: number; day?: number; order_index?: number },
+  excludeId?: string,
+) {
+  const conflicts: { weekDay?: { slug: string; title: string }; order?: { slug: string; title: string } } = {};
+  if (input.week != null && input.day != null) {
+    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("week", input.week).eq("day", input.day).neq("status", "archived");
+    if (excludeId) q = q.neq("id", excludeId);
+    const { data } = await q.maybeSingle();
+    if (data) conflicts.weekDay = { slug: data.slug, title: data.title };
+  }
+  if (input.order_index != null) {
+    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("order_index", input.order_index).neq("status", "archived");
+    if (excludeId) q = q.neq("id", excludeId);
+    const { data } = await q.maybeSingle();
+    if (data) conflicts.order = { slug: data.slug, title: data.title };
+  }
+  return conflicts;
+}
+
+export const checkAdminLessonConflicts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ week: z.number().int().optional(), day: z.number().int().optional(), order_index: z.number().int().optional(), excludeId: z.string().uuid().optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    return await checkLessonConflicts(data, data.excludeId);
+  });
+
 export const getAdminLessons = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
