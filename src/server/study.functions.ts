@@ -438,10 +438,13 @@ export const getStudentReadiness = createServerFn({ method: "GET" })
       0.10 * fcRetention +
       0.05 * activityPct
     );
+    const { examReadyScore } = await getStudySettings();
+    const ready = Number(examReadyScore ?? 85);
+    const almost = Math.max(50, ready - 15);
     let status: "foundation" | "building" | "almost" | "ready";
     if (score < 50) status = "foundation";
-    else if (score < 70) status = "building";
-    else if (score < 85) status = "almost";
+    else if (score < almost) status = "building";
+    else if (score < ready) status = "almost";
     else status = "ready";
 
     return {
