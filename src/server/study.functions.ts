@@ -295,6 +295,8 @@ async function recomputeProgress(supabase: any, userId: string) {
     xp,
     updated_at: new Date().toISOString(),
   }).eq("user_id", userId);
+
+  await touchDailyActivity(supabase, userId);
 }
 
 // ============ STUDENT READINESS / TOPIC MASTERY ============
