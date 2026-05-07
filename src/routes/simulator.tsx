@@ -119,7 +119,7 @@ function Simulator() {
             {[
               { icon: Clock, t: t("student.simulator.twoHours"), d: t("student.simulator.twoHoursDesc") },
               { icon: ListChecks, t: t("student.simulator.sixtyQ"), d: t("student.simulator.sixtyQDesc") },
-              { icon: Target, t: t("student.simulator.seventyMin"), d: t("student.simulator.seventyMinDesc") },
+              { icon: Target, t: t("student.simulator.passMin", { p: passScore, defaultValue: `${passScore}% minimum` }), d: t("student.simulator.passMinDesc", { defaultValue: "We recommend a consistent 85%+." }) },
             ].map((s) => (
               <div key={s.t} className="glass rounded-3xl p-5">
                 <s.icon className="h-5 w-5 text-primary" />
