@@ -118,6 +118,8 @@ function LessonDetail() {
           </div>
         )}
 
+        <LessonDailyQuiz slug={l.slug} locale={locale} />
+
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3" aria-live="polite">
           {data.completed ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-success/15 px-4 py-2 text-sm font-medium text-success">
