@@ -167,7 +167,7 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         selected_index: a.selected_index,
         is_correct: a.is_correct,
         time_ms: a.time_ms,
-      })),
+      })) as never,
     );
 
     // Upsert lesson_quiz_progress + award XP idempotently
