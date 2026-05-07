@@ -379,6 +379,7 @@ function AdminLessonsPage() {
                   <th className="px-3 py-2 text-left">W/D</th>
                   <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
                   <th className="px-3 py-2 text-left">{t("admin.common.status")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.lessons.translation.panelTitle")}</th>
                   <th className="px-3 py-2 text-left">Min</th>
                   <th className="px-3 py-2"></th>
                 </tr>
