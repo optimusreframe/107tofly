@@ -236,16 +236,16 @@ function Dashboard() {
           >
             <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
             <div>
-              <div className="text-xs uppercase tracking-wider text-primary">Plan de estudio</div>
+              <div className="text-xs uppercase tracking-wider text-primary">{t("student.plan.title")}</div>
               <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
-                Continúa con tu plan de 28 días
+                {t("student.dashboard.continueTitle" as never, { defaultValue: t("student.plan.continueTitle") })}
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Lecciones diarias · ACS Part 107
+                {t("student.plan.continueSubtitle")}
               </p>
             </div>
             <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <PlayCircle className="h-5 w-5" /> Ver lecciones
+              <PlayCircle className="h-5 w-5" /> {t("student.plan.seeLessons")}
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </div>
           </Link>
@@ -260,52 +260,52 @@ function Dashboard() {
           >
             <Brain className="h-5 w-5 text-primary" />
             <div className="mt-3 font-display text-lg font-semibold">
-              {dueCount === null ? "Flashcards" : dueCount === 0 ? "Sin tarjetas vencidas" : `${dueCount} ${dueCount === 1 ? "flashcard vence hoy" : "flashcards vencen hoy"}`}
+              {dueCount === null ? t("student.dashboard.flashcards") : dueCount === 0 ? t("student.dashboard.noDueCards") : dueCount === 1 ? t("student.dashboard.dueOne", { n: dueCount }) : t("student.dashboard.dueMany", { n: dueCount })}
             </div>
-            <div className="text-sm text-muted-foreground">Spaced repetition · SM-2</div>
+            <div className="text-sm text-muted-foreground">{t("student.dashboard.sm2")}</div>
           </Link>
           <Link
             to="/simulator"
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
           >
             <Target className="h-5 w-5 text-primary" />
-            <div className="mt-3 font-display text-lg font-semibold">Simulacro UAG</div>
-            <div className="text-sm text-muted-foreground">60 preguntas · 2 horas</div>
+            <div className="mt-3 font-display text-lg font-semibold">{t("student.dashboard.simulatorTitle")}</div>
+            <div className="text-sm text-muted-foreground">{t("student.dashboard.simulatorDesc")}</div>
           </Link>
           <Link
             to="/lessons"
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
           >
             <PlayCircle className="h-5 w-5 text-primary" />
-            <div className="mt-3 font-display text-lg font-semibold">Plan 28 días</div>
-            <div className="text-sm text-muted-foreground">Lecciones diarias · ACS Part 107</div>
+            <div className="mt-3 font-display text-lg font-semibold">{t("student.plan.sectionTitle")}</div>
+            <div className="text-sm text-muted-foreground">{t("student.plan.continueSubtitle")}</div>
           </Link>
           <Link
             to="/flycoach"
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
           >
             <Sparkles className="h-5 w-5 text-primary" />
-            <div className="mt-3 font-display text-lg font-semibold">Pregunta a FlyCoach</div>
-            <div className="text-sm text-muted-foreground">Tutor IA · respuestas con fuente</div>
+            <div className="mt-3 font-display text-lg font-semibold">{t("student.dashboard.askFlycoach")}</div>
+            <div className="text-sm text-muted-foreground">{t("student.dashboard.flycoachDesc")}</div>
           </Link>
         </div>
 
         {/* Activity */}
         <div className="mt-4 glass rounded-3xl p-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-semibold">Actividad reciente</h3>
+            <h3 className="font-display text-lg font-semibold">{t("student.dashboard.recentActivity")}</h3>
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" /> Últimos 7 días
+              <Clock className="h-3.5 w-3.5" /> {t("student.dashboard.lastDays")}
             </span>
           </div>
           {activity === null ? (
             <div className="mt-4 text-sm text-muted-foreground">{t("student.dashboard.loadingActivity")}</div>
           ) : activity.every((v) => v === 0) ? (
             <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Aún no hay suficiente actividad. Completa una lección o un quiz para empezar a ver tu progreso aquí.
+              {t("student.dashboard.noActivity")}
             </div>
           ) : (
-            <div className="mt-4 flex h-24 items-end gap-2" role="img" aria-label="Actividad de los últimos 7 días">
+            <div className="mt-4 flex h-24 items-end gap-2" role="img" aria-label={t("student.dashboard.activityAria")}>
               {activity.map((v, i) => {
                 const max = Math.max(...activity, 1);
                 const pct = (v / max) * 100;
