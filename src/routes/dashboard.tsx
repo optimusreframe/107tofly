@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchDueFlashcards } from "@/server/study.functions";
+import { fetchDueFlashcards, getStudentReadiness, getStudentTopicMastery } from "@/server/study.functions";
 import {
   Flame,
   Sparkles,
@@ -16,6 +17,9 @@ import {
   Brain,
   Target,
 } from "lucide-react";
+
+type Mastery = Awaited<ReturnType<typeof getStudentTopicMastery>>;
+type Readiness = Awaited<ReturnType<typeof getStudentReadiness>>;
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
