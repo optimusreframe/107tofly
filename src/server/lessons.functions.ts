@@ -8,31 +8,44 @@ export const getLessons = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const locale = data.locale ?? "en";
-    const [{ data: localized }, { data: enRows }, { data: completions }] = await Promise.all([
-      supabase
-        .from("lessons")
-        .select("slug,title,summary,week,day,order_index,topic,est_minutes,status,locale")
-        .eq("status", "published")
-        .eq("locale", locale)
-        .order("order_index", { ascending: true }),
-      supabase
-        .from("lessons")
-        .select("slug,title,summary,week,day,order_index,topic,est_minutes,status,locale")
-        .eq("status", "published")
-        .eq("locale", "en")
-        .order("order_index", { ascending: true }),
-      supabase
-        .from("lesson_completions")
-        .select("lesson_slug")
-        .eq("user_id", userId),
-    ]);
+    const { data: localized }: { data: any } = await supabase
+      .from("lessons")
+      .select("slug,title,summary,week,day,order_index,topic,est_minutes,status,locale")
+      .eq("status", "published")
+      .eq("locale", locale)
+      .order("order_index", { ascending: true });
+    const { data: enRows }: { data: any } = await supabase
+      .from("lessons")
+      .select("slug,title,summary,week,day,order_index,topic,est_minutes,status,locale")
+      .eq("status", "published")
+      .eq("locale", "en")
+      .order("order_index", { ascending: true });
+    const { data: completions } = await supabase
+      .from("lesson_completions")
+      .select("lesson_slug")
+      .eq("user_id", userId);
+    const { data: quizProgress } = await supabase
+      .from("lesson_quiz_progress")
+      .select("lesson_slug,best_score,passed,attempts_count")
+      .eq("user_id", userId);
     const done = new Set((completions ?? []).map((c) => c.lesson_slug));
+    const qpBySlug = new Map<string, { best_score: number; passed: boolean; attempts_count: number }>();
+    for (const p of quizProgress ?? []) qpBySlug.set(p.lesson_slug as string, { best_score: (p.best_score as number) ?? 0, passed: !!p.passed, attempts_count: (p.attempts_count as number) ?? 0 });
     type Row = { slug: string; title: string; summary: string; week: number; day: number; order_index: number; topic: string | null; est_minutes: number; status: string; locale: string; fallback?: boolean };
     const bySlug = new Map<string, Row>();
     for (const r of (enRows ?? []) as Row[]) bySlug.set(r.slug, { ...r, fallback: locale !== "en" });
     for (const r of (localized ?? []) as Row[]) bySlug.set(r.slug, { ...r, fallback: false });
     const merged = Array.from(bySlug.values()).sort((a, b) => a.order_index - b.order_index);
-    return merged.map((l) => ({ ...l, completed: done.has(l.slug) }));
+    return merged.map((l) => {
+      const qp = qpBySlug.get(l.slug);
+      return {
+        ...l,
+        completed: done.has(l.slug),
+        quiz_best_score: qp?.best_score ?? 0,
+        quiz_passed: qp?.passed ?? false,
+        quiz_attempts: qp?.attempts_count ?? 0,
+      };
+    });
   });
 
 export const getLesson = createServerFn({ method: "POST" })
