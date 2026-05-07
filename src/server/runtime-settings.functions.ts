@@ -15,10 +15,10 @@ export const getPublicRuntimeSettings = createServerFn({ method: "GET" }).handle
     getPublicRuntimeSnapshot(),
   ]);
   return {
-    features,
-    study,
-    certificate: cert,
-    snapshot,
+    features: features as Record<string, unknown>,
+    study: study as Record<string, unknown>,
+    certificate: cert as Record<string, unknown>,
+    snapshot: snapshot as Record<string, unknown>,
     connectedKeys: RUNTIME_CONNECTED_KEYS,
   };
 });
