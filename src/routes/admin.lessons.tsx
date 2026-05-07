@@ -113,9 +113,14 @@ function AdminLessonsPage() {
       };
       if (editing) await updateFn({ data: { id: editing.id, input: payload } });
       else await createFn({ data: payload });
-      toast.success(editing ? "Lesson updated" : "Lesson created");
+      toast.success(t(editing ? "admin.lessons.updated" : "admin.lessons.created"));
       setEditing(null); setDraft(null); refresh();
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg.startsWith("LESSON_CONFLICT_WEEKDAY")) toast.error(t("admin.lessons.conflictWeekDay"));
+      else if (msg.startsWith("LESSON_CONFLICT_ORDER")) toast.error(t("admin.lessons.conflictOrder"));
+      else toast.error(msg);
+    }
     finally { setSaving(false); }
   };
 
@@ -147,29 +152,29 @@ function AdminLessonsPage() {
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight">Lessons</h1>
-            <p className="text-sm text-muted-foreground">{counts.total} total · {counts.published} published · {counts.draft} draft/review · {counts.archived} archived</p>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">{t("admin.lessons.title")}</h1>
+            <p className="text-sm text-muted-foreground">{counts.total} total · {counts.published} {t("admin.status.published").toLowerCase()} · {counts.draft} {t("admin.status.draft").toLowerCase()} · {counts.archived} {t("admin.status.archived").toLowerCase()}</p>
           </div>
-          <Button onClick={() => openEditor(null)}><Plus className="mr-1.5 h-4 w-4" /> New lesson</Button>
+          <Button onClick={() => openEditor(null)}><Plus className="mr-1.5 h-4 w-4" /> {t("admin.lessons.new")}</Button>
         </header>
 
         <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, slug, summary…" className="pl-9" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("admin.lessons.searchPh")} className="pl-9" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              <SelectItem value="all">{t("admin.common.allStatus")}</SelectItem>
+              {STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`admin.status.${s}`)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={topicFilter} onValueChange={setTopicFilter}>
             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All topics</SelectItem>
-              {TOPICS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <SelectItem value="all">{t("admin.common.allTopics")}</SelectItem>
+              {TOPICS.map((t2) => <SelectItem key={t2} value={t2}>{t2}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
