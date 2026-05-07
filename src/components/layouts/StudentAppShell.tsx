@@ -128,21 +128,21 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
             </div>
           </aside>
 
-          <div className="flex min-h-screen flex-1 flex-col">
+          <div className="flex min-h-screen flex-1 flex-col min-w-0">
             <header className="sticky top-0 z-40 flex h-14 items-center justify-end gap-2 border-b border-border/40 bg-background/60 px-4 backdrop-blur-xl">
-              <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center gap-1 rounded-full border border-border bg-card/60 px-3 text-xs font-medium hover:bg-accent">
+              <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center gap-1 rounded-full border border-border bg-card/60 px-3 text-xs font-medium hover:bg-accent transition">
                 <span className="flex items-center gap-1"><Languages className="h-3.5 w-3.5" />{lang}</span>
               </button>
-              <button onClick={toggle} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent">
+              <button onClick={toggle} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card/60 hover:bg-accent transition">
                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
               {user && (
-                <button onClick={() => signOut()} aria-label="Sign out" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 text-sm hover:bg-accent">
+                <button onClick={() => signOut()} aria-label="Sign out" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 text-sm hover:bg-accent transition">
                   <LogOut className="h-4 w-4" /> {t("nav.signout")}
                 </button>
               )}
             </header>
-            <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+            <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none min-w-0">
               {children}
             </main>
             <SiteFooter />
