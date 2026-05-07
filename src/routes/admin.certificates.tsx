@@ -38,7 +38,7 @@ type Cert = {
 };
 
 function AdminCertsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
@@ -46,6 +46,13 @@ function AdminCertsPage() {
   const fetchDetail = useServerFn(getAdminCertificateDetail);
   const revokeFn = useServerFn(revokeAdminCertificate);
   const reissueFn = useServerFn(reissueAdminCertificate);
+  const runtime = usePublicRuntime();
+  const certCfg = (runtime?.certificate ?? {}) as Record<string, unknown>;
+  const templateStyle = String(certCfg["certificate.template_style"] ?? "premium");
+  const isEs = i18n.language?.startsWith("es");
+  const previewDisclaimer = isEs
+    ? String(certCfg["certificate.disclaimer_es"] ?? t("verify.note"))
+    : String(certCfg["certificate.disclaimer_en"] ?? t("verify.note"));
 
   const [items, setItems] = useState<Cert[] | null>(null);
   const [search, setSearch] = useState("");
