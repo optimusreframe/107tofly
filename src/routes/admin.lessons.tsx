@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import { Shield, Search, Plus, Copy, Archive, RotateCcw, ExternalLink, Save, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
