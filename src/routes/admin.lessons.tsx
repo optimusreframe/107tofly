@@ -335,6 +335,21 @@ function AdminLessonsPage() {
               {TOPICS.map((t2) => <SelectItem key={t2} value={t2}>{t2}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={localeFilter} onValueChange={setLocaleFilter}>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder={t("admin.lessons.translation.filterLocale")} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("admin.lessons.translation.filterLocale")}: {t("admin.lessons.translation.all")}</SelectItem>
+              {LOCALES.map((lc) => <SelectItem key={lc} value={lc}>{lc.toUpperCase()}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={translationFilter} onValueChange={setTranslationFilter}>
+            <SelectTrigger className="w-[170px]"><SelectValue placeholder={t("admin.lessons.translation.filterTranslation")} /></SelectTrigger>
+            <SelectContent>
+              {TRANSLATION_FILTERS.map((f) => (
+                <SelectItem key={f} value={f}>{t(`admin.lessons.translation.${f}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {!lessons ? (
