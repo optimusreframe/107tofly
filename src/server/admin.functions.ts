@@ -3,6 +3,7 @@ import { z } from "zod";
 import { md5 } from "js-md5";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { invalidateSettingsCache } from "./runtime-settings.server";
 
 type AppRole = "student" | "admin" | "content_manager" | "support";
 const ALL_ROLES: AppRole[] = ["student", "admin", "content_manager", "support"];
