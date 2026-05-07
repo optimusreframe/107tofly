@@ -26,7 +26,9 @@ import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LessonsIndexRouteImport } from './routes/lessons.index'
 import { Route as VerifyIdRouteImport } from './routes/verify.$id'
+import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -113,9 +115,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LessonsIndexRoute = LessonsIndexRouteImport.update({
+  id: '/lessons/',
+  path: '/lessons/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyIdRoute = VerifyIdRouteImport.update({
   id: '/verify/$id',
   path: '/verify/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LessonsSlugRoute = LessonsSlugRouteImport.update({
+  id: '/lessons/$slug',
+  path: '/lessons/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -137,7 +149,9 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
+  '/lessons/': typeof LessonsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -157,7 +171,9 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
+  '/lessons': typeof LessonsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -178,7 +194,9 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
+  '/lessons/': typeof LessonsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,7 +218,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/lessons/$slug'
     | '/verify/$id'
+    | '/lessons/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -220,7 +240,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/lessons/$slug'
     | '/verify/$id'
+    | '/lessons'
   id:
     | '__root__'
     | '/'
@@ -240,7 +262,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/lessons/$slug'
     | '/verify/$id'
+    | '/lessons/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -261,7 +285,9 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SimulatorRoute: typeof SimulatorRoute
   WeatherLabRoute: typeof WeatherLabRoute
+  LessonsSlugRoute: typeof LessonsSlugRoute
   VerifyIdRoute: typeof VerifyIdRoute
+  LessonsIndexRoute: typeof LessonsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -385,11 +411,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lessons/': {
+      id: '/lessons/'
+      path: '/lessons'
+      fullPath: '/lessons/'
+      preLoaderRoute: typeof LessonsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify/$id': {
       id: '/verify/$id'
       path: '/verify/$id'
       fullPath: '/verify/$id'
       preLoaderRoute: typeof VerifyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lessons/$slug': {
+      id: '/lessons/$slug'
+      path: '/lessons/$slug'
+      fullPath: '/lessons/$slug'
+      preLoaderRoute: typeof LessonsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -413,17 +453,10 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SimulatorRoute: SimulatorRoute,
   WeatherLabRoute: WeatherLabRoute,
+  LessonsSlugRoute: LessonsSlugRoute,
   VerifyIdRoute: VerifyIdRoute,
+  LessonsIndexRoute: LessonsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
