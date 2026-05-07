@@ -7,6 +7,8 @@ import {
   RUNTIME_CONNECTED_KEYS,
 } from "./runtime-settings.server";
 
+type JsonVal = string | number | boolean | null | JsonVal[] | { [k: string]: JsonVal };
+
 export const getPublicRuntimeSettings = createServerFn({ method: "GET" }).handler(async () => {
   const [features, study, cert, snapshot] = await Promise.all([
     getFeatureFlags(),
@@ -15,10 +17,10 @@ export const getPublicRuntimeSettings = createServerFn({ method: "GET" }).handle
     getPublicRuntimeSnapshot(),
   ]);
   return {
-    features: features as Record<string, unknown>,
-    study: study as Record<string, unknown>,
-    certificate: cert as Record<string, unknown>,
-    snapshot: snapshot as Record<string, unknown>,
+    features: features as unknown as Record<string, JsonVal>,
+    study: study as unknown as Record<string, JsonVal>,
+    certificate: cert as unknown as Record<string, JsonVal>,
+    snapshot: snapshot as unknown as Record<string, JsonVal>,
     connectedKeys: RUNTIME_CONNECTED_KEYS,
   };
 });
