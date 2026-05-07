@@ -42,12 +42,13 @@ export const Route = createRootRoute({
       { name: "twitter:description", content: "107toFly is a premium web app for mastering the FAA Part 107 Remote Pilot Certificate exam." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b9cd26b2-60ab-47ad-8e5d-e464b6030d6e" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b9cd26b2-60ab-47ad-8e5d-e464b6030d6e" },
+      { name: "theme-color", content: "#0b0d12" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/icons/icon-192.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
     ],
   }),
   shellComponent: RootShell,

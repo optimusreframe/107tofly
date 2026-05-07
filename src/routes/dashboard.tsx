@@ -193,7 +193,7 @@ function Dashboard() {
         </div>
 
         {/* Action grid */}
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link
             to="/flashcards"
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
@@ -209,6 +209,14 @@ function Dashboard() {
             <Target className="h-5 w-5 text-primary" />
             <div className="mt-3 font-display text-lg font-semibold">Simulacro UAG</div>
             <div className="text-sm text-muted-foreground">60 preguntas · 2 horas</div>
+          </Link>
+          <Link
+            to="/lessons"
+            className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
+          >
+            <PlayCircle className="h-5 w-5 text-primary" />
+            <div className="mt-3 font-display text-lg font-semibold">Plan 28 días</div>
+            <div className="text-sm text-muted-foreground">Lecciones diarias · ACS Part 107</div>
           </Link>
           <Link
             to="/flycoach"

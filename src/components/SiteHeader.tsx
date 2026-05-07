@@ -12,6 +12,7 @@ export function SiteHeader() {
 
   const nav = [
     { to: "/dashboard", label: t("nav.dashboard") },
+    { to: "/lessons", label: t("nav.lessons") },
     { to: "/practice", label: t("nav.practice") },
     { to: "/course", label: t("nav.course") },
     { to: "/simulator", label: t("nav.simulator") },
