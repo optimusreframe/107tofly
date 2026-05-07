@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { fetchDueFlashcards } from "@/server/study.functions";
 import {
   Flame,
   Sparkles,
@@ -25,11 +27,7 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const rings = [
-  { label: "Estudio", value: 78, color: "oklch(0.62 0.2 255)" },
-  { label: "Práctica", value: 64, color: "oklch(0.7 0.16 235)" },
-  { label: "Repaso", value: 92, color: "oklch(0.68 0.16 155)" },
-];
+const DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
 
 function Ring({ value, color, size = 110 }: { value: number; color: string; size?: number }) {
   const r = size / 2 - 8;
