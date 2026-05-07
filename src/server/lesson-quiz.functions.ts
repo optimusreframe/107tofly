@@ -221,10 +221,9 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         .update({ xp: newXp, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
       xp_awarded_now = QUIZ_XP;
-    }
+    await touchDailyActivity(supabase, userId);
 
-    return {
-      attempt_id: attempt.id,
+
       score,
       correct,
       total,
