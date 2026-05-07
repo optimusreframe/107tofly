@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { askFlyCoach } from "@/server/flycoach.functions";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { Sparkles, Send, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/flycoach")({
