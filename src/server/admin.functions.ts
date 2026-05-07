@@ -917,6 +917,7 @@ export const updateAdminSetting = createServerFn({ method: "POST" })
       entity: "setting", key: data.key,
       category: (existing as { category?: string } | null)?.category ?? null,
     });
+    invalidateSettingsCache();
     return { setting: row };
   });
 
