@@ -350,3 +350,291 @@ export const getAdminUserActivity = createServerFn({ method: "GET" })
       examSimulations: es.data ?? [],
     };
   });
+
+// ============================================================
+// Lessons CMS
+// ============================================================
+
+const TOPIC_ENUM = z.enum([
+  "regulations","airspace","sectional","weather","performance",
+  "operations","adm","emergencies","remote_id","maintenance",
+]);
+const LESSON_STATUS = z.enum(["draft","review","published","archived"]);
+const QUESTION_STATUS = z.enum(["draft","reviewed","published","archived"]);
+
+const lessonInputSchema = z.object({
+  slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/i),
+  title: z.string().trim().min(1).max(200),
+  summary: z.string().trim().min(1).max(1000),
+  body_md: z.string().trim().min(1),
+  topic: TOPIC_ENUM,
+  week: z.number().int().min(1).max(4),
+  day: z.number().int().min(1).max(28),
+  order_index: z.number().int().min(0),
+  est_minutes: z.number().int().min(1).max(600).default(30),
+  sources: z.array(z.object({ title: z.string().min(1), url: z.string().url().optional() })).default([]),
+  status: LESSON_STATUS.default("draft"),
+  locale: z.string().min(2).max(8).default("en"),
+  media_assets: z.array(z.any()).default([]),
+});
+
+export const getAdminLessons = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("lessons")
+      .select("*")
+      .order("order_index", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { lessons: data ?? [] };
+  });
+
+export const getAdminLessonDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ idOrSlug: z.string().min(1) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const isUuid = /^[0-9a-f-]{36}$/i.test(data.idOrSlug);
+    const q = supabaseAdmin.from("lessons").select("*");
+    const { data: row, error } = await (isUuid ? q.eq("id", data.idOrSlug) : q.eq("slug", data.idOrSlug)).maybeSingle();
+    if (error) throw new Error(error.message);
+    return { lesson: row };
+  });
+
+export const createAdminLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => lessonInputSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const payload: Record<string, unknown> = {
+      ...data,
+      sources: data.sources as never,
+      media_assets: data.media_assets as never,
+      updated_by: context.userId,
+      published_at: data.status === "published" ? new Date().toISOString() : null,
+    };
+    const { data: row, error } = await supabaseAdmin.from("lessons").insert(payload as never).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "lesson_create", { entity: "lesson", entity_id: row.id, slug: row.slug, status: row.status });
+    return { lesson: row };
+  });
+
+export const updateAdminLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), input: lessonInputSchema.partial() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const patch: Record<string, unknown> = {
+      ...data.input,
+      updated_by: context.userId,
+    };
+    if (data.input.status === "published") patch.published_at = new Date().toISOString();
+    if (data.input.status === "archived") patch.archived_at = new Date().toISOString();
+    const { data: row, error } = await supabaseAdmin.from("lessons").update(patch as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "lesson_update", { entity: "lesson", entity_id: row.id, slug: row.slug, status: row.status, changes: Object.keys(data.input) });
+    return { lesson: row };
+  });
+
+export const archiveAdminLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), restore: z.boolean().optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const patch = data.restore
+      ? { status: "draft", archived_at: null, updated_by: context.userId }
+      : { status: "archived", archived_at: new Date().toISOString(), updated_by: context.userId };
+    const { data: row, error } = await supabaseAdmin.from("lessons").update(patch as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, data.restore ? "lesson_restore" : "lesson_archive", { entity: "lesson", entity_id: row.id, slug: row.slug, status: row.status });
+    return { lesson: row };
+  });
+
+export const duplicateAdminLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: src, error: e1 } = await supabaseAdmin.from("lessons").select("*").eq("id", data.id).maybeSingle();
+    if (e1 || !src) throw new Error(e1?.message ?? "not found");
+    const baseSlug = `${src.slug}-copy`;
+    let slug = baseSlug; let n = 1;
+    while (true) {
+      const { data: ex } = await supabaseAdmin.from("lessons").select("id").eq("slug", slug).maybeSingle();
+      if (!ex) break;
+      n += 1; slug = `${baseSlug}-${n}`;
+    }
+    const copy: Record<string, unknown> = {
+      slug,
+      title: `${src.title} (Copy)`,
+      summary: src.summary,
+      body_md: src.body_md,
+      topic: src.topic,
+      week: src.week,
+      day: src.day,
+      order_index: src.order_index,
+      est_minutes: src.est_minutes,
+      sources: src.sources as never,
+      media_assets: (src as { media_assets?: unknown }).media_assets ?? [],
+      status: "draft",
+      locale: (src as { locale?: string }).locale ?? "en",
+      updated_by: context.userId,
+    };
+    const { data: row, error } = await supabaseAdmin.from("lessons").insert(copy as never).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "lesson_duplicate", { entity: "lesson", entity_id: row.id, slug: row.slug, source_id: src.id });
+    return { lesson: row };
+  });
+
+// ============================================================
+// Questions CMS
+// ============================================================
+
+function normalizeHash(text: string): Promise<string> {
+  const norm = text.toLowerCase().replace(/\s+/g, " ").trim();
+  // Use Web Crypto to compute sha256 (md5 not available); store as content_hash
+  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(norm)).then((buf) => {
+    const arr = Array.from(new Uint8Array(buf));
+    return arr.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+  });
+}
+
+const questionInputSchema = z.object({
+  question: z.string().trim().min(1),
+  options: z.array(z.string()).length(4),
+  correct_index: z.number().int().min(0).max(3),
+  explanation: z.string().trim().min(1),
+  common_mistake: z.string().trim().nullable().optional(),
+  topic: TOPIC_ENUM,
+  difficulty: z.enum(["easy","medium","hard"]),
+  acs_code: z.string().trim().min(1),
+  source: z.string().trim().min(1),
+  tags: z.array(z.string()).default([]),
+  status: QUESTION_STATUS.default("draft"),
+  locale: z.string().min(2).max(8).default("en"),
+});
+
+function validateForPublish(q: z.infer<typeof questionInputSchema>) {
+  if (q.status === "published" || q.status === "reviewed") {
+    if (q.options.some((o) => !o.trim())) throw new Error("All 4 options are required for published/reviewed status");
+    if (q.explanation.split(/\s+/).filter(Boolean).length < 80) throw new Error("Explanation must be at least 80 words for published/reviewed status");
+    if (!q.source.trim()) throw new Error("Source required for published/reviewed status");
+  }
+}
+
+export const getAdminQuestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("questions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    if (error) throw new Error(error.message);
+    return { questions: data ?? [] };
+  });
+
+export const getAdminQuestionDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: row, error } = await supabaseAdmin.from("questions").select("*").eq("id", data.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    return { question: row };
+  });
+
+export const createAdminQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => questionInputSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    validateForPublish(data);
+    const content_hash = await normalizeHash(data.question + "|" + data.options.join("|"));
+    const { data: dup } = await supabaseAdmin.from("questions").select("id").eq("content_hash", content_hash).maybeSingle();
+    if (dup) throw new Error("A similar question already exists.");
+    const payload: Record<string, unknown> = {
+      ...data,
+      options: data.options as never,
+      tags: data.tags as never,
+      content_hash,
+      updated_by: context.userId,
+      published_at: data.status === "published" ? new Date().toISOString() : null,
+    };
+    const { data: row, error } = await supabaseAdmin.from("questions").insert(payload as never).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "question_create", { entity: "question", entity_id: row.id, topic: row.topic, difficulty: row.difficulty, status: row.status });
+    return { question: row };
+  });
+
+export const updateAdminQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), input: questionInputSchema.partial() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: existing } = await supabaseAdmin.from("questions").select("*").eq("id", data.id).maybeSingle();
+    if (!existing) throw new Error("Not found");
+    const merged = { ...existing, ...data.input } as z.infer<typeof questionInputSchema>;
+    if (data.input.status) validateForPublish(merged);
+    const patch: Record<string, unknown> = { ...data.input, updated_by: context.userId };
+    if (data.input.question || data.input.options) {
+      const text = (data.input.question ?? existing.question) + "|" + ((data.input.options ?? existing.options) as string[]).join("|");
+      const content_hash = await normalizeHash(text);
+      const { data: dup } = await supabaseAdmin.from("questions").select("id").eq("content_hash", content_hash).neq("id", data.id).maybeSingle();
+      if (dup) throw new Error("A similar question already exists.");
+      patch.content_hash = content_hash;
+    }
+    if (data.input.status === "published") patch.published_at = new Date().toISOString();
+    if (data.input.status === "archived") patch.archived_at = new Date().toISOString();
+    const { data: row, error } = await supabaseAdmin.from("questions").update(patch as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "question_update", { entity: "question", entity_id: row.id, topic: row.topic, status: row.status, changes: Object.keys(data.input) });
+    return { question: row };
+  });
+
+export const archiveAdminQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), restore: z.boolean().optional() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const patch = data.restore
+      ? { status: "draft", archived_at: null, updated_by: context.userId }
+      : { status: "archived", archived_at: new Date().toISOString(), updated_by: context.userId };
+    const { data: row, error } = await supabaseAdmin.from("questions").update(patch as never).eq("id", data.id).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, data.restore ? "question_restore" : "question_archive", { entity: "question", entity_id: row.id, status: row.status });
+    return { question: row };
+  });
+
+export const duplicateAdminQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: src, error: e1 } = await supabaseAdmin.from("questions").select("*").eq("id", data.id).maybeSingle();
+    if (e1 || !src) throw new Error(e1?.message ?? "not found");
+    const newQuestion = `${src.question} (Copy)`;
+    const content_hash = await normalizeHash(newQuestion + "|" + (src.options as string[]).join("|"));
+    const copy: Record<string, unknown> = {
+      question: newQuestion,
+      options: src.options as never,
+      correct_index: src.correct_index,
+      explanation: src.explanation,
+      common_mistake: src.common_mistake,
+      topic: src.topic,
+      difficulty: src.difficulty,
+      acs_code: src.acs_code,
+      source: src.source,
+      tags: (src.tags ?? []) as never,
+      status: "draft",
+      locale: (src as { locale?: string }).locale ?? "en",
+      content_hash,
+      updated_by: context.userId,
+    };
+    const { data: row, error } = await supabaseAdmin.from("questions").insert(copy as never).select("*").single();
+    if (error) throw new Error(error.message);
+    await logAudit(context.userId, null, "question_duplicate", { entity: "question", entity_id: row.id, source_id: src.id });
+    return { question: row };
+  });

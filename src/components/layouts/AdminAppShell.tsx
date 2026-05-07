@@ -19,8 +19,8 @@ import { useDeviceMode } from "@/hooks/use-device-mode";
 export const ADMIN_NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, ready: true },
   { to: "/admin/users", label: "Users", icon: Users, ready: true },
-  { to: "/admin/lessons", label: "Lessons", icon: BookOpen, ready: false },
-  { to: "/admin/questions", label: "Questions", icon: ListChecks, ready: false },
+  { to: "/admin/lessons", label: "Lessons", icon: BookOpen, ready: true },
+  { to: "/admin/questions", label: "Questions", icon: ListChecks, ready: true },
   { to: "/admin/certificates", label: "Certificates", icon: Award, ready: false },
   { to: "/admin/landing", label: "Landing", icon: Globe, ready: false },
   { to: "/admin/media", label: "Media", icon: ImageIcon, ready: false },

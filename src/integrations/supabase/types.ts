@@ -186,42 +186,69 @@ export type Database = {
       }
       lessons: {
         Row: {
+          archived_at: string | null
           body_md: string
           created_at: string
           day: number
           est_minutes: number
+          id: string
+          locale: string
+          media_assets: Json
           order_index: number
+          published_at: string | null
           slug: string
           sources: Json
+          status: string
           summary: string
           title: string
           topic: Database["public"]["Enums"]["question_topic"] | null
+          updated_at: string
+          updated_by: string | null
+          version: number
           week: number
         }
         Insert: {
+          archived_at?: string | null
           body_md: string
           created_at?: string
           day: number
           est_minutes?: number
+          id?: string
+          locale?: string
+          media_assets?: Json
           order_index: number
+          published_at?: string | null
           slug: string
           sources?: Json
+          status?: string
           summary: string
           title: string
           topic?: Database["public"]["Enums"]["question_topic"] | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
           week: number
         }
         Update: {
+          archived_at?: string | null
           body_md?: string
           created_at?: string
           day?: number
           est_minutes?: number
+          id?: string
+          locale?: string
+          media_assets?: Json
           order_index?: number
+          published_at?: string | null
           slug?: string
           sources?: Json
+          status?: string
           summary?: string
           title?: string
           topic?: Database["public"]["Enums"]["question_topic"] | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
           week?: number
         }
         Relationships: []
@@ -301,6 +328,7 @@ export type Database = {
       questions: {
         Row: {
           acs_code: string
+          archived_at: string | null
           common_mistake: string | null
           content_hash: string
           correct_index: number
@@ -308,14 +336,21 @@ export type Database = {
           difficulty: string
           explanation: string
           id: string
+          locale: string
           options: Json
+          published_at: string | null
           question: string
           source: string
+          status: string
           tags: string[] | null
           topic: Database["public"]["Enums"]["question_topic"]
+          updated_at: string
+          updated_by: string | null
+          version: number
         }
         Insert: {
           acs_code: string
+          archived_at?: string | null
           common_mistake?: string | null
           content_hash: string
           correct_index: number
@@ -323,14 +358,21 @@ export type Database = {
           difficulty?: string
           explanation: string
           id?: string
+          locale?: string
           options: Json
+          published_at?: string | null
           question: string
           source: string
+          status?: string
           tags?: string[] | null
           topic: Database["public"]["Enums"]["question_topic"]
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
         }
         Update: {
           acs_code?: string
+          archived_at?: string | null
           common_mistake?: string | null
           content_hash?: string
           correct_index?: number
@@ -338,11 +380,17 @@ export type Database = {
           difficulty?: string
           explanation?: string
           id?: string
+          locale?: string
           options?: Json
+          published_at?: string | null
           question?: string
           source?: string
+          status?: string
           tags?: string[] | null
           topic?: Database["public"]["Enums"]["question_topic"]
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
         }
         Relationships: []
       }

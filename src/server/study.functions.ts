@@ -13,7 +13,7 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    let q = supabase.from("questions").select("id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index").limit(data.limit);
+    let q = supabase.from("questions").select("id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index").eq("status","published").limit(data.limit);
     if (data.topic) q = q.eq("topic", data.topic);
     const { data: rows, error } = await q;
     if (error) throw error;
