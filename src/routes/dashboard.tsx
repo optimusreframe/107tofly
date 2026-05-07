@@ -253,25 +253,61 @@ function Dashboard() {
           </div>
 
           {/* Next lesson */}
-          <Link
-            to="/lessons"
-            className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
-          >
-            <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
-            <div>
-              <div className="text-xs uppercase tracking-wider text-primary">{t("student.plan.title")}</div>
-              <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
-                {t("student.dashboard.continueTitle" as never, { defaultValue: t("student.plan.continueTitle") })}
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("student.plan.continueSubtitle")}
-              </p>
+          {nextLesson?.allCompleted ? (
+            <Link
+              to="/certificate"
+              className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
+            >
+              <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
+              <div>
+                <div className="text-xs uppercase tracking-wider text-success">{t("dashboard.courseCompleted")}</div>
+                <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
+                  <Award className="mr-2 inline h-6 w-6 text-success" />
+                  {t("dashboard.courseCompleted")}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">{t("dashboard.courseCompletedDesc")}</p>
+              </div>
+              <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                <GraduationCap className="h-5 w-5" /> {t("nav.certificate")}
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          ) : nextLesson?.lesson ? (
+            <Link
+              to="/lessons/$slug"
+              params={{ slug: nextLesson.lesson.slug }}
+              className="group glass-strong relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-glass transition hover:-translate-y-0.5"
+            >
+              <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-10" />
+              <div>
+                <div className="text-xs uppercase tracking-wider text-primary">{t("dashboard.nextLesson")}</div>
+                <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">{nextLesson.lesson.title}</h3>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{t("student.plan.weekShort", { n: nextLesson.lesson.week })} · D{nextLesson.lesson.day}</span>
+                  {nextLesson.lesson.topic && <span>· {t(`student.topics.${nextLesson.lesson.topic}`, { defaultValue: nextLesson.lesson.topic })}</span>}
+                  <span>· {nextLesson.lesson.est_minutes} min</span>
+                </div>
+                {nextLesson.lesson.quiz_passed ? (
+                  <div className="mt-2 inline-flex items-center gap-1 text-xs text-success">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {t("dailyQuiz.passed")} · {t("dailyQuiz.statusBestScore", { n: nextLesson.lesson.quiz_best_score ?? 0 })}
+                  </div>
+                ) : nextLesson.lesson.quiz_best_score ? (
+                  <div className="mt-2 text-xs text-warning">
+                    {t("dailyQuiz.statusBestScore", { n: nextLesson.lesson.quiz_best_score })}
+                  </div>
+                ) : null}
+              </div>
+              <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                <PlayCircle className="h-5 w-5" /> {t("dashboard.continueLesson")}
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          ) : (
+            <div className="glass-strong rounded-3xl p-6 shadow-glass">
+              <div className="text-xs uppercase tracking-wider text-primary">{t("dashboard.nextLesson")}</div>
+              <div className="mt-2 text-sm text-muted-foreground">{t("common.loading")}</div>
             </div>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <PlayCircle className="h-5 w-5" /> {t("student.plan.seeLessons")}
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </div>
-          </Link>
+          )}
 
         </div>
 
