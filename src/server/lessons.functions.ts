@@ -29,8 +29,9 @@ export const getLesson = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: lesson, error } = await supabase
       .from("lessons")
-      .select("slug,title,summary,body_md,week,day,order_index,topic,est_minutes,sources")
+      .select("slug,title,summary,body_md,week,day,order_index,topic,est_minutes,sources,status")
       .eq("slug", data.slug)
+      .eq("status", "published")
       .maybeSingle();
     if (error) throw error;
     if (!lesson) return { lesson: null, completed: false };
