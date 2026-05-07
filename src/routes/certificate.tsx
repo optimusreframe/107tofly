@@ -141,11 +141,11 @@ function Certificate() {
           {t("student.certificate.heroDesc")}
         </p>
 
-        <div className="mt-12 glass-strong overflow-hidden rounded-3xl shadow-elevated">
-          <div className="relative bg-[var(--gradient-aurora)] p-10 text-center text-primary-foreground">
-            <div aria-hidden className="absolute inset-0 bg-foreground/30" />
+        <div className={`mt-12 overflow-hidden rounded-3xl shadow-elevated ${templateStyle === "minimal" ? "border-2 border-foreground bg-background" : templateStyle === "classic" ? "border-4 border-amber-700/60 bg-amber-50" : "glass-strong"}`}>
+          <div className={`relative p-10 text-center ${templateStyle === "minimal" ? "bg-background text-foreground" : templateStyle === "classic" ? "bg-amber-50 text-amber-950" : "bg-[var(--gradient-aurora)] text-primary-foreground"}`}>
+            {templateStyle === "premium" && <div aria-hidden className="absolute inset-0 bg-foreground/30" />}
             <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-full bg-background/20 px-3 py-1 text-xs backdrop-blur">
+              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${templateStyle === "premium" ? "bg-background/20 backdrop-blur" : "border border-current/30"}`}>
                 <Award className="h-3.5 w-3.5" /> 107toFly · Course Completion
               </div>
               <div className="mt-6 font-display text-sm uppercase tracking-[0.3em] opacity-80">{t("student.certificate.thisCertifies")}</div>
@@ -158,13 +158,20 @@ function Certificate() {
                 <div><div className="opacity-70">{t("student.certificate.hours")}</div><div className="font-display text-lg">{cert?.hours_estimated ?? 56}h</div></div>
                 <div><div className="opacity-70">{t("student.certificate.certId")}</div><div className="font-mono text-xs">{cert ? `107F-${cert.id.slice(0, 8).toUpperCase()}` : "—"}</div></div>
               </div>
+              <div className="mt-4 text-[10px] uppercase tracking-wider opacity-60">{t("student.certificate.style", { defaultValue: "Style" })}: {templateStyle}</div>
             </div>
           </div>
           <div className="flex items-start gap-3 border-t border-border bg-card/70 p-5 text-xs text-muted-foreground">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-            <p>{t("student.certificate.disclaimer")}</p>
+            <p>{disclaimer}</p>
           </div>
         </div>
+
+        {!certificatesEnabled && (
+          <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-700">
+            {t("runtime.certificatesDisabled")}
+          </div>
+        )}
 
         <div className="mt-8 flex flex-wrap gap-3">
           {cert ? (
@@ -172,7 +179,7 @@ function Certificate() {
               <Download className="h-4 w-4" /> {t("student.certificate.downloadPdf")}
             </button>
           ) : (
-            <button onClick={onIssue} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90 disabled:opacity-40">
+            <button onClick={onIssue} disabled={busy || !certificatesEnabled} className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90 disabled:opacity-40">
               <Award className="h-4 w-4" /> {busy ? t("student.certificate.issuing") : t("student.certificate.issueCert")}
             </button>
           )}
