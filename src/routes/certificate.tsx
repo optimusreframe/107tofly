@@ -18,12 +18,8 @@ export const Route = createFileRoute("/certificate")({
   component: Certificate,
 });
 
-const reqs = [
-  "Módulos completados (estudio)",
-  "Promedio de quizzes ≥ 80%",
-  "Al menos 1 simulacro de 60 preguntas con score ≥ 85%",
-  "Cobertura de dominios ACS",
-];
+// reqs are i18n keys, resolved at render time
+const REQ_KEYS = ["modules", "quizAvg", "sim", "coverage"] as const;
 
 interface CertRow { id: string; display_name: string; final_score: number; modules_completed: number; hours_estimated: number; issued_at: string }
 
@@ -48,7 +44,7 @@ function Certificate() {
     setBusy(true); setError(null);
     try {
       const res = await issue();
-      if (!res.ok) setError(res.reason ?? "No cumples los requisitos aún.");
+      if (!res.ok) setError(res.reason ?? t("student.certificate.defaultReason"));
       else {
         const { data } = await supabase.from("certificates").select("*").eq("id", res.id).maybeSingle();
         if (data) setCert(data as CertRow);
@@ -111,12 +107,12 @@ function Certificate() {
   return (
     <StudentAppShell>
       <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
-        <div className="text-xs font-medium uppercase tracking-wider text-primary">Course Completion</div>
+        <div className="text-xs font-medium uppercase tracking-wider text-primary">{t("student.certificate.eyebrow")}</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
-          Certificado <span className="text-gradient">interno</span> de aprobación.
+          <span className="text-gradient">{t("student.certificate.heroTitle")}</span>
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          Cuando dominas internamente el temario, 107toFly emite tu Course Completion Certificate alineado al ACS y al material oficial FAA.
+          {t("student.certificate.heroDesc")}
         </p>
 
         <div className="mt-12 glass-strong overflow-hidden rounded-3xl shadow-elevated">
@@ -126,32 +122,32 @@ function Certificate() {
               <div className="inline-flex items-center gap-2 rounded-full bg-background/20 px-3 py-1 text-xs backdrop-blur">
                 <Award className="h-3.5 w-3.5" /> 107toFly · Course Completion
               </div>
-              <div className="mt-6 font-display text-sm uppercase tracking-[0.3em] opacity-80">This certifies that</div>
-              <div className="mt-3 font-display text-4xl font-semibold md:text-5xl">{cert?.display_name ?? "Your Name Here"}</div>
+              <div className="mt-6 font-display text-sm uppercase tracking-[0.3em] opacity-80">{t("student.certificate.thisCertifies")}</div>
+              <div className="mt-3 font-display text-4xl font-semibold md:text-5xl">{cert?.display_name ?? t("student.certificate.yourName")}</div>
               <div className="mt-3 max-w-xl mx-auto text-sm opacity-90">
-                has successfully completed the 107toFly Part 107 Preparation Program, aligned with FAA ACS, Remote Pilot Study Guide and 14 CFR Part 107 / 89.
+                {t("student.certificate.programLine")}
               </div>
               <div className="mt-8 grid grid-cols-3 gap-6 text-xs">
-                <div><div className="opacity-70">Final Score</div><div className="font-display text-lg">{cert ? `${Math.round(cert.final_score)}%` : "—"}</div></div>
-                <div><div className="opacity-70">Hours</div><div className="font-display text-lg">{cert?.hours_estimated ?? 56}h</div></div>
-                <div><div className="opacity-70">Certificate ID</div><div className="font-mono text-xs">{cert ? `107F-${cert.id.slice(0, 8).toUpperCase()}` : "—"}</div></div>
+                <div><div className="opacity-70">{t("student.certificate.finalScore")}</div><div className="font-display text-lg">{cert ? `${Math.round(cert.final_score)}%` : "—"}</div></div>
+                <div><div className="opacity-70">{t("student.certificate.hours")}</div><div className="font-display text-lg">{cert?.hours_estimated ?? 56}h</div></div>
+                <div><div className="opacity-70">{t("student.certificate.certId")}</div><div className="font-mono text-xs">{cert ? `107F-${cert.id.slice(0, 8).toUpperCase()}` : "—"}</div></div>
               </div>
             </div>
           </div>
           <div className="flex items-start gap-3 border-t border-border bg-card/70 p-5 text-xs text-muted-foreground">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-            <p>This certificate is <strong>not</strong> an FAA Remote Pilot Certificate and does not replace the official FAA UAG knowledge test or IACRA certification process.</p>
+            <p>{t("student.certificate.disclaimer")}</p>
           </div>
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3">
           {cert ? (
             <button onClick={downloadPdf} className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90">
-              <Download className="h-4 w-4" /> Descargar PDF
+              <Download className="h-4 w-4" /> {t("student.certificate.downloadPdf")}
             </button>
           ) : (
             <button onClick={onIssue} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90 disabled:opacity-40">
-              <Award className="h-4 w-4" /> {busy ? "Emitiendo…" : "Emitir mi certificado"}
+              <Award className="h-4 w-4" /> {busy ? t("student.certificate.issuing") : t("student.certificate.issueCert")}
             </button>
           )}
         </div>
@@ -160,24 +156,24 @@ function Certificate() {
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <div className="glass rounded-3xl p-6">
             <div className="flex items-center gap-2 font-display text-lg font-semibold">
-              <ShieldCheck className="h-5 w-5 text-success" /> Requisitos de emisión
+              <ShieldCheck className="h-5 w-5 text-success" /> {t("student.certificate.reqsTitle")}
             </div>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              {reqs.map((r) => (
-                <li key={r} className="flex gap-2"><FileCheck2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{r}</li>
+              {REQ_KEYS.map((k) => (
+                <li key={k} className="flex gap-2"><FileCheck2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{t(`student.certificate.reqs.${k}`)}</li>
               ))}
             </ul>
           </div>
           <div className="glass rounded-3xl p-6">
             <div className="flex items-center gap-2 font-display text-lg font-semibold">
-              <Award className="h-5 w-5 text-primary" /> Qué incluye
+              <Award className="h-5 w-5 text-primary" /> {t("student.certificate.includesTitle")}
             </div>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>• PDF descargable de alta calidad</li>
-              <li>• ID único verificable</li>
-              <li>• Compartir directo en LinkedIn</li>
-              <li>• Visible en tu perfil de 107toFly</li>
-              <li>• Disclaimer FAA claro y permanente</li>
+              <li>• {t("student.certificate.includes.pdf")}</li>
+              <li>• {t("student.certificate.includes.uniqueId")}</li>
+              <li>• {t("student.certificate.includes.linkedin")}</li>
+              <li>• {t("student.certificate.includes.profile")}</li>
+              <li>• {t("student.certificate.includes.disclaimer")}</li>
             </ul>
           </div>
         </div>

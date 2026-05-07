@@ -46,15 +46,15 @@ function LessonsPage() {
   return (
     <StudentAppShell>
       <section className="mx-auto max-w-5xl px-6 pt-12 md:pt-16">
-        <div className="text-xs font-medium uppercase tracking-wider text-primary">Plan de estudio</div>
+        <div className="text-xs font-medium uppercase tracking-wider text-primary">{t("student.plan.title")}</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
-          28 días. <span className="text-gradient">Lecciones reales.</span>
+          {t("student.plan.heroDays")} <span className="text-gradient">{t("student.plan.heroLessons")}</span>
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          Cada lección viene con cuerpo de estudio, fuentes oficiales y tracking de completion (+15 XP).
+          {t("student.plan.heroDescription")}
         </p>
         <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
-          <span className="font-semibold">{completedCount}</span> / {total} completadas
+          {t("student.plan.progressOf", { c: completedCount, n: total })}
         </div>
 
         <div className="mt-10 space-y-6">
@@ -63,8 +63,8 @@ function LessonsPage() {
             return (
               <div key={w} className="glass rounded-3xl p-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-display text-xl font-semibold">Semana {w}</h2>
-                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">{items.length} lecciones</span>
+                  <h2 className="font-display text-xl font-semibold">{t("student.plan.weekShort", { n: w })}</h2>
+                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">{t("student.plan.lessonsCount", { n: items.length })}</span>
                 </div>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   {items.length === 0 && <div className="text-sm text-muted-foreground">{t("common.loading")}</div>}

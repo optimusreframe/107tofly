@@ -45,15 +45,15 @@ function Achievements() {
   return (
     <StudentAppShell>
       <section className="mx-auto max-w-6xl px-6 pt-12 md:pt-16">
-        <div className="text-xs font-medium uppercase tracking-wider text-primary">Logros</div>
+        <div className="text-xs font-medium uppercase tracking-wider text-primary">{t("nav.achievements")}</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-5xl">
-          Cada vuelo te hace <span className="text-gradient">mejor piloto</span>.
+          <span className="text-gradient">{t("student.achievements.heroLine")}</span>
         </h1>
 
         <div className="mt-10 glass-strong rounded-3xl p-6 shadow-glass">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Nivel actual</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("student.achievements.currentLevel")}</div>
               <div className="font-display text-2xl font-semibold">
                 Lv {data.currentLevel + 1} · {data.levels[data.currentLevel]}
               </div>
@@ -76,11 +76,11 @@ function Achievements() {
             ))}
           </div>
           <div className="mt-4 text-sm text-muted-foreground">
-            Lecciones completadas: <span className="font-medium text-foreground">{data.lessonsDone}/{data.lessonsTotal}</span> · Streak: <span className="font-medium text-foreground">{data.streak} días</span>
+            {t("student.lessonsCompletedLabel")}: <span className="font-medium text-foreground">{data.lessonsDone}/{data.lessonsTotal}</span> · {t("student.streakDays", { n: data.streak })}
           </div>
         </div>
 
-        <h2 className="mt-12 font-display text-2xl font-semibold">Badges</h2>
+        <h2 className="mt-12 font-display text-2xl font-semibold">{t("student.achievements.badges")}</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {data.badges.map((b) => {
             const Icon = ICONS[b.id] ?? Award;
@@ -93,7 +93,7 @@ function Achievements() {
                 <div className="text-sm text-muted-foreground">{b.desc}</div>
                 {b.got && (
                   <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success">
-                    <Award className="h-3 w-3" /> Obtenido
+                    <Award className="h-3 w-3" /> {t("student.obtained")}
                   </div>
                 )}
               </div>
@@ -103,7 +103,7 @@ function Achievements() {
 
         <div className="mt-10">
           <Link to="/lessons" className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90">
-            Ir al plan de 28 días
+            {t("student.plan.goPlan")}
           </Link>
         </div>
       </section>

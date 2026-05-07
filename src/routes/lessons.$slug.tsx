@@ -49,8 +49,8 @@ function LessonDetail() {
     return (
       <StudentAppShell>
         <div className="mx-auto max-w-3xl px-6 pt-24">
-          <h1 className="font-display text-3xl font-semibold">Lección no encontrada</h1>
-          <Link to="/lessons" className="mt-4 inline-block text-primary underline">← Volver a lecciones</Link>
+          <h1 className="font-display text-3xl font-semibold">{t("student.notFound")}</h1>
+          <Link to="/lessons" className="mt-4 inline-block text-primary underline">{t("student.backToLessons")}</Link>
         </div>
       </StudentAppShell>
     );
@@ -67,9 +67,9 @@ function LessonDetail() {
     try {
       await completeLesson({ data: { lesson_slug: l.slug, topic: l.topic ?? undefined } });
       setData({ ...data, completed: true });
-      setMsg("¡Lección completada! +15 XP");
+      setMsg(t("student.lessonXpToast"));
     } catch (e) {
-      setMsg("Error al completar la lección.");
+      setMsg(t("student.lessonError"));
     } finally {
       setSubmitting(false);
     }
@@ -79,13 +79,13 @@ function LessonDetail() {
     <StudentAppShell>
       <article className="mx-auto max-w-3xl px-6 pt-12 md:pt-16">
         <Link to="/lessons" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Lecciones
+          <ArrowLeft className="h-4 w-4" /> {t("nav.lessons")}
         </Link>
         <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Semana {l.week} · Día {l.day}</span>
+          <span>{t("student.week")} {l.week} · {t("student.day")} {l.day}</span>
           <span>·</span>
           <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {l.est_minutes} min</span>
-          {l.topic && <><span>·</span><span className="rounded-full bg-accent px-2 py-0.5">{l.topic}</span></>}
+          {l.topic && <><span>·</span><span className="rounded-full bg-accent px-2 py-0.5">{t(`student.topics.${l.topic}`, { defaultValue: l.topic })}</span></>}
         </div>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-5xl">{l.title}</h1>
         {l.summary && <p className="mt-3 text-lg text-muted-foreground">{l.summary}</p>}
@@ -99,7 +99,7 @@ function LessonDetail() {
         {sources.length > 0 && (
           <div className="mt-6 glass rounded-3xl p-5">
             <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-              <BookOpen className="h-3.5 w-3.5" /> Fuentes
+              <BookOpen className="h-3.5 w-3.5" /> {t("student.sources")}
             </div>
             <ul className="space-y-1 text-sm">
               {sources.map((s, i) => (
@@ -114,7 +114,7 @@ function LessonDetail() {
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3" aria-live="polite">
           {data.completed ? (
             <span className="inline-flex items-center gap-2 rounded-full bg-success/15 px-4 py-2 text-sm font-medium text-success">
-              <CheckCircle2 className="h-4 w-4" /> Lección completada
+              <CheckCircle2 className="h-4 w-4" /> {t("student.lessonCompleted")}
             </span>
           ) : (
             <button
@@ -122,7 +122,7 @@ function LessonDetail() {
               disabled={submitting}
               className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
             >
-              {submitting ? "Guardando…" : "Marcar como completada · +15 XP"}
+              {submitting ? t("student.saving") : t("student.completeLesson")}
             </button>
           )}
           {msg && <span className="text-sm text-muted-foreground">{msg}</span>}

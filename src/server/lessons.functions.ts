@@ -2,46 +2,72 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const getLessons = createServerFn({ method: "GET" })
+export const getLessons = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => z.object({ locale: z.enum(["en", "es"]).optional() }).parse(d ?? {}))
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const [{ data: lessons, error }, { data: completions }] = await Promise.all([
+    const locale = data.locale ?? "en";
+    const [{ data: localized }, { data: enRows }, { data: completions }] = await Promise.all([
       supabase
         .from("lessons")
-        .select("slug,title,summary,week,day,order_index,topic,est_minutes,status")
+        .select("slug,title,summary,week,day,order_index,topic,est_minutes,status,locale")
         .eq("status", "published")
+        .eq("locale", locale)
+        .order("order_index", { ascending: true }),
+      supabase
+        .from("lessons")
+        .select("slug,title,summary,week,day,order_index,topic,est_minutes,status,locale")
+        .eq("status", "published")
+        .eq("locale", "en")
         .order("order_index", { ascending: true }),
       supabase
         .from("lesson_completions")
         .select("lesson_slug")
         .eq("user_id", userId),
     ]);
-    if (error) throw error;
     const done = new Set((completions ?? []).map((c) => c.lesson_slug));
-    return (lessons ?? []).map((l) => ({ ...l, completed: done.has(l.slug) }));
+    type Row = { slug: string; title: string; summary: string; week: number; day: number; order_index: number; topic: string | null; est_minutes: number; status: string; locale: string; fallback?: boolean };
+    const bySlug = new Map<string, Row>();
+    for (const r of (enRows ?? []) as Row[]) bySlug.set(r.slug, { ...r, fallback: locale !== "en" });
+    for (const r of (localized ?? []) as Row[]) bySlug.set(r.slug, { ...r, fallback: false });
+    const merged = Array.from(bySlug.values()).sort((a, b) => a.order_index - b.order_index);
+    return merged.map((l) => ({ ...l, completed: done.has(l.slug) }));
   });
 
 export const getLesson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(120) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(120), locale: z.enum(["en", "es"]).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: lesson, error } = await supabase
+    const locale = data.locale ?? "en";
+    let { data: lesson } = await supabase
       .from("lessons")
-      .select("slug,title,summary,body_md,week,day,order_index,topic,est_minutes,sources,status")
+      .select("slug,title,summary,body_md,week,day,order_index,topic,est_minutes,sources,status,locale")
       .eq("slug", data.slug)
       .eq("status", "published")
+      .eq("locale", locale)
       .maybeSingle();
-    if (error) throw error;
-    if (!lesson) return { lesson: null, completed: false };
+    let fallback = false;
+    if (!lesson) {
+      const r = await supabase
+        .from("lessons")
+        .select("slug,title,summary,body_md,week,day,order_index,topic,est_minutes,sources,status,locale")
+        .eq("slug", data.slug)
+        .eq("status", "published")
+        .eq("locale", "en")
+        .maybeSingle();
+      lesson = r.data;
+      fallback = !!lesson && locale !== "en";
+    }
+    if (!lesson) return { lesson: null, completed: false, fallback: false };
     const { data: completion } = await supabase
       .from("lesson_completions")
       .select("lesson_slug")
       .eq("user_id", userId)
       .eq("lesson_slug", data.slug)
       .maybeSingle();
-    return { lesson, completed: !!completion };
+    return { lesson, completed: !!completion, fallback };
   });
 
 export const getAchievements = createServerFn({ method: "GET" })
