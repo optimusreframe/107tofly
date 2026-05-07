@@ -36,6 +36,33 @@ const SECTIONS: { id: string; categories: string[]; titleKey: string; defaultLab
 // Map settings to their UI sections (legal pulls from certificate.disclaimer_*)
 const LEGAL_KEYS = ["certificate.disclaimer_en", "certificate.disclaimer_es"];
 
+// Keys whose values currently affect runtime behavior in the app.
+const RUNTIME_CONNECTED_KEYS = new Set<string>([
+  "study.lesson_completion_xp",
+  "study.lesson_quiz_pass_xp",
+  "study.quiz_pass_score",
+  "study.exam_pass_score",
+  "study.exam_ready_score",
+  "study.level_xp_step",
+  "study.daily_goal_minutes",
+  "certificate.min_course_completion_percent",
+  "certificate.min_quiz_average",
+  "certificate.required_exam_simulations",
+  "certificate.min_latest_exam_score",
+  "certificate.estimated_hours",
+  "certificate.disclaimer_en",
+  "certificate.disclaimer_es",
+  "certificate.template_style",
+  "features.flycoach_enabled",
+  "features.certificates_enabled",
+  "features.maintenance_mode",
+]);
+
+function ConnectedBadge({ k }: { k: string }) {
+  if (!RUNTIME_CONNECTED_KEYS.has(k)) return null;
+  return <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-600">Runtime</span>;
+}
+
 function inferType(key: string, value: unknown): "string" | "number" | "boolean" | "json" | "textarea" {
   if (typeof value === "boolean") return "boolean";
   if (typeof value === "number") return "number";
