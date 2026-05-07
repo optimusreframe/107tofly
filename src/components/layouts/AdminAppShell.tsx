@@ -17,15 +17,15 @@ import { useTranslation } from "react-i18next";
 import { useDeviceMode } from "@/hooks/use-device-mode";
 
 export const ADMIN_NAV = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard, ready: true },
-  { to: "/admin/users", label: "Users", icon: Users, ready: true },
-  { to: "/admin/lessons", label: "Lessons", icon: BookOpen, ready: true },
-  { to: "/admin/questions", label: "Questions", icon: ListChecks, ready: true },
-  { to: "/admin/certificates", label: "Certificates", icon: Award, ready: true },
-  { to: "/admin/landing", label: "Landing", icon: Globe, ready: true },
-  { to: "/admin/media", label: "Media", icon: ImageIcon, ready: true },
-  { to: "/admin/analytics", label: "Analytics", icon: BarChart3, ready: true },
-  { to: "/admin/settings", label: "Settings", icon: Settings, ready: true },
+  { to: "/admin", labelKey: "admin.nav.overview", icon: LayoutDashboard, ready: true },
+  { to: "/admin/users", labelKey: "admin.nav.users", icon: Users, ready: true },
+  { to: "/admin/lessons", labelKey: "admin.nav.lessons", icon: BookOpen, ready: true },
+  { to: "/admin/questions", labelKey: "admin.nav.questions", icon: ListChecks, ready: true },
+  { to: "/admin/certificates", labelKey: "admin.nav.certificates", icon: Award, ready: true },
+  { to: "/admin/landing", labelKey: "admin.nav.landing", icon: Globe, ready: true },
+  { to: "/admin/media", labelKey: "admin.nav.media", icon: ImageIcon, ready: true },
+  { to: "/admin/analytics", labelKey: "admin.nav.analytics", icon: BarChart3, ready: true },
+  { to: "/admin/settings", labelKey: "admin.nav.settings", icon: Settings, ready: true },
 ] as const;
 
 export function AdminAppShell({ children }: { children: ReactNode }) {
