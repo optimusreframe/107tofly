@@ -36,6 +36,33 @@ const SECTIONS: { id: string; categories: string[]; titleKey: string; defaultLab
 // Map settings to their UI sections (legal pulls from certificate.disclaimer_*)
 const LEGAL_KEYS = ["certificate.disclaimer_en", "certificate.disclaimer_es"];
 
+// Keys whose values currently affect runtime behavior in the app.
+const RUNTIME_CONNECTED_KEYS = new Set<string>([
+  "study.lesson_completion_xp",
+  "study.lesson_quiz_pass_xp",
+  "study.quiz_pass_score",
+  "study.exam_pass_score",
+  "study.exam_ready_score",
+  "study.level_xp_step",
+  "study.daily_goal_minutes",
+  "certificate.min_course_completion_percent",
+  "certificate.min_quiz_average",
+  "certificate.required_exam_simulations",
+  "certificate.min_latest_exam_score",
+  "certificate.estimated_hours",
+  "certificate.disclaimer_en",
+  "certificate.disclaimer_es",
+  "certificate.template_style",
+  "features.flycoach_enabled",
+  "features.certificates_enabled",
+  "features.maintenance_mode",
+]);
+
+function ConnectedBadge({ k }: { k: string }) {
+  if (!RUNTIME_CONNECTED_KEYS.has(k)) return null;
+  return <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-600">Runtime</span>;
+}
+
 function inferType(key: string, value: unknown): "string" | "number" | "boolean" | "json" | "textarea" {
   if (typeof value === "boolean") return "boolean";
   if (typeof value === "number") return "number";
@@ -143,7 +170,7 @@ function AdminSettingsPage() {
       return (
         <div key={s.key} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-card/40 p-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-medium">{s.key}{isDirty && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
+            <div className="flex items-center gap-2 text-sm font-medium">{s.key}<ConnectedBadge k={s.key} />{isDirty && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
             {s.description && <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>}
             {s.key === "features.maintenance_mode" && val === true && (
               <p className="mt-2 flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="h-3 w-3" />{t("admin.settings.maintenanceWarn", { defaultValue: "Maintenance mode is on." })}</p>
@@ -256,7 +283,7 @@ function FieldRow({ s, isDirty, onSave, children }: { s: Setting; isDirty: boole
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-sm font-medium">{s.key}{isDirty && <span className="ml-2 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
+        <div className="text-sm font-medium">{s.key}<ConnectedBadge k={s.key} />{isDirty && <span className="ml-2 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
         <Button size="sm" variant="ghost" onClick={onSave} disabled={!isDirty}><Save className="mr-1 h-3 w-3" />{t("admin.common.save")}</Button>
       </div>
       {s.description && <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>}

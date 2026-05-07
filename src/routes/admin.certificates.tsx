@@ -6,6 +6,7 @@ import { Loader2, Search, ExternalLink, Copy as CopyIcon, ShieldX, RefreshCw, Do
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-role";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import {
   getAdminCertificates,
   getAdminCertificateDetail,
@@ -38,7 +39,7 @@ type Cert = {
 };
 
 function AdminCertsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
@@ -46,6 +47,13 @@ function AdminCertsPage() {
   const fetchDetail = useServerFn(getAdminCertificateDetail);
   const revokeFn = useServerFn(revokeAdminCertificate);
   const reissueFn = useServerFn(reissueAdminCertificate);
+  const runtime = usePublicRuntime();
+  const certCfg = (runtime?.certificate ?? {}) as Record<string, unknown>;
+  const templateStyle = String(certCfg["certificate.template_style"] ?? "premium");
+  const isEs = i18n.language?.startsWith("es");
+  const previewDisclaimer = isEs
+    ? String(certCfg["certificate.disclaimer_es"] ?? t("verify.note"))
+    : String(certCfg["certificate.disclaimer_en"] ?? t("verify.note"));
 
   const [items, setItems] = useState<Cert[] | null>(null);
   const [search, setSearch] = useState("");
@@ -196,20 +204,33 @@ function AdminCertsPage() {
 
           <TabsContent value="template" className="mt-4 space-y-4">
             <div className="rounded-3xl border border-border bg-card/40 p-6">
-              <h2 className="font-display text-lg font-semibold">{t("admin.certs.preview", { defaultValue: "Preview" })}</h2>
-              <p className="mt-1 text-xs text-muted-foreground">{t("admin.certs.templateHint", { defaultValue: "Edit certificate copy in Settings → Legal." })}</p>
-              <div className="mt-6 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-8 text-center">
-                <div className="font-display text-3xl font-bold tracking-tight">Certificate of Completion</div>
-                <div className="mt-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">107toFly</div>
-                <div className="mt-8 text-sm text-muted-foreground">This certifies that</div>
-                <div className="mt-1 font-display text-2xl font-semibold">[Student Name]</div>
-                <div className="mt-4 text-sm text-muted-foreground">has completed the Part 107 prep course</div>
-                <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-                  <div><div className="font-semibold text-foreground">[Date]</div>Issued</div>
-                  <div><div className="font-semibold text-foreground">[Score]%</div>Final</div>
-                  <div><div className="font-semibold text-foreground">56h</div>Estimated</div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display text-lg font-semibold">{t("admin.certs.preview", { defaultValue: "Preview" })}</h2>
+                <span className="rounded-full border border-border bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t("admin.certs.style", { defaultValue: "Style" })}: {templateStyle}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{t("admin.certs.templateHint", { defaultValue: "Edit copy in Settings → Legal. Change template_style in Settings → Certificate Rules." })}</p>
+              <div className={`mt-6 rounded-2xl p-8 text-center ${
+                templateStyle === "minimal"
+                  ? "border-2 border-foreground bg-background"
+                  : templateStyle === "classic"
+                    ? "border-4 border-amber-700/60 bg-amber-50 text-amber-950"
+                    : "border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent"
+              }`}>
+                <div className={`font-display ${templateStyle === "classic" ? "text-2xl" : "text-3xl"} font-bold tracking-tight`}>
+                  {templateStyle === "classic" ? "107toFly — Certificate of Completion" : templateStyle === "minimal" ? "Certificate of Completion · 107toFly" : "Certificate of Completion"}
                 </div>
-                <p className="mt-6 text-[10px] leading-relaxed text-muted-foreground">{t("verify.note")}</p>
+                <div className="mt-2 text-xs uppercase tracking-[0.3em] opacity-70">107toFly</div>
+                <div className="mt-8 text-sm opacity-80">This certifies that</div>
+                <div className="mt-1 font-display text-2xl font-semibold">[Student Name]</div>
+                <div className="mt-4 text-sm opacity-80">has completed the Part 107 prep course</div>
+                <div className="mt-6 flex items-center justify-center gap-6 text-xs opacity-80">
+                  <div><div className="font-semibold">[Date]</div>Issued</div>
+                  <div><div className="font-semibold">[Score]%</div>Final</div>
+                  <div><div className="font-semibold">56h</div>Estimated</div>
+                </div>
+                <p className="mt-6 text-[10px] leading-relaxed opacity-70">{previewDisclaimer}</p>
               </div>
             </div>
           </TabsContent>

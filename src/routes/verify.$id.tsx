@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { ShieldCheck, ShieldX, Plane } from "lucide-react";
 
 export const Route = createFileRoute("/verify/$id")({
@@ -29,7 +30,13 @@ type Cert = {
 
 function VerifyPage() {
   const { id } = Route.useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const runtime = usePublicRuntime();
+  const certCfg = (runtime?.certificate ?? {}) as Record<string, unknown>;
+  const isEs = i18n.language?.startsWith("es");
+  const note = isEs
+    ? String(certCfg["certificate.disclaimer_es"] ?? t("verify.note"))
+    : String(certCfg["certificate.disclaimer_en"] ?? t("verify.note"));
   const [cert, setCert] = useState<Cert | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,7 +92,7 @@ function VerifyPage() {
               {isRevoked && cert.revoke_reason && (
                 <p className="text-xs text-destructive">{t("verify.reason", { defaultValue: "Reason" })}: {cert.revoke_reason}</p>
               )}
-              <p className="text-xs leading-relaxed text-muted-foreground">{t("verify.note")}</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">{note}</p>
             </div>
           ) : (
             <div className="mt-6 flex items-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-destructive">

@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitExamSimulation } from "@/server/study.functions";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { Clock, Target, ListChecks, ArrowRight, ArrowLeft, Flag, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/simulator")({
@@ -37,6 +38,8 @@ function Simulator() {
   const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const runtime = usePublicRuntime();
+  const passScore = Number((runtime?.study as Record<string, unknown> | undefined)?.["study.exam_pass_score"] ?? 70);
   const fetchQ = useServerFn(fetchPracticeQuestions);
   const submitSim = useServerFn(submitExamSimulation);
 
@@ -116,7 +119,7 @@ function Simulator() {
             {[
               { icon: Clock, t: t("student.simulator.twoHours"), d: t("student.simulator.twoHoursDesc") },
               { icon: ListChecks, t: t("student.simulator.sixtyQ"), d: t("student.simulator.sixtyQDesc") },
-              { icon: Target, t: t("student.simulator.seventyMin"), d: t("student.simulator.seventyMinDesc") },
+              { icon: Target, t: t("student.simulator.passMin", { p: passScore, defaultValue: `${passScore}% minimum` }), d: t("student.simulator.passMinDesc", { defaultValue: "We recommend a consistent 85%+." }) },
             ].map((s) => (
               <div key={s.t} className="glass rounded-3xl p-5">
                 <s.icon className="h-5 w-5 text-primary" />
@@ -136,7 +139,7 @@ function Simulator() {
   }
 
   if (phase === "done" && result) {
-    const passed = result.score >= 70;
+    const passed = result.score >= passScore;
     return (
       <StudentAppShell>
         <section className="mx-auto max-w-3xl px-6 pt-16 text-center">
@@ -146,6 +149,7 @@ function Simulator() {
           <h1 className="mt-4 font-display text-3xl font-semibold">{t("student.simulator.completed")}</h1>
           <div className="mt-6 font-display text-7xl font-semibold text-gradient">{Math.round(result.score)}%</div>
           <p className="mt-2 text-muted-foreground">{t("student.simulator.ofCorrect", { c: result.correct, n: result.total })} · {passed ? t("student.simulator.passedInternal") : t("student.simulator.keepPracticing")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("student.simulator.threshold", { p: passScore, defaultValue: `Pass threshold: ${passScore}%` })}</p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {Object.entries(result.breakdown).map(([topic, b]) => {
               const pct = Math.round((b.correct / b.total) * 100);
