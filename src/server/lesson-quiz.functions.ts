@@ -34,13 +34,23 @@ export const getLessonQuiz = createServerFn({ method: "POST" })
     const { supabase } = context;
     const locale = data.locale ?? "en";
 
-    const { data: lesson } = await supabase
+    let { data: lesson } = await supabase
       .from("lessons")
       .select("id,slug,topic")
       .eq("slug", data.slug)
       .eq("status", "published")
-      .limit(1)
+      .eq("locale", locale)
       .maybeSingle();
+    if (!lesson) {
+      const r = await supabase
+        .from("lessons")
+        .select("id,slug,topic")
+        .eq("slug", data.slug)
+        .eq("status", "published")
+        .eq("locale", "en")
+        .maybeSingle();
+      lesson = r.data;
+    }
 
     if (!lesson) return { lesson: null, questions: [], fallback: false, topic: null };
     const topic = (lesson.topic as string | null) ?? null;
