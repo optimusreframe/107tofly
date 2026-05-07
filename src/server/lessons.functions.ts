@@ -27,10 +27,10 @@ export const getLessons = createServerFn({ method: "POST" })
         .eq("user_id", userId),
     ]);
     const done = new Set((completions ?? []).map((c) => c.lesson_slug));
-    // Merge: prefer localized; fallback to EN if missing for that order_index/slug
-    const bySlug = new Map<string, typeof (enRows ?? [])[number] & { fallback?: boolean }>();
-    for (const r of (enRows ?? [])) bySlug.set(r.slug, { ...r, fallback: locale !== "en" });
-    for (const r of (localized ?? [])) bySlug.set(r.slug, { ...r, fallback: false });
+    type Row = { slug: string; title: string; summary: string; week: number; day: number; order_index: number; topic: string | null; est_minutes: number; status: string; locale: string; fallback?: boolean };
+    const bySlug = new Map<string, Row>();
+    for (const r of (enRows ?? []) as Row[]) bySlug.set(r.slug, { ...r, fallback: locale !== "en" });
+    for (const r of (localized ?? []) as Row[]) bySlug.set(r.slug, { ...r, fallback: false });
     const merged = Array.from(bySlug.values()).sort((a, b) => a.order_index - b.order_index);
     return merged.map((l) => ({ ...l, completed: done.has(l.slug) }));
   });
