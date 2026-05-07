@@ -30,7 +30,13 @@ type Cert = {
 
 function VerifyPage() {
   const { id } = Route.useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const runtime = usePublicRuntime();
+  const certCfg = (runtime?.certificate ?? {}) as Record<string, unknown>;
+  const isEs = i18n.language?.startsWith("es");
+  const note = isEs
+    ? String(certCfg["certificate.disclaimer_es"] ?? t("verify.note"))
+    : String(certCfg["certificate.disclaimer_en"] ?? t("verify.note"));
   const [cert, setCert] = useState<Cert | null>(null);
   const [loading, setLoading] = useState(true);
 
