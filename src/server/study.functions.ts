@@ -304,15 +304,13 @@ async function recomputeProgress(supabase: any, userId: string) {
   const reviewPct = Math.round(srRetention);
   const readiness = Math.round(0.4 * quizAvg + 0.25 * simAvg + 0.2 * srRetention + 0.15 * studyPct);
 
-  // simple xp & streak (xp = lessons*50 + attempts*20 + cards*5)
-  const xp = (lessons?.length ?? 0) * 50 + (attempts?.length ?? 0) * 20 + (cards?.length ?? 0) * 5;
-
+  // XP is awarded incrementally by event-driven flows (lesson completion, lesson quiz pass).
+  // Don't overwrite it here.
   await supabase.from("progress").update({
     study_pct: studyPct,
     practice_pct: practicePct,
     review_pct: reviewPct,
     readiness,
-    xp,
     updated_at: new Date().toISOString(),
   }).eq("user_id", userId);
 
