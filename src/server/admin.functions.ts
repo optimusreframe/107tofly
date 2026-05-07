@@ -439,6 +439,7 @@ export const createAdminLesson = createServerFn({ method: "POST" })
     const conflicts = await checkLessonConflicts(data);
     if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
     if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
+    const payload: Record<string, unknown> = {
       ...data,
       sources: data.sources as never,
       media_assets: data.media_assets as never,
@@ -459,6 +460,7 @@ export const updateAdminLesson = createServerFn({ method: "POST" })
     const conflicts = await checkLessonConflicts(data.input, data.id);
     if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
     if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
+    const patch: Record<string, unknown> = {
       ...data.input,
       updated_by: context.userId,
     };
