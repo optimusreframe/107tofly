@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           display_name: string
@@ -49,6 +85,10 @@ export type Database = {
           id: string
           issued_at: string
           modules_completed: number
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          status: string
           user_id: string
         }
         Insert: {
@@ -58,6 +98,10 @@ export type Database = {
           id?: string
           issued_at?: string
           modules_completed: number
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
           user_id: string
         }
         Update: {
@@ -67,6 +111,10 @@ export type Database = {
           id?: string
           issued_at?: string
           modules_completed?: number
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: []

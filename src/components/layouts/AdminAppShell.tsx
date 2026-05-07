@@ -21,11 +21,11 @@ export const ADMIN_NAV = [
   { to: "/admin/users", label: "Users", icon: Users, ready: true },
   { to: "/admin/lessons", label: "Lessons", icon: BookOpen, ready: true },
   { to: "/admin/questions", label: "Questions", icon: ListChecks, ready: true },
-  { to: "/admin/certificates", label: "Certificates", icon: Award, ready: false },
+  { to: "/admin/certificates", label: "Certificates", icon: Award, ready: true },
   { to: "/admin/landing", label: "Landing", icon: Globe, ready: true },
   { to: "/admin/media", label: "Media", icon: ImageIcon, ready: true },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, ready: false },
-  { to: "/admin/settings", label: "Settings", icon: Settings, ready: false },
+  { to: "/admin/settings", label: "Settings", icon: Settings, ready: true },
 ] as const;
 
 export function AdminAppShell({ children }: { children: ReactNode }) {

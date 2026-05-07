@@ -31,10 +31,12 @@ import { Route as LessonsIndexRouteImport } from './routes/lessons.index'
 import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminMediaRouteImport } from './routes/admin.media'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
 import { Route as AdminLandingRouteImport } from './routes/admin.landing'
+import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -146,6 +148,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   id: '/questions',
   path: '/questions',
@@ -164,6 +171,11 @@ const AdminLessonsRoute = AdminLessonsRouteImport.update({
 const AdminLandingRoute = AdminLandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCertificatesRoute = AdminCertificatesRouteImport.update({
+  id: '/certificates',
+  path: '/certificates',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -186,10 +198,12 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -214,10 +228,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -243,10 +259,12 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -273,10 +291,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/certificates'
     | '/admin/landing'
     | '/admin/lessons'
     | '/admin/media'
     | '/admin/questions'
+    | '/admin/settings'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -301,10 +321,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/certificates'
     | '/admin/landing'
     | '/admin/lessons'
     | '/admin/media'
     | '/admin/questions'
+    | '/admin/settings'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -329,10 +351,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/certificates'
     | '/admin/landing'
     | '/admin/lessons'
     | '/admin/media'
     | '/admin/questions'
+    | '/admin/settings'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -519,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/questions': {
       id: '/admin/questions'
       path: '/questions'
@@ -547,22 +578,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLandingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/certificates': {
+      id: '/admin/certificates'
+      path: '/certificates'
+      fullPath: '/admin/certificates'
+      preLoaderRoute: typeof AdminCertificatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminCertificatesRoute: typeof AdminCertificatesRoute
   AdminLandingRoute: typeof AdminLandingRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCertificatesRoute: AdminCertificatesRoute,
   AdminLandingRoute: AdminLandingRoute,
   AdminLessonsRoute: AdminLessonsRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
 }
 
