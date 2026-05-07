@@ -86,6 +86,7 @@ function LessonsPage() {
                             <div className="truncate font-medium">{l.title}</div>
                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                               <Clock className="h-3 w-3" /> {l.est_minutes} min
+                              {l.fallback && <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px]" title={t("student.fallbackToEn")}>EN</span>}
                             </div>
                           </div>
                         </div>
