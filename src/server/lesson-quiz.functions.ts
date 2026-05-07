@@ -158,7 +158,7 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         lesson_id: lessonId,
         lesson_slug: data.lesson_slug,
         attempt_type: "lesson_quiz",
-      })
+      } as never)
       .select("id")
       .single();
     if (aerr || !attempt) throw aerr ?? new Error("attempt insert failed");
