@@ -126,10 +126,11 @@ function Dashboard() {
       (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
       setActivity(counts);
     }).catch(() => setActivity([]));
-  }, [user, fetchDue]);
+  }, [user, fetchDue, fetchReadiness, fetchMastery]);
 
 
-  const readiness = progress?.readiness ?? 0;
+  const readiness = readinessData?.score ?? progress?.readiness ?? 0;
+  const readinessStatusKey = readinessData?.status ?? (readiness >= 85 ? "ready" : readiness >= 70 ? "almost" : readiness >= 50 ? "building" : "foundation");
   const ringValues = [
     { label: "Estudio", value: progress?.study_pct ?? 0, color: "oklch(0.62 0.2 255)" },
     { label: "Práctica", value: progress?.practice_pct ?? 0, color: "oklch(0.7 0.16 235)" },
