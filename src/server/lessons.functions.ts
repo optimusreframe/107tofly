@@ -149,5 +149,7 @@ export const getAchievements = createServerFn({ method: "GET" })
       levels,
       currentLevel: levelIdx,
       nextXp,
+      levelStep,
+      examReadyScore: Number(examReadyScore ?? 85),
     };
   });
