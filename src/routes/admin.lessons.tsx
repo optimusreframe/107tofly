@@ -384,18 +384,51 @@ function AdminLessonsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((l) => (
+                {filtered.map((l) => {
+                  const isEn = l.locale === "en";
+                  const trBadge = isEn ? translationBadgeForEn(l) : null;
+                  const es = isEn ? getEsForEn(l) : null;
+                  return (
                   <tr key={l.id} className="border-t border-border/40 hover:bg-accent/30">
                     <td className="px-3 py-2">
                       <button onClick={() => openEditor(l)} className="text-left font-medium hover:underline">{l.title}</button>
-                      <div className="text-xs text-muted-foreground">{l.slug}</div>
+                      <div className="text-xs text-muted-foreground">{l.slug} · <span className="uppercase">{l.locale}</span></div>
                     </td>
                     <td className="px-3 py-2 tabular-nums">W{l.week}·D{l.day}</td>
                     <td className="px-3 py-2">{l.topic}</td>
                     <td className="px-3 py-2"><Badge variant={l.status === "published" ? "default" : "secondary"}>{t(`admin.status.${l.status}`)}</Badge></td>
+                    <td className="px-3 py-2">
+                      {isEn && trBadge ? (
+                        <Badge variant={trBadge.tone}>{t(`admin.lessons.translation.${trBadge.key}`)}</Badge>
+                      ) : !isEn ? (
+                        <Badge variant="outline">{t("admin.lessons.translation.translatedFromEn")}</Badge>
+                      ) : null}
+                    </td>
                     <td className="px-3 py-2 tabular-nums">{l.est_minutes}</td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex justify-end gap-1">
+                        {isEn && (
+                          es ? (
+                            <>
+                              <button onClick={() => openExistingEsEditor(l)} className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs hover:bg-accent" title={t("admin.lessons.translation.edit")}>
+                                <Languages className="h-4 w-4" /> ES
+                              </button>
+                              <button onClick={() => onGenerateEs(l)} disabled={aiLoadingId === l.id} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent disabled:opacity-50" title={t("admin.lessons.translation.regenerate")}>
+                                {aiLoadingId === l.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              </button>
+                              {es.status !== "published" && (
+                                <button onClick={() => onPublishExistingEs(l)} className="inline-flex h-8 items-center rounded-md px-2 text-xs hover:bg-accent" title={t("admin.lessons.translation.publish")}>
+                                  {t("admin.lessons.translation.publish")}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <button onClick={() => onGenerateEs(l)} disabled={aiLoadingId === l.id} className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs hover:bg-accent disabled:opacity-50" title={t("admin.lessons.translation.generate")}>
+                              {aiLoadingId === l.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              ES
+                            </button>
+                          )
+                        )}
                         {l.status === "published" && (
                           <Link to="/lessons/$slug" params={{ slug: l.slug }} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={t("admin.lessons.openStudent")}><ExternalLink className="h-4 w-4" /></Link>
                         )}
@@ -406,7 +439,8 @@ function AdminLessonsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
