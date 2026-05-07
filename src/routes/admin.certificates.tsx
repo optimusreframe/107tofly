@@ -6,6 +6,7 @@ import { Loader2, Search, ExternalLink, Copy as CopyIcon, ShieldX, RefreshCw, Do
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-role";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import {
   getAdminCertificates,
   getAdminCertificateDetail,
