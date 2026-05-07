@@ -51,10 +51,10 @@ export const getLessonQuiz = createServerFn({ method: "POST" })
         .from("questions")
         .select(cols)
         .eq("status", "published")
-        .eq("topic", topic)
+        .eq("topic", topic as (typeof TOPICS)[number])
         .eq("locale", loc);
       if (error) throw error;
-      return (rows ?? []) as QuestionRow[];
+      return (rows ?? []) as unknown as QuestionRow[];
     };
 
     let rows: QuestionRow[] = [];
