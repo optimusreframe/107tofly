@@ -2,11 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
+import { getStudySettings } from "./runtime-settings.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
 const QUIZ_SIZE = 6;
-const PASS_THRESHOLD = 70;
-const QUIZ_XP = 20;
 
 type QuestionRow = {
   id: string;
