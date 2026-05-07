@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/server/study.functions";
@@ -32,6 +33,7 @@ interface Q {
 }
 
 function Practice() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const search = Route.useSearch();
@@ -66,7 +68,7 @@ function Practice() {
     load();
   }, [user, fetchQ, fetchMastery, search.mode]);
 
-  if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+  if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
 
   if (done) {
     return (
@@ -75,19 +77,19 @@ function Practice() {
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--gradient-aurora)] text-primary-foreground">
             <Sparkles className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 font-display text-3xl font-semibold">Quiz completado</h1>
+          <h1 className="mt-4 font-display text-3xl font-semibold">{t("student.practice.done")}</h1>
           <div className="mt-6 font-display text-6xl font-semibold text-gradient">{Math.round(done.score)}%</div>
-          <p className="mt-2 text-muted-foreground">{done.correct} de {done.total} correctas</p>
+          <p className="mt-2 text-muted-foreground">{t("student.practice.doneSummary", { c: done.correct, n: done.total })}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/dashboard" className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background">Ir al Dashboard</Link>
-            <button onClick={() => location.reload()} className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">Otra ronda</button>
+            <Link to="/dashboard" className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background">{t("student.practice.goDashboard")}</Link>
+            <button onClick={() => location.reload()} className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">{t("student.practice.another")}</button>
           </div>
         </section>
       </StudentAppShell>
     );
   }
 
-  if (!questions.length) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando preguntas…</div></StudentAppShell>;
+  if (!questions.length) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("student.practice.loading")}</div></StudentAppShell>;
 
   const q = questions[idx];
   const isCorrect = picked !== null && picked === q.correct_index;
@@ -109,7 +111,7 @@ function Practice() {
     <StudentAppShell>
       <section className="mx-auto max-w-2xl px-6 pt-12">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="uppercase tracking-wider">Práctica · {q.topic}</span>
+          <span className="uppercase tracking-wider">{t("student.practice.label")} · {t(`student.topics.${q.topic}`, { defaultValue: q.topic })}</span>
           <span>{idx + 1} / {questions.length}</span>
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -148,18 +150,18 @@ function Practice() {
           {picked !== null && (
             <div className="mt-5 rounded-2xl border border-border bg-card/70 p-4 text-sm">
               <div className={`text-xs font-medium uppercase tracking-wider ${isCorrect ? "text-success" : "text-destructive"}`}>
-                {isCorrect ? "Correcto" : "No exactamente"}
+                {isCorrect ? t("student.practice.correct") : t("student.practice.notQuite")}
               </div>
               <p className="mt-2 text-foreground">{q.explanation}</p>
               {q.common_mistake && (
-                <p className="mt-2 text-muted-foreground"><span className="font-medium">Error común:</span> {q.common_mistake}</p>
+                <p className="mt-2 text-muted-foreground"><span className="font-medium">{t("student.practice.commonMistake")}</span> {q.common_mistake}</p>
               )}
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   onClick={() => saveFC({ data: { question_id: q.id } })}
                   className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs hover:bg-accent"
                 >
-                  <BookmarkPlus className="h-3.5 w-3.5" /> Guardar como flashcard
+                  <BookmarkPlus className="h-3.5 w-3.5" /> {t("student.practice.saveFlashcard")}
                 </button>
               </div>
             </div>
@@ -171,7 +173,7 @@ function Practice() {
               disabled={picked === null}
               className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-40"
             >
-              {idx + 1 >= questions.length ? "Terminar" : "Siguiente"} <ArrowRight className="h-4 w-4" />
+              {idx + 1 >= questions.length ? t("student.practice.finish") : t("student.practice.next")} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

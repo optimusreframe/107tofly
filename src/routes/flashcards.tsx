@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
@@ -20,6 +21,7 @@ type Grade = "again" | "hard" | "good" | "easy";
 interface Card { id: string; front: string; back: string; topic: string | null; due_date: string; interval_days: number }
 
 function Flashcards() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const fetchDue = useServerFn(fetchDueFlashcards);
@@ -73,7 +75,7 @@ function Flashcards() {
   }, [cards, idx, flipped]);
 
   if (loading || !user || cards === null) {
-    return <StudentAppShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
 
@@ -106,8 +108,8 @@ function Flashcards() {
         ) : done ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
             <Sparkles className="mx-auto h-10 w-10 text-primary" />
-            <h2 className="mt-3 font-display text-2xl font-semibold">¡Sesión completada!</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Repasaste {reviewed} tarjetas. Próximas vencen según SM-2.</p>
+            <h2 className="mt-3 font-display text-2xl font-semibold">{t("student.flashcards.done")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("student.flashcards.reviewed", { n: reviewed })}</p>
             <Link to="/dashboard" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">Ir al Dashboard</Link>
           </div>
         ) : (

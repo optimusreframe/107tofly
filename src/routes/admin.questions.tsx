@@ -139,7 +139,7 @@ function AdminQuestionsPage() {
     catch (e) { toast.error((e as Error).message); }
   };
 
-  if (authLoading || rolesLoading) return <AdminAppShell><div className="p-8 text-sm text-muted-foreground">Cargando…</div></AdminAppShell>;
+  if (authLoading || rolesLoading) return <AdminAppShell><div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div></AdminAppShell>;
   if (!isAdmin) return (
     <AdminAppShell>
       <div className="mx-auto max-w-md p-8 text-center">

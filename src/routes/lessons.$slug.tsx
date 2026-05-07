@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/lessons/$slug")({
 });
 
 function LessonDetail() {
+  const { t } = useTranslation();
   const { slug } = Route.useParams();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ function LessonDetail() {
   }, [slug, user]);
 
   if (loading || !user || !data) {
-    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
+    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
   }
 
   if (!data.lesson) {

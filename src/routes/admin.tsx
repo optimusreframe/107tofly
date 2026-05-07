@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { Shield, Users, BookOpen, ListChecks, Award, FileCheck, Brain, LifeBuoy } from "lucide-react";
 import { AdminAppShell, ADMIN_NAV } from "@/components/layouts/AdminAppShell";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/admin")({
 type Metrics = Awaited<ReturnType<typeof getAdminMetrics>>;
 
 function AdminPage() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
@@ -41,7 +43,7 @@ function AdminPage() {
   if (authLoading || rolesLoading) {
     return (
       <AdminAppShell>
-        <div className="p-8 text-sm text-muted-foreground">Cargando…</div>
+        <div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div>
       </AdminAppShell>
     );
   }
@@ -51,12 +53,12 @@ function AdminPage() {
       <AdminAppShell>
         <div className="mx-auto max-w-md p-8 text-center">
           <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h1 className="mt-4 text-2xl font-semibold">Access denied</h1>
+          <h1 className="mt-4 text-2xl font-semibold">{t("student.accessDenied")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            No tienes permisos para acceder al panel de administración.
+            {t("student.accessDenied")}
           </p>
           <Link to="/dashboard" className="mt-6 inline-flex rounded-full bg-foreground px-4 py-2 text-sm text-background">
-            Volver al dashboard
+            {t("student.backToDashboard")}
           </Link>
         </div>
       </AdminAppShell>
@@ -64,23 +66,23 @@ function AdminPage() {
   }
 
   const stats = [
-    { label: "Usuarios", value: metrics?.users, icon: Users },
-    { label: "Lecciones", value: metrics?.lessons, icon: BookOpen },
-    { label: "Preguntas", value: metrics?.questions, icon: ListChecks },
-    { label: "Quiz attempts", value: metrics?.quizAttempts, icon: Brain },
-    { label: "Simulaciones", value: metrics?.examSimulations, icon: FileCheck },
-    { label: "Certificados", value: metrics?.certificates, icon: Award },
-    { label: "Estudiantes activos", value: undefined, icon: Users, soon: true },
-    { label: "Tickets soporte", value: undefined, icon: LifeBuoy, soon: true },
+    { label: t("admin.overview.stats.users"), value: metrics?.users, icon: Users },
+    { label: t("admin.overview.stats.lessons"), value: metrics?.lessons, icon: BookOpen },
+    { label: t("admin.overview.stats.questions"), value: metrics?.questions, icon: ListChecks },
+    { label: t("admin.overview.stats.quizAttempts"), value: metrics?.quizAttempts, icon: Brain },
+    { label: t("admin.overview.stats.examSimulations"), value: metrics?.examSimulations, icon: FileCheck },
+    { label: t("admin.overview.stats.certificates"), value: metrics?.certificates, icon: Award },
+    { label: t("admin.overview.stats.activeStudents"), value: undefined, icon: Users, soon: true },
+    { label: t("admin.overview.stats.supportTickets"), value: undefined, icon: LifeBuoy, soon: true },
   ];
 
   return (
     <AdminAppShell>
       <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
         <header className="mb-8">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Overview</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("admin.overview.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Métricas globales de la plataforma.
+            {t("admin.overview.subtitle")}
           </p>
         </header>
 
@@ -100,7 +102,7 @@ function AdminPage() {
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="mt-3 font-display text-3xl font-semibold tabular-nums">
-                  {s.soon ? <span className="text-base text-muted-foreground">Coming soon</span> : (s.value ?? "—")}
+                  {s.soon ? <span className="text-base text-muted-foreground">{t("admin.overview.soon")}</span> : (s.value ?? "—")}
                 </div>
               </div>
             );
@@ -108,7 +110,7 @@ function AdminPage() {
         </section>
 
         <section aria-label="Sections" className="mt-10">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">Secciones</h2>
+          <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">{t("admin.overview.sections")}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ADMIN_NAV.filter((n) => n.to !== "/admin").map((n) => {
               const Icon = n.icon;
@@ -122,9 +124,9 @@ function AdminPage() {
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="font-medium">{n.label}</div>
+                      <div className="font-medium">{t(n.labelKey)}</div>
                       <div className="text-xs text-muted-foreground">
-                        {n.ready ? "Disponible" : "Próximamente"}
+                        {n.ready ? t("admin.overview.available") : t("admin.overview.soon")}
                       </div>
                     </div>
                   </div>
