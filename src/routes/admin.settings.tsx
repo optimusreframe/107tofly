@@ -283,7 +283,7 @@ function FieldRow({ s, isDirty, onSave, children }: { s: Setting; isDirty: boole
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-sm font-medium">{s.key}{isDirty && <span className="ml-2 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
+        <div className="text-sm font-medium">{s.key}<ConnectedBadge k={s.key} />{isDirty && <span className="ml-2 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">dirty</span>}</div>
         <Button size="sm" variant="ghost" onClick={onSave} disabled={!isDirty}><Save className="mr-1 h-3 w-3" />{t("admin.common.save")}</Button>
       </div>
       {s.description && <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>}
