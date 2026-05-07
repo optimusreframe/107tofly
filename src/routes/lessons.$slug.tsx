@@ -8,6 +8,7 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getLesson, getLessons } from "@/server/lessons.functions";
 import { completeLesson } from "@/server/study.functions";
+import { LessonDailyQuiz } from "@/components/LessonDailyQuiz";
 
 type LessonResp = Awaited<ReturnType<typeof getLesson>>;
 
