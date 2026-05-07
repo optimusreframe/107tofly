@@ -31,13 +31,6 @@ type Q = {
   id: string; question: string; options: string[]; correct_index: number;
   explanation: string; common_mistake: string | null; topic: string;
   difficulty: string; acs_code: string; source: string; tags: string[] | null;
-  status: string; locale: string;
-};
-
-type Q = {
-  id: string; question: string; options: string[]; correct_index: number;
-  explanation: string; common_mistake: string | null; topic: string;
-  difficulty: string; acs_code: string; source: string; tags: string[] | null;
   status: string; locale: string; version?: number; updated_at?: string; updated_by?: string | null;
 };
 
