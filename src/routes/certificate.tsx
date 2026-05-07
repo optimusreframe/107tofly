@@ -44,8 +44,12 @@ function Certificate() {
     setBusy(true); setError(null);
     try {
       const res = await issue();
-      if (!res.ok) setError(res.reason ?? t("student.certificate.defaultReason"));
-      else {
+      if (!res.ok) {
+        const code = res.reason ?? "";
+        if (code === "CERTIFICATES_DISABLED") setError(t("runtime.certificatesDisabled"));
+        else if (code === "REQUIREMENTS_NOT_MET") setError(t("student.certificate.defaultReason"));
+        else setError(code || t("student.certificate.defaultReason"));
+      } else {
         const { data } = await supabase.from("certificates").select("*").eq("id", res.id).maybeSingle();
         if (data) setCert(data as CertRow);
       }

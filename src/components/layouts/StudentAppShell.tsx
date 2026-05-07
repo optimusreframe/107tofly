@@ -23,6 +23,7 @@ import { useDeviceMode } from "@/hooks/use-device-mode";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteFooter } from "@/components/SiteFooter";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 
 const PRIMARY = [
   { to: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
@@ -78,8 +79,15 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
   };
   const lang = (i18n.language || "es").slice(0, 2).toUpperCase();
 
+  const runtime = usePublicRuntime();
+  const maintenance = runtime?.features.maintenanceMode === true;
   return (
     <div className="relative min-h-screen overflow-x-hidden">
+      {maintenance && (
+        <div className="sticky top-0 z-50 bg-amber-500/90 px-4 py-2 text-center text-xs font-medium text-amber-950">
+          {t("runtime.maintenanceMode", { defaultValue: "Maintenance mode is active." })}
+        </div>
+      )}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-[var(--gradient-aurora)] opacity-20 blur-3xl" />
         <div className="absolute top-1/3 -right-40 h-[480px] w-[480px] rounded-full bg-[var(--gradient-sky)] opacity-15 blur-3xl" />

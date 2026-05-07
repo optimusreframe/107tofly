@@ -3,6 +3,7 @@ import { z } from "zod";
 import { md5 } from "js-md5";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { invalidateSettingsCache } from "./runtime-settings.server";
 
 type AppRole = "student" | "admin" | "content_manager" | "support";
 const ALL_ROLES: AppRole[] = ["student", "admin", "content_manager", "support"];
@@ -916,6 +917,7 @@ export const updateAdminSetting = createServerFn({ method: "POST" })
       entity: "setting", key: data.key,
       category: (existing as { category?: string } | null)?.category ?? null,
     });
+    invalidateSettingsCache();
     return { setting: row };
   });
 
@@ -936,6 +938,7 @@ export const updateAdminSettingsBulk = createServerFn({ method: "POST" })
     await logAudit(context.userId, null, "settings_bulk_update", {
       entity: "setting", keys,
     });
+    invalidateSettingsCache();
     return { ok: true, count: keys.length };
   });
 

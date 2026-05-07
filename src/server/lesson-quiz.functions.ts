@@ -2,11 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
+import { getStudySettings } from "./runtime-settings.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
 const QUIZ_SIZE = 6;
-const PASS_THRESHOLD = 70;
-const QUIZ_XP = 20;
 
 type QuestionRow = {
   id: string;
@@ -140,10 +139,13 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
     const lessonId = (lesson?.id as string | undefined) ?? null;
     const topic = data.topic ?? ((lesson?.topic as string | undefined) ?? undefined);
 
+    const { quizPassScore, lessonQuizPassXp } = await getStudySettings();
+    const passThreshold = Number(quizPassScore ?? 70);
+    const quizXp = Number(lessonQuizPassXp ?? 20);
     const total = data.answers.length;
     const correct = data.answers.filter((a) => a.is_correct).length;
     const score = Math.round((correct / total) * 100);
-    const passed = score >= PASS_THRESHOLD;
+    const passed = score >= passThreshold;
 
     const { data: attempt, error: aerr } = await supabase
       .from("quiz_attempts")
@@ -215,12 +217,12 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         .select("xp")
         .eq("user_id", userId)
         .maybeSingle();
-      const newXp = (prog?.xp ?? 0) + QUIZ_XP;
+      const newXp = (prog?.xp ?? 0) + quizXp;
       await supabase
         .from("progress")
         .update({ xp: newXp, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
-      xp_awarded_now = QUIZ_XP;
+      xp_awarded_now = quizXp;
     }
     await touchDailyActivity(supabase, userId);
 

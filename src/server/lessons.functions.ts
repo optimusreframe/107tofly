@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getStudySettings } from "./runtime-settings.server";
 
 export const getLessons = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -134,7 +135,8 @@ export const getAchievements = createServerFn({ method: "GET" })
       "Remote PIC Ready",
       "Exam Ready Pilot",
     ];
-    const levelStep = 400;
+    const { levelXpStep, examReadyScore } = await getStudySettings();
+    const levelStep = Number(levelXpStep ?? 400);
     const levelIdx = Math.min(levels.length - 1, Math.floor(xp / levelStep));
     const nextXp = (levelIdx + 1) * levelStep;
 
@@ -147,5 +149,7 @@ export const getAchievements = createServerFn({ method: "GET" })
       levels,
       currentLevel: levelIdx,
       nextXp,
+      levelStep,
+      examReadyScore: Number(examReadyScore ?? 85),
     };
   });

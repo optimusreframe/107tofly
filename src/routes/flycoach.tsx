@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { askFlyCoach } from "@/server/flycoach.functions";
+import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { Sparkles, Send, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/flycoach")({
@@ -30,7 +32,10 @@ const SUGGESTIONS = [
 ];
 
 function FlyCoach() {
+  const { t } = useTranslation();
   const ask = useServerFn(askFlyCoach);
+  const runtime = usePublicRuntime();
+  const flycoachEnabled = runtime?.features.flycoachEnabled !== false;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,6 +44,18 @@ function FlyCoach() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  if (runtime && !flycoachEnabled) {
+    return (
+      <StudentAppShell>
+        <section className="mx-auto max-w-2xl px-6 pt-24 text-center">
+          <Sparkles className="mx-auto h-8 w-8 text-muted-foreground" />
+          <h1 className="mt-4 font-display text-3xl font-semibold">FlyCoach</h1>
+          <p className="mt-3 text-muted-foreground">{t("runtime.flycoachDisabled")}</p>
+        </section>
+      </StudentAppShell>
+    );
+  }
 
   const send = async (text: string) => {
     const trimmed = text.trim();
