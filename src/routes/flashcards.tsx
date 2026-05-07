@@ -37,13 +37,10 @@ function Flashcards() {
     fetchDue().then((d) => setCards(d as Card[]));
   }, [user, fetchDue]);
 
-  if (loading || !user || cards === null) {
-    return <PageShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
-  }
-
   const reset = () => { fetchDue().then((d) => { setCards(d as Card[]); setIdx(0); setFlipped(false); setReviewed(0); }); };
 
   const submit = async (g: Grade) => {
+    if (!cards || idx >= cards.length) return;
     const card = cards[idx];
     await grade({ data: { flashcard_id: card.id, grade: g } });
     setReviewed((n) => n + 1);
@@ -51,6 +48,34 @@ function Flashcards() {
     if (idx + 1 < cards.length) setIdx(idx + 1);
     else setIdx(cards.length);
   };
+
+  // Keyboard shortcuts: Space = flip, 1-4 = grade
+  useEffect(() => {
+    if (!cards || cards.length === 0 || idx >= cards.length) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setFlipped((f) => !f);
+        return;
+      }
+      if (!flipped) return;
+      const map: Record<string, Grade> = { "1": "again", "2": "hard", "3": "good", "4": "easy" };
+      const g = map[e.key];
+      if (g) {
+        e.preventDefault();
+        void submit(g);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cards, idx, flipped]);
+
+  if (loading || !user || cards === null) {
+    return <PageShell><div className="mx-auto max-w-2xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+  }
+
 
   const done = idx >= cards.length;
 
