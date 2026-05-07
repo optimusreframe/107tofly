@@ -111,13 +111,14 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
                     key={item.to}
                     to={item.to}
                     aria-current={active ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                    className={`relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
                       active
                         ? "bg-accent text-foreground shadow-sm"
                         : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    {active && <span aria-hidden className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />}
+                    <Icon className={`h-4 w-4 ${active ? "text-primary" : ""}`} />
                     <span>{t(item.key)}</span>
                   </Link>
                 );
