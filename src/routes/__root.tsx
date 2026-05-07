@@ -1,10 +1,13 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { I18nextProvider } from "react-i18next";
 
 import appCss from "../styles.css?url";
-import "../i18n";
+import i18n from "../i18n";
 import { installServerFnAuth } from "@/lib/server-fn-auth";
 
 if (typeof window !== "undefined") installServerFnAuth();
+
+const themeScript = `(function(){try{var k='theme';var s=localStorage.getItem(k);var t=s||'system';var sd=window.matchMedia('(prefers-color-scheme: dark)').matches;var r=(t==='dark'||(t==='system'&&sd))?'dark':'light';var d=document.documentElement;d.classList.toggle('dark',r==='dark');d.style.colorScheme=r;d.dataset.theme=r;}catch(e){document.documentElement.style.colorScheme='light';}})();`;
 
 function NotFoundComponent() {
   return (
@@ -58,6 +61,9 @@ export const Route = createRootRoute({
       { rel: "icon", href: "/icons/icon-192.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
     ],
+    scripts: [
+      { children: themeScript },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -66,7 +72,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <HeadContent />
       </head>
@@ -79,5 +85,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <I18nextProvider i18n={i18n}>
+      <Outlet />
+    </I18nextProvider>
+  );
 }
