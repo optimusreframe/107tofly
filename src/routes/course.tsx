@@ -21,13 +21,14 @@ export const Route = createFileRoute("/course")({
 });
 
 function Course() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [loading, user, navigate]);
-  useEffect(() => { if (user) getLessons().then(setLessons); }, [user]);
+  useEffect(() => { if (user) getLessons({ data: { locale } }).then(setLessons); }, [user, locale]);
 
   if (loading || !user) {
     return <StudentAppShell><div className="mx-auto max-w-5xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
