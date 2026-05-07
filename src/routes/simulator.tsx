@@ -104,18 +104,18 @@ function Simulator() {
     return (
       <StudentAppShell>
         <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
-          <div className="text-xs font-medium uppercase tracking-wider text-primary">Exam Simulator</div>
+          <div className="text-xs font-medium uppercase tracking-wider text-primary">{t("student.simulator.eyebrow")}</div>
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
-            Simula el <span className="text-gradient">UAG</span> real.
+            {t("student.simulator.heroBefore")} <span className="text-gradient">UAG</span> {t("student.simulator.heroAfter")}
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            60 preguntas en 2 horas, ponderadas por dominios ACS. Pasa con 70% interno; recomendado 85%+.
+            {t("student.simulator.heroDesc")}
           </p>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {[
-              { icon: Clock, t: "2 horas", d: "Mismo timing del examen oficial." },
-              { icon: ListChecks, t: "60 preguntas", d: "Distribuidas por dominios ACS." },
-              { icon: Target, t: "70% mínimo", d: "Recomendamos 85%+ consistente." },
+              { icon: Clock, t: t("student.simulator.twoHours"), d: t("student.simulator.twoHoursDesc") },
+              { icon: ListChecks, t: t("student.simulator.sixtyQ"), d: t("student.simulator.sixtyQDesc") },
+              { icon: Target, t: t("student.simulator.seventyMin"), d: t("student.simulator.seventyMinDesc") },
             ].map((s) => (
               <div key={s.t} className="glass rounded-3xl p-5">
                 <s.icon className="h-5 w-5 text-primary" />
@@ -126,7 +126,7 @@ function Simulator() {
           </div>
           <div className="mt-10">
             <button onClick={start} className="rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background hover:opacity-90">
-              Comenzar simulacro
+              {t("student.simulator.start")}
             </button>
           </div>
         </section>
@@ -142,16 +142,16 @@ function Simulator() {
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--gradient-aurora)] text-primary-foreground">
             <Sparkles className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 font-display text-3xl font-semibold">Simulacro completado</h1>
+          <h1 className="mt-4 font-display text-3xl font-semibold">{t("student.simulator.completed")}</h1>
           <div className="mt-6 font-display text-7xl font-semibold text-gradient">{Math.round(result.score)}%</div>
-          <p className="mt-2 text-muted-foreground">{result.correct} de {result.total} correctas · {passed ? "Aprobado interno ✅" : "Sigue practicando"}</p>
+          <p className="mt-2 text-muted-foreground">{t("student.simulator.ofCorrect", { c: result.correct, n: result.total })} · {passed ? t("student.simulator.passedInternal") : t("student.simulator.keepPracticing")}</p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {Object.entries(result.breakdown).map(([topic, b]) => {
               const pct = Math.round((b.correct / b.total) * 100);
               return (
                 <div key={topic} className="rounded-2xl border border-border bg-card/60 p-4 text-left">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="capitalize">{topic}</span>
+                    <span>{t(`student.topics.${topic}`, { defaultValue: topic })}</span>
                     <span className="font-medium">{pct}%</span>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -162,9 +162,9 @@ function Simulator() {
             })}
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/dashboard" className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background">Dashboard</Link>
-            <Link to="/certificate" className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">Ver certificado</Link>
-            <button onClick={start} className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">Otro simulacro</button>
+            <Link to="/dashboard" className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background">{t("student.simulator.dashboard")}</Link>
+            <Link to="/certificate" className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">{t("student.simulator.seeCertificate")}</Link>
+            <button onClick={start} className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">{t("student.simulator.anotherSim")}</button>
           </div>
         </section>
       </StudentAppShell>
