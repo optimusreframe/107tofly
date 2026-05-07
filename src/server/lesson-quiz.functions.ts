@@ -263,6 +263,6 @@ export const createFlashcardsFromMissed = createServerFn({ method: "POST" })
       back: q.explanation as string,
       topic: q.topic as string,
     }));
-    if (rows.length > 0) await supabase.from("flashcards").insert(rows);
+    if (rows.length > 0) await supabase.from("flashcards").insert(rows as never);
     return { created: rows.length, skipped: data.question_ids.length - rows.length };
   });
