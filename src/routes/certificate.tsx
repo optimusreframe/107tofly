@@ -25,13 +25,23 @@ const REQ_KEYS = ["modules", "quizAvg", "sim", "coverage"] as const;
 interface CertRow { id: string; display_name: string; final_score: number; modules_completed: number; hours_estimated: number; issued_at: string }
 
 function Certificate() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const runtime = usePublicRuntime();
   const issue = useServerFn(issueCertificate);
   const [cert, setCert] = useState<CertRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const isEs = i18n.language?.startsWith("es");
+  const certCfg = (runtime?.certificate ?? {}) as Record<string, unknown>;
+  const featCfg = (runtime?.features ?? {}) as Record<string, unknown>;
+  const disclaimerEn = String(certCfg["certificate.disclaimer_en"] ?? t("student.certificate.disclaimer"));
+  const disclaimerEs = String(certCfg["certificate.disclaimer_es"] ?? t("student.certificate.disclaimer"));
+  const disclaimer = isEs ? disclaimerEs : disclaimerEn;
+  const templateStyle = String(certCfg["certificate.template_style"] ?? "premium");
+  const certificatesEnabled = featCfg["features.certificates_enabled"] !== false;
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [loading, user, navigate]);
 
