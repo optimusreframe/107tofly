@@ -66,13 +66,18 @@ interface ProgressRow {
 }
 
 function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const fetchDue = useServerFn(fetchDueFlashcards);
+  const fetchReadiness = useServerFn(getStudentReadiness);
+  const fetchMastery = useServerFn(getStudentTopicMastery);
   const [progress, setProgress] = useState<ProgressRow | null>(null);
   const [name, setName] = useState<string>("Pilot");
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [activity, setActivity] = useState<number[] | null>(null);
+  const [readinessData, setReadinessData] = useState<Readiness | null>(null);
+  const [mastery, setMastery] = useState<Mastery | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
