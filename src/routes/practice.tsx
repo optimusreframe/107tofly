@@ -33,7 +33,8 @@ interface Q {
 }
 
 function Practice() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const search = Route.useSearch();
@@ -43,6 +44,7 @@ function Practice() {
   const saveFC = useServerFn(createFlashcardFromQuestion);
 
   const [questions, setQuestions] = useState<Q[]>([]);
+  const [fallback, setFallback] = useState(false);
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [answers, setAnswers] = useState<{ question_id: string; selected_index: number; is_correct: boolean }[]>([]);
@@ -62,11 +64,12 @@ function Practice() {
           topic = weak?.topic;
         } catch { /* fallback random */ }
       }
-      const qs = await fetchQ({ data: topic ? { limit: 10, topic: topic as never } : { limit: 10 } });
-      setQuestions(qs as Q[]);
+      const res = await fetchQ({ data: topic ? { limit: 10, topic: topic as never, locale } : { limit: 10, locale } });
+      setQuestions(res.questions as unknown as Q[]);
+      setFallback(!!res.fallback);
     };
     load();
-  }, [user, fetchQ, fetchMastery, search.mode]);
+  }, [user, fetchQ, fetchMastery, search.mode, locale]);
 
   if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
 
@@ -114,6 +117,11 @@ function Practice() {
           <span className="uppercase tracking-wider">{t("student.practice.label")} · {t(`student.topics.${q.topic}`, { defaultValue: q.topic })}</span>
           <span>{idx + 1} / {questions.length}</span>
         </div>
+        {fallback && (
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+            {t("student.fallbackToEn")}
+          </div>
+        )}
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
           <div className="h-full bg-[var(--gradient-sky)] transition-all" style={{ width: `${((idx) / questions.length) * 100}%` }} />
         </div>

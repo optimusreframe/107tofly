@@ -21,7 +21,8 @@ export const Route = createFileRoute("/lessons/")({
 });
 
 function LessonsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
@@ -32,8 +33,8 @@ function LessonsPage() {
 
   useEffect(() => {
     if (!user) return;
-    getLessons().then(setLessons).catch((e) => console.error(e));
-  }, [user]);
+    getLessons({ data: { locale } }).then(setLessons).catch((e) => console.error(e));
+  }, [user, locale]);
 
   if (loading || !user) {
     return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
@@ -85,6 +86,7 @@ function LessonsPage() {
                             <div className="truncate font-medium">{l.title}</div>
                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                               <Clock className="h-3 w-3" /> {l.est_minutes} min
+                              {l.fallback && <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px]" title={t("student.fallbackToEn")}>EN</span>}
                             </div>
                           </div>
                         </div>

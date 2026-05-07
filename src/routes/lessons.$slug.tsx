@@ -22,7 +22,8 @@ export const Route = createFileRoute("/lessons/$slug")({
 });
 
 function LessonDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const { slug } = Route.useParams();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -37,9 +38,9 @@ function LessonDetail() {
     if (!user) return;
     setData(null);
     setMsg(null);
-    getLesson({ data: { slug } }).then(setData);
-    getLessons().then(setAll);
-  }, [slug, user]);
+    getLesson({ data: { slug, locale } }).then(setData);
+    getLessons({ data: { locale } }).then(setAll);
+  }, [slug, user, locale]);
 
   if (loading || !user || !data) {
     return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
@@ -88,6 +89,11 @@ function LessonDetail() {
           {l.topic && <><span>·</span><span className="rounded-full bg-accent px-2 py-0.5">{t(`student.topics.${l.topic}`, { defaultValue: l.topic })}</span></>}
         </div>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-5xl">{l.title}</h1>
+        {data.fallback && (
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+            {t("student.fallbackToEn")}
+          </div>
+        )}
         {l.summary && <p className="mt-3 text-lg text-muted-foreground">{l.summary}</p>}
 
         <div className="glass-strong mt-8 rounded-3xl p-6 md:p-8 shadow-glass">
