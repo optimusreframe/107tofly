@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useState, useEffect } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -76,7 +76,7 @@ function Onboarding() {
   };
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-2xl px-6 pt-12 md:pt-20">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Onboarding</span>
@@ -126,6 +126,6 @@ function Onboarding() {
           </div>
         )}
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

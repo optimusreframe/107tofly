@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { CheckCircle2, Lock, PlayCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getLessons } from "@/server/lessons.functions";
@@ -28,7 +28,7 @@ function Course() {
   useEffect(() => { if (user) getLessons().then(setLessons); }, [user]);
 
   if (loading || !user) {
-    return <PageShell><div className="mx-auto max-w-5xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+    return <StudentAppShell><div className="mx-auto max-w-5xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
   }
 
   const weeks = [1, 2, 3, 4];
@@ -40,7 +40,7 @@ function Course() {
   };
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">Ruta de estudio</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
@@ -85,6 +85,6 @@ function Course() {
           })}
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

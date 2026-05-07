@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { askFlyCoach } from "@/server/flycoach.functions";
 import { Sparkles, Send, Loader2 } from "lucide-react";
 
@@ -61,7 +61,7 @@ function FlyCoach() {
   };
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto flex max-w-3xl flex-col px-6 pt-12 md:pt-16">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">
           Tutor IA · Part 107
@@ -149,6 +149,6 @@ function FlyCoach() {
           FlyCoach puede equivocarse. Verifica siempre con la fuente oficial FAA.
         </p>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

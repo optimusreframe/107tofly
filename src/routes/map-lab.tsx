@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useState } from "react";
 import { Sparkles, MapPin } from "lucide-react";
 
@@ -39,7 +39,7 @@ function MapLab() {
   const [selected, setSelected] = useState<Spot>(spots[0]);
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-6xl px-6 pt-12 md:pt-16">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">Map Lab</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-5xl">
@@ -137,6 +137,6 @@ function MapLab() {
           </div>
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

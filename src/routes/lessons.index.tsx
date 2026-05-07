@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Lock, PlayCircle, Clock } from "lucide-react";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getLessons } from "@/server/lessons.functions";
 
@@ -34,7 +34,7 @@ function LessonsPage() {
   }, [user]);
 
   if (loading || !user) {
-    return <PageShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+    return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
   }
 
   const weeks = [1, 2, 3, 4];
@@ -42,7 +42,7 @@ function LessonsPage() {
   const total = lessons?.length ?? 28;
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-5xl px-6 pt-12 md:pt-16">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">Plan de estudio</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
@@ -96,6 +96,6 @@ function LessonsPage() {
           })}
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

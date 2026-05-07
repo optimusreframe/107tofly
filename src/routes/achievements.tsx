@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { Award, Plane, Map, CloudSun, Shield, Trophy, Sparkles, Target, Zap, BookMarked } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getAchievements } from "@/server/lessons.functions";
@@ -35,13 +35,13 @@ function Achievements() {
   useEffect(() => { if (user) getAchievements().then(setData); }, [user]);
 
   if (loading || !user || !data) {
-    return <PageShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+    return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
   }
 
   const pct = Math.min(100, Math.round((data.xp / Math.max(1, data.nextXp)) * 100));
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-6xl px-6 pt-12 md:pt-16">
         <div className="text-xs font-medium uppercase tracking-wider text-primary">Logros</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-5xl">
@@ -105,6 +105,6 @@ function Achievements() {
           </Link>
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

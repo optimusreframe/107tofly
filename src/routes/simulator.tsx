@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitExamSimulation } from "@/server/study.functions";
 import { Clock, Target, ListChecks, ArrowRight, ArrowLeft, Flag, Sparkles } from "lucide-react";
@@ -95,12 +95,12 @@ function Simulator() {
   const answered = useMemo(() => Object.keys(picks).length, [picks]);
 
   if (loading || !user) {
-    return <PageShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></PageShell>;
+    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
   }
 
   if (phase === "intro") {
     return (
-      <PageShell>
+      <StudentAppShell>
         <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
           <div className="text-xs font-medium uppercase tracking-wider text-primary">Exam Simulator</div>
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
@@ -128,14 +128,14 @@ function Simulator() {
             </button>
           </div>
         </section>
-      </PageShell>
+      </StudentAppShell>
     );
   }
 
   if (phase === "done" && result) {
     const passed = result.score >= 70;
     return (
-      <PageShell>
+      <StudentAppShell>
         <section className="mx-auto max-w-3xl px-6 pt-16 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--gradient-aurora)] text-primary-foreground">
             <Sparkles className="h-7 w-7" />
@@ -165,16 +165,16 @@ function Simulator() {
             <button onClick={start} className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm">Otro simulacro</button>
           </div>
         </section>
-      </PageShell>
+      </StudentAppShell>
     );
   }
 
   // running
   const q = questions[idx];
-  if (!q) return <PageShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando preguntas…</div></PageShell>;
+  if (!q) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando preguntas…</div></StudentAppShell>;
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-3xl px-6 pt-10">
         <div className="flex items-center justify-between text-xs">
           <span className="uppercase tracking-wider text-muted-foreground">{q.acs_code} · {q.topic}</span>
@@ -232,6 +232,6 @@ function Simulator() {
           ))}
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }

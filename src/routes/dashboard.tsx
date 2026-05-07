@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PageShell } from "@/components/PageShell";
+import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchDueFlashcards } from "@/server/study.functions";
@@ -127,14 +127,14 @@ function Dashboard() {
 
   if (loading || !user) {
     return (
-      <PageShell>
+      <StudentAppShell>
         <div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">Cargando…</div>
-      </PageShell>
+      </StudentAppShell>
     );
   }
 
   return (
-    <PageShell>
+    <StudentAppShell>
       <section className="mx-auto max-w-6xl px-6 pt-12 md:pt-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -291,6 +291,6 @@ function Dashboard() {
           )}
         </div>
       </section>
-    </PageShell>
+    </StudentAppShell>
   );
 }
