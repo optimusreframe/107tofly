@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { md5 } from "js-md5";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -495,7 +496,6 @@ export const duplicateAdminLesson = createServerFn({ method: "POST" })
 // original seed migration (20260504070140) which stored md5(lower(regexp_replace(question,'\s+',' ','g'))).
 // We extend the input to include options to better detect near-duplicates created via the CMS,
 // but stay on md5/32-char hex so historical rows and new rows live in the same hash space.
-import { md5 } from "js-md5";
 function normalizeHash(text: string): string {
   const norm = text.toLowerCase().replace(/\s+/g, " ").trim();
   return md5(norm);
