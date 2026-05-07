@@ -209,6 +209,93 @@ function AdminLessonsPage() {
     catch (e) { toast.error((e as Error).message); }
   };
 
+  const onGenerateEs = async (en: Lesson) => {
+    setAiLoadingId(en.id);
+    try {
+      const res = await generateEsFn({ data: { lessonId: en.id } });
+      const existing = getEsForEn(en);
+      setOverwritePublished(false);
+      setEsReview({
+        sourceLesson: en,
+        existingEs: existing,
+        title: res.draft.title,
+        summary: res.draft.summary,
+        body_md: res.draft.body_md,
+        warnings: res.draft.warnings ?? [],
+        meta: res.meta as Record<string, unknown>,
+      });
+      toast.success(t("admin.lessons.translation.generated"));
+    } catch (e) {
+      toast.error((e as Error).message || t("admin.lessons.translation.invalidAi"));
+    } finally {
+      setAiLoadingId(null);
+    }
+  };
+
+  const openExistingEsEditor = (en: Lesson) => {
+    const es = getEsForEn(en);
+    if (!es) return;
+    setOverwritePublished(false);
+    setEsReview({
+      sourceLesson: en,
+      existingEs: es,
+      title: es.title,
+      summary: es.summary,
+      body_md: es.body_md,
+      warnings: [],
+      meta: (es.ai_translation_metadata as Record<string, unknown>) ?? {},
+    });
+  };
+
+  const saveEs = async (mode: "draft" | "reviewed" | "published") => {
+    if (!esReview) return;
+    setEsSaving(true);
+    try {
+      const lesson_status = mode === "published" ? "published" : mode === "reviewed" ? "review" : "draft";
+      const translation_status = mode === "published" ? "published" : mode === "reviewed" ? "reviewed" : "ai_draft";
+      await saveEsFn({
+        data: {
+          sourceLessonId: esReview.sourceLesson.id,
+          targetLessonId: esReview.existingEs?.id ?? null,
+          title: esReview.title,
+          summary: esReview.summary,
+          body_md: esReview.body_md,
+          translation_status: translation_status as never,
+          lesson_status: lesson_status as never,
+          ai_metadata: esReview.meta,
+          overwritePublished,
+        },
+      });
+      toast.success(
+        mode === "published"
+          ? t("admin.lessons.translation.published")
+          : mode === "reviewed"
+          ? t("admin.lessons.translation.marked")
+          : t("admin.lessons.translation.saved"),
+      );
+      setEsReview(null);
+      setOverwritePublished(false);
+      refresh();
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg === "PUBLISHED_ES_EXISTS") toast.error(t("admin.lessons.translation.publishedExists"));
+      else if (msg === "SIMILAR_ES_EXISTS") toast.error(t("admin.lessons.translation.similarExists"));
+      else toast.error(msg);
+    } finally {
+      setEsSaving(false);
+    }
+  };
+
+  const onPublishExistingEs = async (en: Lesson) => {
+    const es = getEsForEn(en);
+    if (!es) return;
+    try {
+      await publishEsFn({ data: { lessonId: es.id } });
+      toast.success(t("admin.lessons.translation.published"));
+      refresh();
+    } catch (e) { toast.error((e as Error).message); }
+  };
+
   if (authLoading || rolesLoading) return <AdminAppShell><div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div></AdminAppShell>;
   if (!isAdmin) return (
     <AdminAppShell>
