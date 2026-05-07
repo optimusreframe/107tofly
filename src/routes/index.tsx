@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Plane,
   Map,
@@ -12,6 +14,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { QuizDemo } from "@/components/QuizDemo";
+import { getPublicLandingSections } from "@/server/admin.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
