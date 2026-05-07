@@ -21,7 +21,8 @@ export const Route = createFileRoute("/lessons/")({
 });
 
 function LessonsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
@@ -32,8 +33,8 @@ function LessonsPage() {
 
   useEffect(() => {
     if (!user) return;
-    getLessons().then(setLessons).catch((e) => console.error(e));
-  }, [user]);
+    getLessons({ data: { locale } }).then(setLessons).catch((e) => console.error(e));
+  }, [user, locale]);
 
   if (loading || !user) {
     return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
