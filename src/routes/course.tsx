@@ -35,21 +35,21 @@ function Course() {
 
   const weeks = [1, 2, 3, 4];
   const weekTitles: Record<number, string> = {
-    1: "Semana 1 · Reglas y Remote PIC",
-    2: "Semana 2 · Espacio aéreo y sectional charts",
-    3: "Semana 3 · Clima, performance y operaciones",
-    4: "Semana 4 · Seguridad, emergencias y simulacros",
+    1: t("student.course.week1"),
+    2: t("student.course.week2"),
+    3: t("student.course.week3"),
+    4: t("student.course.week4"),
   };
 
   return (
     <StudentAppShell>
       <section className="mx-auto max-w-5xl px-6 pt-16 md:pt-24">
-        <div className="text-xs font-medium uppercase tracking-wider text-primary">Ruta de estudio</div>
+        <div className="text-xs font-medium uppercase tracking-wider text-primary">{t("student.course.route")}</div>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-6xl">
-          4 semanas. <span className="text-gradient">2 horas al día.</span>
+          <span className="text-gradient">{t("student.course.title4w")}</span>
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          Ruta calibrada al ACS oficial. Cada día combina microlección, fuentes, flashcards y quiz.
+          {t("student.course.desc")}
         </p>
 
         <div className="mt-12 space-y-6">
@@ -59,7 +59,7 @@ function Course() {
               <div key={wi} className="glass rounded-3xl p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="font-display text-xl font-semibold">{weekTitles[wi]}</h2>
-                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">Semana {wi}</span>
+                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium">{t("student.plan.weekShort", { n: wi })}</span>
                 </div>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   {items.length === 0 && <div className="text-sm text-muted-foreground">{t("common.loading")}</div>}
