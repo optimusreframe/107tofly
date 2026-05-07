@@ -2,6 +2,9 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import appCss from "../styles.css?url";
 import "../i18n";
+import { installServerFnAuth } from "@/lib/server-fn-auth";
+
+if (typeof window !== "undefined") installServerFnAuth();
 
 function NotFoundComponent() {
   return (
