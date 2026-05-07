@@ -203,7 +203,7 @@ function AdminLessonsPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.common.title")}</th>
                   <th className="px-3 py-2 text-left">W/D</th>
                   <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
                   <th className="px-3 py-2 text-left">{t("admin.common.status")}</th>
@@ -255,7 +255,7 @@ function AdminLessonsPage() {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.topic") /* title */}</span>
+                <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.title")}</span>
                   <Input value={draft.title ?? ""} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></label>
                 <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.slug")}</span>
                   <Input value={draft.slug ?? ""} onChange={(e) => setDraft({ ...draft, slug: e.target.value })} /></label>

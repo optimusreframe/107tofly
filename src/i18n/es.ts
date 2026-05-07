@@ -45,6 +45,7 @@ export default {
       updatedBy: "Actualizado por",
       version: "Versión",
       actions: "Acciones",
+      title: "Título",
       loading: "Cargando…",
       empty: "Sin resultados.",
       error: "Ocurrió un error.",

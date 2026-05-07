@@ -45,6 +45,7 @@ export default {
       updatedBy: "Updated by",
       version: "Version",
       actions: "Actions",
+      title: "Title",
       loading: "Loading…",
       empty: "No results found.",
       error: "Something went wrong.",
