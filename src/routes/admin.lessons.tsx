@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
-import { Shield, Search, Plus, Copy, Archive, RotateCcw, ExternalLink, Save, Loader2 } from "lucide-react";
+import { Shield, Search, Plus, Copy, Archive, RotateCcw, ExternalLink, Save, Loader2, Languages, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
@@ -16,11 +16,17 @@ import {
   archiveAdminLesson,
   duplicateAdminLesson,
 } from "@/server/admin.functions";
+import {
+  generateLessonSpanishDraft,
+  saveLessonSpanishTranslation,
+  publishLessonTranslation,
+} from "@/server/admin-lesson-translations.functions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -34,11 +40,17 @@ type Lesson = {
   topic: string; week: number; day: number; order_index: number; est_minutes: number;
   status: string; locale: string; sources: unknown; updated_at?: string;
   version?: number; updated_by?: string | null;
+  translation_group_id?: string | null;
+  source_lesson_id?: string | null;
+  translated_from_locale?: string | null;
+  translation_status?: string;
+  ai_translation_metadata?: Record<string, unknown> | null;
 };
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"];
 const STATUSES = ["draft","review","published","archived"] as const;
 const LOCALES = ["en","es"] as const;
+const TRANSLATION_FILTERS = ["all","original","missingEs","aiDraft","reviewed","published2","needsReview"] as const;
 
 function AdminLessonsPage() {
   const { t } = useTranslation();
@@ -51,14 +63,33 @@ function AdminLessonsPage() {
   const updateFn = useServerFn(updateAdminLesson);
   const archiveFn = useServerFn(archiveAdminLesson);
   const dupFn = useServerFn(duplicateAdminLesson);
+  const generateEsFn = useServerFn(generateLessonSpanishDraft);
+  const saveEsFn = useServerFn(saveLessonSpanishTranslation);
+  const publishEsFn = useServerFn(publishLessonTranslation);
 
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [topicFilter, setTopicFilter] = useState<string>("all");
+  const [localeFilter, setLocaleFilter] = useState<string>("all");
+  const [translationFilter, setTranslationFilter] = useState<string>("all");
   const [editing, setEditing] = useState<Lesson | null>(null);
   const [draft, setDraft] = useState<Partial<Lesson> | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // ES translation review state
+  const [esReview, setEsReview] = useState<null | {
+    sourceLesson: Lesson;
+    existingEs: Lesson | null;
+    title: string;
+    summary: string;
+    body_md: string;
+    warnings: string[];
+    meta: Record<string, unknown>;
+  }>(null);
+  const [aiLoadingId, setAiLoadingId] = useState<string | null>(null);
+  const [esSaving, setEsSaving] = useState(false);
+  const [overwritePublished, setOverwritePublished] = useState(false);
 
   useEffect(() => { if (!authLoading && !user) navigate({ to: "/auth" }); }, [authLoading, user, navigate]);
 
@@ -68,16 +99,55 @@ function AdminLessonsPage() {
   };
   useEffect(refresh, [isAdmin]); // eslint-disable-line
 
+  // Index ES lessons by translation_group_id of EN lessons
+  const esByGroupId = useMemo(() => {
+    const m = new Map<string, Lesson>();
+    for (const l of lessons ?? []) {
+      if (l.locale === "es" && l.translation_group_id) m.set(l.translation_group_id, l);
+    }
+    return m;
+  }, [lessons]);
+
+  const getEsForEn = (en: Lesson): Lesson | null => {
+    const gid = en.translation_group_id ?? en.id;
+    return esByGroupId.get(gid) ?? null;
+  };
+
+  const translationBadgeForEn = (en: Lesson): { key: string; tone: "default" | "secondary" | "destructive" | "outline" } => {
+    const es = getEsForEn(en);
+    if (!es) return { key: "esMissing", tone: "outline" };
+    if (es.status === "published") return { key: "esReady", tone: "default" };
+    if (es.translation_status === "reviewed" || es.status === "review") return { key: "esReviewed", tone: "secondary" };
+    if (es.translation_status === "needs_review") return { key: "esNeedsReview", tone: "destructive" };
+    return { key: "esDraft", tone: "secondary" };
+  };
+
   const filtered = useMemo(() => {
     if (!lessons) return [];
     const q = search.trim().toLowerCase();
     return lessons.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (topicFilter !== "all" && l.topic !== topicFilter) return false;
+      if (localeFilter !== "all" && l.locale !== localeFilter) return false;
+      if (translationFilter !== "all") {
+        if (translationFilter === "missingEs") {
+          if (l.locale !== "en" || getEsForEn(l)) return false;
+        } else if (translationFilter === "original") {
+          if (l.translation_status !== "original" || l.locale !== "en") return false;
+        } else if (translationFilter === "aiDraft") {
+          if (l.translation_status !== "ai_draft") return false;
+        } else if (translationFilter === "reviewed") {
+          if (l.translation_status !== "reviewed") return false;
+        } else if (translationFilter === "published2") {
+          if (l.translation_status !== "published") return false;
+        } else if (translationFilter === "needsReview") {
+          if (l.translation_status !== "needs_review") return false;
+        }
+      }
       if (q && !`${l.title} ${l.slug} ${l.summary}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [lessons, search, statusFilter, topicFilter]);
+  }, [lessons, search, statusFilter, topicFilter, localeFilter, translationFilter, esByGroupId]);
 
   const counts = useMemo(() => {
     const c = { total: lessons?.length ?? 0, published: 0, draft: 0, archived: 0 };
@@ -137,6 +207,93 @@ function AdminLessonsPage() {
     catch (e) { toast.error((e as Error).message); }
   };
 
+  const onGenerateEs = async (en: Lesson) => {
+    setAiLoadingId(en.id);
+    try {
+      const res = await generateEsFn({ data: { lessonId: en.id } });
+      const existing = getEsForEn(en);
+      setOverwritePublished(false);
+      setEsReview({
+        sourceLesson: en,
+        existingEs: existing,
+        title: res.draft.title,
+        summary: res.draft.summary,
+        body_md: res.draft.body_md,
+        warnings: res.draft.warnings ?? [],
+        meta: res.meta as Record<string, unknown>,
+      });
+      toast.success(t("admin.lessons.translation.generated"));
+    } catch (e) {
+      toast.error((e as Error).message || t("admin.lessons.translation.invalidAi"));
+    } finally {
+      setAiLoadingId(null);
+    }
+  };
+
+  const openExistingEsEditor = (en: Lesson) => {
+    const es = getEsForEn(en);
+    if (!es) return;
+    setOverwritePublished(false);
+    setEsReview({
+      sourceLesson: en,
+      existingEs: es,
+      title: es.title,
+      summary: es.summary,
+      body_md: es.body_md,
+      warnings: [],
+      meta: (es.ai_translation_metadata as Record<string, unknown>) ?? {},
+    });
+  };
+
+  const saveEs = async (mode: "draft" | "reviewed" | "published") => {
+    if (!esReview) return;
+    setEsSaving(true);
+    try {
+      const lesson_status = mode === "published" ? "published" : mode === "reviewed" ? "review" : "draft";
+      const translation_status = mode === "published" ? "published" : mode === "reviewed" ? "reviewed" : "ai_draft";
+      await saveEsFn({
+        data: {
+          sourceLessonId: esReview.sourceLesson.id,
+          targetLessonId: esReview.existingEs?.id ?? null,
+          title: esReview.title,
+          summary: esReview.summary,
+          body_md: esReview.body_md,
+          translation_status: translation_status as never,
+          lesson_status: lesson_status as never,
+          ai_metadata: esReview.meta,
+          overwritePublished,
+        },
+      });
+      toast.success(
+        mode === "published"
+          ? t("admin.lessons.translation.published")
+          : mode === "reviewed"
+          ? t("admin.lessons.translation.marked")
+          : t("admin.lessons.translation.saved"),
+      );
+      setEsReview(null);
+      setOverwritePublished(false);
+      refresh();
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg === "PUBLISHED_ES_EXISTS") toast.error(t("admin.lessons.translation.publishedExists"));
+      else if (msg === "SIMILAR_ES_EXISTS") toast.error(t("admin.lessons.translation.similarExists"));
+      else toast.error(msg);
+    } finally {
+      setEsSaving(false);
+    }
+  };
+
+  const onPublishExistingEs = async (en: Lesson) => {
+    const es = getEsForEn(en);
+    if (!es) return;
+    try {
+      await publishEsFn({ data: { lessonId: es.id } });
+      toast.success(t("admin.lessons.translation.published"));
+      refresh();
+    } catch (e) { toast.error((e as Error).message); }
+  };
+
   if (authLoading || rolesLoading) return <AdminAppShell><div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div></AdminAppShell>;
   if (!isAdmin) return (
     <AdminAppShell>
@@ -159,8 +316,8 @@ function AdminLessonsPage() {
           <Button onClick={() => openEditor(null)}><Plus className="mr-1.5 h-4 w-4" /> {t("admin.lessons.new")}</Button>
         </header>
 
-        <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-          <div className="relative">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[220px] flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("admin.lessons.searchPh")} className="pl-9" />
           </div>
@@ -176,6 +333,21 @@ function AdminLessonsPage() {
             <SelectContent>
               <SelectItem value="all">{t("admin.common.allTopics")}</SelectItem>
               {TOPICS.map((t2) => <SelectItem key={t2} value={t2}>{t2}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={localeFilter} onValueChange={setLocaleFilter}>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder={t("admin.lessons.translation.filterLocale")} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("admin.lessons.translation.filterLocale")}: {t("admin.lessons.translation.all")}</SelectItem>
+              {LOCALES.map((lc) => <SelectItem key={lc} value={lc}>{lc.toUpperCase()}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={translationFilter} onValueChange={setTranslationFilter}>
+            <SelectTrigger className="w-[170px]"><SelectValue placeholder={t("admin.lessons.translation.filterTranslation")} /></SelectTrigger>
+            <SelectContent>
+              {TRANSLATION_FILTERS.map((f) => (
+                <SelectItem key={f} value={f}>{t(`admin.lessons.translation.${f}`)}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -207,23 +379,57 @@ function AdminLessonsPage() {
                   <th className="px-3 py-2 text-left">W/D</th>
                   <th className="px-3 py-2 text-left">{t("admin.common.topic")}</th>
                   <th className="px-3 py-2 text-left">{t("admin.common.status")}</th>
+                  <th className="px-3 py-2 text-left">{t("admin.lessons.translation.panelTitle")}</th>
                   <th className="px-3 py-2 text-left">Min</th>
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((l) => (
+                {filtered.map((l) => {
+                  const isEn = l.locale === "en";
+                  const trBadge = isEn ? translationBadgeForEn(l) : null;
+                  const es = isEn ? getEsForEn(l) : null;
+                  return (
                   <tr key={l.id} className="border-t border-border/40 hover:bg-accent/30">
                     <td className="px-3 py-2">
                       <button onClick={() => openEditor(l)} className="text-left font-medium hover:underline">{l.title}</button>
-                      <div className="text-xs text-muted-foreground">{l.slug}</div>
+                      <div className="text-xs text-muted-foreground">{l.slug} · <span className="uppercase">{l.locale}</span></div>
                     </td>
                     <td className="px-3 py-2 tabular-nums">W{l.week}·D{l.day}</td>
                     <td className="px-3 py-2">{l.topic}</td>
                     <td className="px-3 py-2"><Badge variant={l.status === "published" ? "default" : "secondary"}>{t(`admin.status.${l.status}`)}</Badge></td>
+                    <td className="px-3 py-2">
+                      {isEn && trBadge ? (
+                        <Badge variant={trBadge.tone}>{t(`admin.lessons.translation.${trBadge.key}`)}</Badge>
+                      ) : !isEn ? (
+                        <Badge variant="outline">{t("admin.lessons.translation.translatedFromEn")}</Badge>
+                      ) : null}
+                    </td>
                     <td className="px-3 py-2 tabular-nums">{l.est_minutes}</td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex justify-end gap-1">
+                        {isEn && (
+                          es ? (
+                            <>
+                              <button onClick={() => openExistingEsEditor(l)} className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs hover:bg-accent" title={t("admin.lessons.translation.edit")}>
+                                <Languages className="h-4 w-4" /> ES
+                              </button>
+                              <button onClick={() => onGenerateEs(l)} disabled={aiLoadingId === l.id} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent disabled:opacity-50" title={t("admin.lessons.translation.regenerate")}>
+                                {aiLoadingId === l.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              </button>
+                              {es.status !== "published" && (
+                                <button onClick={() => onPublishExistingEs(l)} className="inline-flex h-8 items-center rounded-md px-2 text-xs hover:bg-accent" title={t("admin.lessons.translation.publish")}>
+                                  {t("admin.lessons.translation.publish")}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <button onClick={() => onGenerateEs(l)} disabled={aiLoadingId === l.id} className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs hover:bg-accent disabled:opacity-50" title={t("admin.lessons.translation.generate")}>
+                              {aiLoadingId === l.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              ES
+                            </button>
+                          )
+                        )}
                         {l.status === "published" && (
                           <Link to="/lessons/$slug" params={{ slug: l.slug }} className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" title={t("admin.lessons.openStudent")}><ExternalLink className="h-4 w-4" /></Link>
                         )}
@@ -234,7 +440,8 @@ function AdminLessonsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -305,6 +512,79 @@ function AdminLessonsPage() {
               <div className="sticky bottom-0 -mx-6 mt-2 flex justify-end gap-2 border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
                 <Button variant="ghost" onClick={() => { setDraft(null); setEditing(null); }}>{t("admin.common.cancel")}</Button>
                 <Button onClick={save} disabled={saving}>{saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />} {t("admin.common.save")}</Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={!!esReview} onOpenChange={(o) => { if (!o) { setEsReview(null); setOverwritePublished(false); } }}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-4xl">
+          <SheetHeader>
+            <SheetTitle>{t("admin.lessons.translation.review")} — {esReview?.sourceLesson.slug}</SheetTitle>
+          </SheetHeader>
+          {esReview && (
+            <div className="mt-4 grid gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                <Badge variant="outline">{t("admin.lessons.translation.translatedFromEn")}</Badge>
+                <Badge variant="secondary">W{esReview.sourceLesson.week}·D{esReview.sourceLesson.day}</Badge>
+                <Badge variant="secondary">{esReview.sourceLesson.topic}</Badge>
+                {esReview.existingEs && <Badge variant="default">{t(`admin.status.${esReview.existingEs.status}`)}</Badge>}
+                {esReview.existingEs?.status === "published" && (
+                  <Badge variant="destructive">{t("admin.lessons.translation.publishedExists")}</Badge>
+                )}
+              </div>
+              {esReview.warnings.length > 0 && (
+                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs">
+                  <div className="mb-1 font-medium">{t("admin.lessons.translation.aiWarnings")}</div>
+                  <ul className="list-disc pl-4">{esReview.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+                </div>
+              )}
+              <Tabs defaultValue="draft">
+                <TabsList>
+                  <TabsTrigger value="source">{t("admin.lessons.translation.tabSource")}</TabsTrigger>
+                  <TabsTrigger value="draft">{t("admin.lessons.translation.tabDraft")}</TabsTrigger>
+                  <TabsTrigger value="preview">{t("admin.lessons.translation.tabPreview")}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="source" className="mt-3 space-y-2">
+                  <div className="text-xs text-muted-foreground">{t("admin.common.title")}</div>
+                  <div className="rounded-md border border-border/60 bg-muted/30 p-2 text-sm">{esReview.sourceLesson.title}</div>
+                  <div className="text-xs text-muted-foreground">{t("admin.lessons.summary")}</div>
+                  <div className="rounded-md border border-border/60 bg-muted/30 p-2 text-sm">{esReview.sourceLesson.summary}</div>
+                  <div className="text-xs text-muted-foreground">{t("admin.lessons.bodyMd")}</div>
+                  <Textarea readOnly rows={18} value={esReview.sourceLesson.body_md} className="font-mono text-xs" />
+                </TabsContent>
+                <TabsContent value="draft" className="mt-3 space-y-2">
+                  <label className="text-xs"><span className="text-muted-foreground">{t("admin.common.title")}</span>
+                    <Input value={esReview.title} onChange={(e) => setEsReview({ ...esReview, title: e.target.value })} /></label>
+                  <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.summary")}</span>
+                    <Textarea rows={2} value={esReview.summary} onChange={(e) => setEsReview({ ...esReview, summary: e.target.value })} /></label>
+                  <label className="text-xs"><span className="text-muted-foreground">{t("admin.lessons.bodyMd")}</span>
+                    <Textarea rows={18} value={esReview.body_md} onChange={(e) => setEsReview({ ...esReview, body_md: e.target.value })} className="font-mono text-xs" /></label>
+                  <p className="text-[10px] text-muted-foreground">{t("admin.lessons.translation.preserveStructure")}</p>
+                </TabsContent>
+                <TabsContent value="preview" className="mt-3">
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{t("admin.lessons.translation.markdownPreview")}</div>
+                    <h2 className="font-display text-xl font-semibold">{esReview.title}</h2>
+                    <p className="mb-3 text-sm text-muted-foreground">{esReview.summary}</p>
+                    <article className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{esReview.body_md}</ReactMarkdown>
+                    </article>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              {esReview.existingEs?.status === "published" && (
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={overwritePublished} onChange={(e) => setOverwritePublished(e.target.checked)} />
+                  {t("admin.lessons.translation.confirmOverwrite")}
+                </label>
+              )}
+              <div className="sticky bottom-0 -mx-6 mt-2 flex flex-wrap justify-end gap-2 border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
+                <Button variant="ghost" onClick={() => { setEsReview(null); setOverwritePublished(false); }}>{t("admin.common.cancel")}</Button>
+                <Button variant="secondary" onClick={() => saveEs("draft")} disabled={esSaving}>{esSaving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}{t("admin.lessons.translation.saveDraft")}</Button>
+                <Button variant="secondary" onClick={() => saveEs("reviewed")} disabled={esSaving}>{t("admin.lessons.translation.saveReviewed")}</Button>
+                <Button onClick={() => saveEs("published")} disabled={esSaving}>{t("admin.lessons.translation.publish")}</Button>
               </div>
             </div>
           )}

@@ -381,18 +381,19 @@ const lessonInputSchema = z.object({
 });
 
 async function checkLessonConflicts(
-  input: { week?: number; day?: number; order_index?: number },
+  input: { week?: number; day?: number; order_index?: number; locale?: string },
   excludeId?: string,
 ) {
   const conflicts: { weekDay?: { slug: string; title: string }; order?: { slug: string; title: string } } = {};
+  const locale = input.locale ?? "en";
   if (input.week != null && input.day != null) {
-    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("week", input.week).eq("day", input.day).neq("status", "archived");
+    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("week", input.week).eq("day", input.day).eq("locale", locale).neq("status", "archived");
     if (excludeId) q = q.neq("id", excludeId);
     const { data } = await q.maybeSingle();
     if (data) conflicts.weekDay = { slug: data.slug, title: data.title };
   }
   if (input.order_index != null) {
-    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("order_index", input.order_index).neq("status", "archived");
+    let q = supabaseAdmin.from("lessons").select("id, slug, title").eq("order_index", input.order_index).eq("locale", locale).neq("status", "archived");
     if (excludeId) q = q.neq("id", excludeId);
     const { data } = await q.maybeSingle();
     if (data) conflicts.order = { slug: data.slug, title: data.title };
@@ -458,7 +459,12 @@ export const updateAdminLesson = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.string().uuid(), input: lessonInputSchema.partial() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
-    const conflicts = await checkLessonConflicts(data.input, data.id);
+    let lessonLocale = data.input.locale;
+    if (!lessonLocale) {
+      const { data: existing } = await supabaseAdmin.from("lessons").select("locale").eq("id", data.id).maybeSingle();
+      lessonLocale = (existing?.locale as string | undefined) ?? "en";
+    }
+    const conflicts = await checkLessonConflicts({ ...data.input, locale: lessonLocale }, data.id);
     if (conflicts.weekDay) throw new Error(`LESSON_CONFLICT_WEEKDAY:${conflicts.weekDay.title}`);
     if (conflicts.order) throw new Error(`LESSON_CONFLICT_ORDER:${conflicts.order.title}`);
     const patch: Record<string, unknown> = {
@@ -497,7 +503,7 @@ export const duplicateAdminLesson = createServerFn({ method: "POST" })
     const baseSlug = `${src.slug}-copy`;
     let slug = baseSlug; let n = 1;
     while (true) {
-      const { data: ex } = await supabaseAdmin.from("lessons").select("id").eq("slug", slug).maybeSingle();
+      const { data: ex } = await supabaseAdmin.from("lessons").select("id").eq("slug", slug).eq("locale", (src as { locale?: string }).locale ?? "en").maybeSingle();
       if (!ex) break;
       n += 1; slug = `${baseSlug}-${n}`;
     }
