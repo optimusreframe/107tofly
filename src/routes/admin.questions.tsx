@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import { Shield, Search, Plus, Copy, Archive, RotateCcw, Save, Loader2, CheckCircle2 } from "lucide-react";
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
@@ -33,11 +34,20 @@ type Q = {
   status: string; locale: string;
 };
 
+type Q = {
+  id: string; question: string; options: string[]; correct_index: number;
+  explanation: string; common_mistake: string | null; topic: string;
+  difficulty: string; acs_code: string; source: string; tags: string[] | null;
+  status: string; locale: string; version?: number; updated_at?: string; updated_by?: string | null;
+};
+
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"];
-const DIFFS = ["easy","medium","hard"];
+const DIFFS = ["easy","medium","hard"] as const;
 const STATUSES = ["draft","reviewed","published","archived"] as const;
+const LOCALES = ["en","es"] as const;
 
 function AdminQuestionsPage() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
