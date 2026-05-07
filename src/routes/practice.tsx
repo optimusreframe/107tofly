@@ -117,6 +117,11 @@ function Practice() {
           <span className="uppercase tracking-wider">{t("student.practice.label")} · {t(`student.topics.${q.topic}`, { defaultValue: q.topic })}</span>
           <span>{idx + 1} / {questions.length}</span>
         </div>
+        {fallback && (
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+            {t("student.fallbackToEn")}
+          </div>
+        )}
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
           <div className="h-full bg-[var(--gradient-sky)] transition-all" style={{ width: `${((idx) / questions.length) * 100}%` }} />
         </div>
