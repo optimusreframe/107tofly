@@ -101,7 +101,18 @@ function Dashboard() {
       });
     fetchDue().then((d) => setDueCount(Array.isArray(d) ? d.length : 0)).catch(() => setDueCount(0));
     fetchReadiness().then(setReadinessData).catch(() => setReadinessData(null));
-    fetchMastery().then(setMastery).catch(() => setMastery(null));
+    fetchMastery()
+      .then((d) => {
+        const arr = Array.isArray(d)
+          ? d
+          : Array.isArray((d as { topics?: unknown })?.topics)
+            ? ((d as { topics: Mastery }).topics)
+            : Array.isArray((d as { mastery?: unknown })?.mastery)
+              ? ((d as { mastery: Mastery }).mastery)
+              : ([] as unknown as Mastery);
+        setMastery(arr);
+      })
+      .catch(() => setMastery([] as unknown as Mastery));
 
     // Build last-7-days activity from real signals (lessons + quizzes + sims)
     const since = new Date();
