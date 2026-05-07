@@ -938,6 +938,7 @@ export const updateAdminSettingsBulk = createServerFn({ method: "POST" })
     await logAudit(context.userId, null, "settings_bulk_update", {
       entity: "setting", keys,
     });
+    invalidateSettingsCache();
     return { ok: true, count: keys.length };
   });
 
