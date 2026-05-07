@@ -217,12 +217,12 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         .select("xp")
         .eq("user_id", userId)
         .maybeSingle();
-      const newXp = (prog?.xp ?? 0) + QUIZ_XP;
+      const newXp = (prog?.xp ?? 0) + quizXp;
       await supabase
         .from("progress")
         .update({ xp: newXp, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
-      xp_awarded_now = QUIZ_XP;
+      xp_awarded_now = quizXp;
     }
     await touchDailyActivity(supabase, userId);
 
