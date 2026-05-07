@@ -88,6 +88,13 @@ function Flashcards() {
             <RotateCcw className="h-3 w-3" /> Recargar
           </button>
         </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Atajos: <kbd className="rounded bg-muted px-1">Espacio</kbd> voltea ·
+          {" "}<kbd className="rounded bg-muted px-1">1</kbd> Otra vez ·
+          {" "}<kbd className="rounded bg-muted px-1">2</kbd> Difícil ·
+          {" "}<kbd className="rounded bg-muted px-1">3</kbd> Bien ·
+          {" "}<kbd className="rounded bg-muted px-1">4</kbd> Fácil
+        </p>
 
         {cards.length === 0 ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
