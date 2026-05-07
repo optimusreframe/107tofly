@@ -108,8 +108,8 @@ function Flashcards() {
         ) : done ? (
           <div className="glass-strong mt-6 rounded-3xl p-10 text-center shadow-glass">
             <Sparkles className="mx-auto h-10 w-10 text-primary" />
-            <h2 className="mt-3 font-display text-2xl font-semibold">¡Sesión completada!</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Repasaste {reviewed} tarjetas. Próximas vencen según SM-2.</p>
+            <h2 className="mt-3 font-display text-2xl font-semibold">{t("student.flashcards.done")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("student.flashcards.reviewed", { n: reviewed })}</p>
             <Link to="/dashboard" className="mt-6 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">Ir al Dashboard</Link>
           </div>
         ) : (

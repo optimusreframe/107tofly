@@ -299,7 +299,7 @@ function Dashboard() {
             </span>
           </div>
           {activity === null ? (
-            <div className="mt-4 text-sm text-muted-foreground">Cargando actividad…</div>
+            <div className="mt-4 text-sm text-muted-foreground">{t("student.dashboard.loadingActivity")}</div>
           ) : activity.every((v) => v === 0) ? (
             <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               Aún no hay suficiente actividad. Completa una lección o un quiz para empezar a ver tu progreso aquí.

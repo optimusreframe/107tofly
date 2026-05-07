@@ -173,7 +173,7 @@ function Simulator() {
 
   // running
   const q = questions[idx];
-  if (!q) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando preguntas…</div></StudentAppShell>;
+  if (!q) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("student.simulator.loading")}</div></StudentAppShell>;
 
   return (
     <StudentAppShell>
@@ -211,7 +211,7 @@ function Simulator() {
             </button>
             {idx + 1 < questions.length ? (
               <button onClick={() => setIdx(idx + 1)} className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">
-                Siguiente <ArrowRight className="h-4 w-4" />
+                {t("student.simulator.next")} <ArrowRight className="h-4 w-4" />
               </button>
             ) : (
               <button onClick={finish} className="inline-flex items-center gap-1.5 rounded-full bg-success px-5 py-2 text-sm font-medium text-success-foreground">
