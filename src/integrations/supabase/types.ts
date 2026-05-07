@@ -295,6 +295,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_quiz_progress: {
+        Row: {
+          attempts_count: number
+          best_score: number
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          lesson_id: string | null
+          lesson_slug: string
+          passed: boolean
+          updated_at: string
+          user_id: string
+          xp_awarded: boolean
+        }
+        Insert: {
+          attempts_count?: number
+          best_score?: number
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          lesson_id?: string | null
+          lesson_slug: string
+          passed?: boolean
+          updated_at?: string
+          user_id: string
+          xp_awarded?: boolean
+        }
+        Update: {
+          attempts_count?: number
+          best_score?: number
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          lesson_id?: string | null
+          lesson_slug?: string
+          passed?: boolean
+          updated_at?: string
+          user_id?: string
+          xp_awarded?: boolean
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           archived_at: string | null
@@ -615,10 +657,13 @@ export type Database = {
       }
       quiz_attempts: {
         Row: {
+          attempt_type: string | null
           correct: number
           duration_sec: number | null
           finished_at: string | null
           id: string
+          lesson_id: string | null
+          lesson_slug: string | null
           mode: string
           score: number
           started_at: string
@@ -627,10 +672,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempt_type?: string | null
           correct?: number
           duration_sec?: number | null
           finished_at?: string | null
           id?: string
+          lesson_id?: string | null
+          lesson_slug?: string | null
           mode?: string
           score?: number
           started_at?: string
@@ -639,10 +687,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempt_type?: string | null
           correct?: number
           duration_sec?: number | null
           finished_at?: string | null
           id?: string
+          lesson_id?: string | null
+          lesson_slug?: string | null
           mode?: string
           score?: number
           started_at?: string
