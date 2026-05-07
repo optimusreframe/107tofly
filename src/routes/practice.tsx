@@ -33,7 +33,8 @@ interface Q {
 }
 
 function Practice() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const search = Route.useSearch();
@@ -43,6 +44,7 @@ function Practice() {
   const saveFC = useServerFn(createFlashcardFromQuestion);
 
   const [questions, setQuestions] = useState<Q[]>([]);
+  const [fallback, setFallback] = useState(false);
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [answers, setAnswers] = useState<{ question_id: string; selected_index: number; is_correct: boolean }[]>([]);
@@ -62,11 +64,12 @@ function Practice() {
           topic = weak?.topic;
         } catch { /* fallback random */ }
       }
-      const qs = await fetchQ({ data: topic ? { limit: 10, topic: topic as never } : { limit: 10 } });
-      setQuestions(qs as Q[]);
+      const res = await fetchQ({ data: topic ? { limit: 10, topic: topic as never, locale } : { limit: 10, locale } });
+      setQuestions(res.questions as unknown as Q[]);
+      setFallback(!!res.fallback);
     };
     load();
-  }, [user, fetchQ, fetchMastery, search.mode]);
+  }, [user, fetchQ, fetchMastery, search.mode, locale]);
 
   if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
 
