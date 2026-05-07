@@ -56,14 +56,14 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
                 } ${!item.ready ? "opacity-60 pointer-events-none" : ""}`;
                 return (
                   <Link key={item.to} to={item.to} aria-disabled={!item.ready} aria-current={active ? "page" : undefined} className={cls}>
-                    <span className="flex items-center gap-3"><Icon className="h-4 w-4" />{item.label}</span>
+                    <span className="flex items-center gap-3"><Icon className="h-4 w-4" />{t(item.labelKey)}</span>
                     {!item.ready && <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] uppercase tracking-wide">soon</span>}
                   </Link>
                 );
               })}
             </nav>
             <Link to="/dashboard" className="m-3 inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-accent hover:text-foreground">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to app
+              <ArrowLeft className="h-3.5 w-3.5" /> {t("admin.nav.backToApp")}
             </Link>
           </aside>
         )}
@@ -72,7 +72,7 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-border/40 bg-background/70 px-4 backdrop-blur-xl">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Shield className="h-4 w-4" />
-              <span>Admin Console</span>
+              <span>{t("admin.nav.console")}</span>
             </div>
             {isMobile && (
               <Link to="/dashboard" className="text-xs text-muted-foreground underline-offset-4 hover:underline">
@@ -84,7 +84,7 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
             {children}
           </main>
           {isMobile && (
-            <nav aria-label="Admin sections" className="sticky bottom-0 z-40 overflow-x-auto border-t border-border/40 bg-background/85 backdrop-blur-xl">
+            <nav aria-label={t("admin.nav.sections")} className="sticky bottom-0 z-40 overflow-x-auto border-t border-border/40 bg-background/85 backdrop-blur-xl" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
               <ul className="flex min-w-max gap-1 px-2 py-2">
                 {ADMIN_NAV.map((item) => {
                   const active = path === item.to;
@@ -98,7 +98,7 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
                           active ? "bg-accent text-foreground" : "text-muted-foreground"
                         } ${!item.ready ? "opacity-60 pointer-events-none" : ""}`}
                       >
-                        <Icon className="h-3.5 w-3.5" /> {item.label}
+                        <Icon className="h-3.5 w-3.5" /> {t(item.labelKey)}
                       </Link>
                     </li>
                   );
