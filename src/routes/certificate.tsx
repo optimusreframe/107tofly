@@ -44,7 +44,7 @@ function Certificate() {
     setBusy(true); setError(null);
     try {
       const res = await issue();
-      if (!res.ok) setError(res.reason ?? "No cumples los requisitos aún.");
+      if (!res.ok) setError(res.reason ?? t("student.certificate.defaultReason"));
       else {
         const { data } = await supabase.from("certificates").select("*").eq("id", res.id).maybeSingle();
         if (data) setCert(data as CertRow);
