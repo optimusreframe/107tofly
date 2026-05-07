@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
-import { Shield, Search, Plus, Copy, Archive, RotateCcw, ExternalLink, Save, Loader2 } from "lucide-react";
+import { Shield, Search, Plus, Copy, Archive, RotateCcw, ExternalLink, Save, Loader2, Languages, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
@@ -16,11 +16,18 @@ import {
   archiveAdminLesson,
   duplicateAdminLesson,
 } from "@/server/admin.functions";
+import {
+  generateLessonSpanishDraft,
+  saveLessonSpanishTranslation,
+  publishLessonTranslation,
+  markLessonTranslationReviewed,
+} from "@/server/admin-lesson-translations.functions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -34,11 +41,17 @@ type Lesson = {
   topic: string; week: number; day: number; order_index: number; est_minutes: number;
   status: string; locale: string; sources: unknown; updated_at?: string;
   version?: number; updated_by?: string | null;
+  translation_group_id?: string | null;
+  source_lesson_id?: string | null;
+  translated_from_locale?: string | null;
+  translation_status?: string;
+  ai_translation_metadata?: Record<string, unknown> | null;
 };
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"];
 const STATUSES = ["draft","review","published","archived"] as const;
 const LOCALES = ["en","es"] as const;
+const TRANSLATION_FILTERS = ["all","original","missingEs","aiDraft","reviewed","published2","needsReview"] as const;
 
 function AdminLessonsPage() {
   const { t } = useTranslation();
