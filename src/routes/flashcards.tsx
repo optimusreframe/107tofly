@@ -112,19 +112,20 @@ function Flashcards() {
               <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">{flipped ? "Respuesta" : "Pregunta"}</div>
                 <div className="mt-3 font-display text-2xl font-semibold leading-snug md:text-3xl">{flipped ? cards[idx].back : cards[idx].front}</div>
-                {!flipped && <div className="mt-6 text-xs text-muted-foreground">Toca para ver la respuesta</div>}
+                {!flipped && <div className="mt-6 text-xs text-muted-foreground">Toca o presiona <kbd className="rounded bg-muted px-1.5 py-0.5">Espacio</kbd> para voltear</div>}
               </div>
             </button>
             {flipped && (
-              <div className="mt-4 grid grid-cols-4 gap-2">
+              <div className="mt-4 grid grid-cols-4 gap-2" aria-live="polite">
                 {([
-                  { g: "again" as Grade, l: "Otra vez", c: "bg-destructive text-destructive-foreground" },
-                  { g: "hard" as Grade, l: "Difícil", c: "bg-warning text-warning-foreground" },
-                  { g: "good" as Grade, l: "Bien", c: "bg-primary text-primary-foreground" },
-                  { g: "easy" as Grade, l: "Fácil", c: "bg-success text-success-foreground" },
+                  { g: "again" as Grade, l: "Otra vez", k: "1", c: "bg-destructive text-destructive-foreground" },
+                  { g: "hard" as Grade, l: "Difícil", k: "2", c: "bg-warning text-warning-foreground" },
+                  { g: "good" as Grade, l: "Bien", k: "3", c: "bg-primary text-primary-foreground" },
+                  { g: "easy" as Grade, l: "Fácil", k: "4", c: "bg-success text-success-foreground" },
                 ]).map((b) => (
-                  <button key={b.g} onClick={() => submit(b.g)} className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}>
-                    {b.l}
+                  <button key={b.g} onClick={() => submit(b.g)} aria-keyshortcuts={b.k} className={`rounded-2xl px-3 py-2.5 text-sm font-medium transition hover:opacity-90 ${b.c}`}>
+                    <span className="block">{b.l}</span>
+                    <span className="mt-0.5 block text-[10px] opacity-75">{b.k}</span>
                   </button>
                 ))}
               </div>
