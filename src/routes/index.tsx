@@ -101,6 +101,17 @@ function Index() {
   }, [locale]);
 
   const hero = cms.hero;
+  const PLACEHOLDERS = new Set(["", "hero", "untitled", "título", "titulo", "placeholder"]);
+  const isPlaceholder = (v?: string | null) => {
+    if (!v) return true;
+    return PLACEHOLDERS.has(v.trim().toLowerCase());
+  };
+  const heroTitle = !isPlaceholder(hero?.title) ? hero!.title : null;
+  const heroSubtitle = !isPlaceholder(hero?.subtitle)
+    ? hero!.subtitle
+    : !isPlaceholder(hero?.body)
+      ? hero!.body
+      : null;
 
   return (
     <PageShell>
@@ -115,8 +126,8 @@ function Index() {
               Alineado al FAA ACS · Part 107
             </div>
             <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
-              {hero?.title ? (
-                hero.title
+              {heroTitle ? (
+                heroTitle
               ) : (
                 <>From zero to{" "}
                 <span className="text-gradient">Remote Pilot</span>
@@ -125,7 +136,7 @@ function Index() {
               )}
             </h1>
             <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              {hero?.subtitle ?? hero?.body ?? "Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto app-like para dominar el examen FAA Part 107 con confianza."}
+              {heroSubtitle ?? "Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto app-like para dominar el examen FAA Part 107 con confianza."}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
