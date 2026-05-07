@@ -491,13 +491,14 @@ export const duplicateAdminLesson = createServerFn({ method: "POST" })
 // Questions CMS
 // ============================================================
 
-function normalizeHash(text: string): Promise<string> {
+// Content hash: keep MD5 of normalized question text for consistency with the
+// original seed migration (20260504070140) which stored md5(lower(regexp_replace(question,'\s+',' ','g'))).
+// We extend the input to include options to better detect near-duplicates created via the CMS,
+// but stay on md5/32-char hex so historical rows and new rows live in the same hash space.
+import { md5 } from "js-md5";
+function normalizeHash(text: string): string {
   const norm = text.toLowerCase().replace(/\s+/g, " ").trim();
-  // Use Web Crypto to compute sha256 (md5 not available); store as content_hash
-  return crypto.subtle.digest("SHA-256", new TextEncoder().encode(norm)).then((buf) => {
-    const arr = Array.from(new Uint8Array(buf));
-    return arr.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
-  });
+  return md5(norm);
 }
 
 const questionInputSchema = z.object({
