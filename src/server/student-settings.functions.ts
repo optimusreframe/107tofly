@@ -50,7 +50,7 @@ export const updateStudentSettings = createServerFn({ method: "POST" })
     }
     if (data.study_plan !== undefined) patch.study_plan = data.study_plan;
     if (data.daily_goal_minutes !== undefined) patch.daily_goal_minutes = data.daily_goal_minutes;
-    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+    const { error } = await supabase.from("profiles").update(patch as never).eq("id", userId);
     if (error) throw error;
     return { ok: true };
   });
