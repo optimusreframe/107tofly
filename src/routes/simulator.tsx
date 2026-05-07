@@ -33,7 +33,8 @@ const EXAM_LEN = 60;
 const EXAM_SECONDS = 2 * 60 * 60;
 
 function Simulator() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const fetchQ = useServerFn(fetchPracticeQuestions);
