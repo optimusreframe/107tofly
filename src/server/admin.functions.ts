@@ -553,7 +553,7 @@ export const createAdminQuestion = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     validateForPublish(data);
-    const content_hash = await normalizeHash(data.question + "|" + data.options.join("|"));
+    const content_hash = normalizeHash(data.question + "|" + data.options.join("|"));
     const { data: dup } = await supabaseAdmin.from("questions").select("id").eq("content_hash", content_hash).maybeSingle();
     if (dup) throw new Error("A similar question already exists.");
     const payload: Record<string, unknown> = {
@@ -582,7 +582,7 @@ export const updateAdminQuestion = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = { ...data.input, updated_by: context.userId };
     if (data.input.question || data.input.options) {
       const text = (data.input.question ?? existing.question) + "|" + ((data.input.options ?? existing.options) as string[]).join("|");
-      const content_hash = await normalizeHash(text);
+      const content_hash = normalizeHash(text);
       const { data: dup } = await supabaseAdmin.from("questions").select("id").eq("content_hash", content_hash).neq("id", data.id).maybeSingle();
       if (dup) throw new Error("A similar question already exists.");
       patch.content_hash = content_hash;
@@ -617,7 +617,7 @@ export const duplicateAdminQuestion = createServerFn({ method: "POST" })
     const { data: src, error: e1 } = await supabaseAdmin.from("questions").select("*").eq("id", data.id).maybeSingle();
     if (e1 || !src) throw new Error(e1?.message ?? "not found");
     const newQuestion = `${src.question} (Copy)`;
-    const content_hash = await normalizeHash(newQuestion + "|" + (src.options as string[]).join("|"));
+    const content_hash = normalizeHash(newQuestion + "|" + (src.options as string[]).join("|"));
     const copy: Record<string, unknown> = {
       question: newQuestion,
       options: src.options as never,
