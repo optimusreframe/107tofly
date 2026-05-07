@@ -1043,3 +1043,206 @@ export const reissueAdminCertificate = createServerFn({ method: "POST" })
     });
     return { certificate: row };
   });
+
+// ===================== ANALYTICS =====================
+
+const TOPIC_KEYS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
+
+export const getAdminAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const now = Date.now();
+    const d7 = new Date(now - 7 * 86400000).toISOString();
+    const d30 = new Date(now - 30 * 86400000).toISOString();
+
+    const [profilesR, rolesR, lcR, qaR, esR, certR, progressR] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id"),
+      supabaseAdmin.from("user_roles").select("user_id, role"),
+      supabaseAdmin.from("lesson_completions").select("user_id, completed_at"),
+      supabaseAdmin.from("quiz_attempts").select("user_id, score, finished_at"),
+      supabaseAdmin.from("exam_simulations").select("user_id, score, finished_at"),
+      supabaseAdmin.from("certificates").select("user_id, status"),
+      supabaseAdmin.from("progress").select("user_id, readiness, study_pct"),
+    ]);
+
+    const totalUsers = (profilesR.data ?? []).length;
+    const adminIds = new Set((rolesR.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id));
+    const studentIds = new Set((rolesR.data ?? []).filter((r) => r.role === "student").map((r) => r.user_id));
+
+    const activeIn = (rows: Array<{ user_id: string; finished_at?: string | null; completed_at?: string | null }>, since: string) => {
+      const set = new Set<string>();
+      for (const r of rows) {
+        const ts = (r as { finished_at?: string | null }).finished_at ?? (r as { completed_at?: string | null }).completed_at;
+        if (ts && ts >= since) set.add(r.user_id);
+      }
+      return set;
+    };
+    const allEvents = [
+      ...(lcR.data ?? []).map((r) => ({ user_id: r.user_id, completed_at: r.completed_at })),
+      ...(qaR.data ?? []).map((r) => ({ user_id: r.user_id, finished_at: r.finished_at })),
+      ...(esR.data ?? []).map((r) => ({ user_id: r.user_id, finished_at: r.finished_at })),
+    ];
+    const active7 = activeIn(allEvents, d7).size;
+    const active30 = activeIn(allEvents, d30).size;
+
+    const certs = certR.data ?? [];
+    const certActive = certs.filter((c) => c.status !== "revoked").length;
+    const certRevoked = certs.filter((c) => c.status === "revoked").length;
+
+    const qa = qaR.data ?? [];
+    const es = esR.data ?? [];
+    const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    const avgQuiz = avg(qa.map((q) => Number(q.score) || 0));
+    const avgExam = avg(es.map((q) => Number(q.score) || 0));
+
+    const prog = progressR.data ?? [];
+    const avgReadiness = avg(prog.map((p) => Number(p.readiness) || 0));
+    const completionRate = prog.length ? (prog.filter((p) => (p.study_pct ?? 0) >= 100).length / prog.length) * 100 : 0;
+    const examReady = prog.filter((p) => (p.readiness ?? 0) >= 85).length;
+    const courseCompleted = prog.filter((p) => (p.study_pct ?? 0) >= 100).length;
+
+    return {
+      totalUsers,
+      totalStudents: studentIds.size,
+      totalAdmins: adminIds.size,
+      activeStudents7d: active7,
+      activeStudents30d: active30,
+      totalLessonsCompleted: (lcR.data ?? []).length,
+      totalQuizAttempts: qa.length,
+      totalExamSimulations: es.length,
+      totalCertificates: certs.length,
+      certificatesActive: certActive,
+      certificatesRevoked: certRevoked,
+      averageQuizScore: Math.round(avgQuiz),
+      averageExamScore: Math.round(avgExam),
+      averageReadinessScore: Math.round(avgReadiness),
+      completionRate: Math.round(completionRate),
+      examReadyCount: examReady,
+      courseCompletedCount: courseCompleted,
+    };
+  });
+
+export const getAdminTopicAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const [qaR, qR, ansR] = await Promise.all([
+      supabaseAdmin.from("quiz_attempts").select("topic, score"),
+      supabaseAdmin.from("questions").select("id, topic, status"),
+      supabaseAdmin.from("quiz_answers").select("question_id, is_correct"),
+    ]);
+
+    const qById = new Map<string, string>();
+    for (const q of qR.data ?? []) qById.set(q.id, (q.topic as string) ?? "unknown");
+    const missCount = new Map<string, number>();
+    const totalAns = new Map<string, number>();
+    for (const a of ansR.data ?? []) {
+      const t = qById.get(a.question_id) ?? "unknown";
+      totalAns.set(t, (totalAns.get(t) ?? 0) + 1);
+      if (!a.is_correct) missCount.set(t, (missCount.get(t) ?? 0) + 1);
+    }
+    const qCount = new Map<string, number>();
+    for (const q of qR.data ?? []) {
+      if (q.status !== "archived") qCount.set(q.topic as string, (qCount.get(q.topic as string) ?? 0) + 1);
+    }
+
+    return TOPIC_KEYS.map((topic) => {
+      const attempts = (qaR.data ?? []).filter((a) => a.topic === topic);
+      const avgScore = attempts.length ? attempts.reduce((s, a) => s + Number(a.score), 0) / attempts.length : 0;
+      const total = totalAns.get(topic) ?? 0;
+      const miss = missCount.get(topic) ?? 0;
+      const weakRate = total ? (miss / total) * 100 : 0;
+      return {
+        topic,
+        quizAttempts: attempts.length,
+        averageScore: Math.round(avgScore),
+        questionCount: qCount.get(topic) ?? 0,
+        mostMissedCount: miss,
+        weakRate: Math.round(weakRate),
+      };
+    });
+  });
+
+export const getAdminQuestionAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const [qR, ansR] = await Promise.all([
+      supabaseAdmin.from("questions").select("id, question, topic, difficulty, source, acs_code"),
+      supabaseAdmin.from("quiz_answers").select("question_id, is_correct, selected_index"),
+    ]);
+    const stats = new Map<string, { total: number; correct: number; wrongCounts: Map<number, number> }>();
+    for (const a of ansR.data ?? []) {
+      const s = stats.get(a.question_id) ?? { total: 0, correct: 0, wrongCounts: new Map() };
+      s.total += 1;
+      if (a.is_correct) s.correct += 1;
+      else s.wrongCounts.set(a.selected_index, (s.wrongCounts.get(a.selected_index) ?? 0) + 1);
+      stats.set(a.question_id, s);
+    }
+    const out = (qR.data ?? []).map((q) => {
+      const s = stats.get(q.id) ?? { total: 0, correct: 0, wrongCounts: new Map<number, number>() };
+      let mostWrong: number | null = null;
+      let max = 0;
+      for (const [k, v] of s.wrongCounts) if (v > max) { max = v; mostWrong = k; }
+      return {
+        questionId: q.id,
+        question: (q.question ?? "").slice(0, 120),
+        topic: q.topic,
+        difficulty: q.difficulty,
+        totalAnswers: s.total,
+        correctAnswers: s.correct,
+        incorrectAnswers: s.total - s.correct,
+        correctRate: s.total ? Math.round((s.correct / s.total) * 100) : 0,
+        mostSelectedWrongOption: mostWrong,
+        source: q.source,
+        acsCode: q.acs_code,
+      };
+    }).filter((q) => q.totalAnswers > 0)
+      .sort((a, b) => a.correctRate - b.correctRate)
+      .slice(0, 25);
+    return out;
+  });
+
+export const getAdminStudentFunnel = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const [profilesR, lcR, qaR, esR, certR, progressR] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, experience_level"),
+      supabaseAdmin.from("lesson_completions").select("user_id, lesson_slug"),
+      supabaseAdmin.from("quiz_attempts").select("user_id, mode"),
+      supabaseAdmin.from("exam_simulations").select("user_id"),
+      supabaseAdmin.from("certificates").select("user_id"),
+      supabaseAdmin.from("progress").select("user_id, study_pct, readiness"),
+    ]);
+    const profiles = profilesR.data ?? [];
+    const onboarded = profiles.filter((p) => p.experience_level).length;
+    const lessonByUser = new Map<string, Set<string>>();
+    for (const l of lcR.data ?? []) {
+      const s = lessonByUser.get(l.user_id) ?? new Set();
+      s.add(l.lesson_slug);
+      lessonByUser.set(l.user_id, s);
+    }
+    const startedCourse = lessonByUser.size;
+    const completedFirst = startedCourse;
+    const week1Done = [...lessonByUser.values()].filter((s) => s.size >= 7).length;
+    const completedCourse = (progressR.data ?? []).filter((p) => (p.study_pct ?? 0) >= 100).length;
+    const tookPractice = new Set((qaR.data ?? []).map((a) => a.user_id)).size;
+    const tookSim = new Set((esR.data ?? []).map((a) => a.user_id)).size;
+    const examReady = (progressR.data ?? []).filter((p) => (p.readiness ?? 0) >= 85).length;
+    const certs = new Set((certR.data ?? []).map((c) => c.user_id)).size;
+
+    return {
+      signedUp: profiles.length,
+      onboarded,
+      startedCourse,
+      completedFirstLesson: completedFirst,
+      completedWeek1: week1Done,
+      completedCourse,
+      tookPractice,
+      tookSimulator: tookSim,
+      examReady,
+      certificateIssued: certs,
+    };
+  });
