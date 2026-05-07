@@ -25,6 +25,10 @@ Reglas estrictas:
 export const askFlyCoach = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }) => {
+    const flags = await getFeatureFlags();
+    if (!flags.flycoachEnabled) {
+      return { reply: "FLYCOACH_DISABLED", error: true, disabled: true };
+    }
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return { reply: "FlyCoach no está configurado (falta LOVABLE_API_KEY).", error: true };
