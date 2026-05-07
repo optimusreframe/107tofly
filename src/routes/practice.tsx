@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion } from "@/server/study.functions";
+import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/server/study.functions";
 import { Check, X, Sparkles, BookmarkPlus, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/practice")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    mode: (s.mode as string | undefined) === "weak" ? "weak" : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Práctica — 107toFly" },
