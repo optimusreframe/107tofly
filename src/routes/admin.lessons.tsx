@@ -67,7 +67,7 @@ function AdminLessonsPage() {
   const generateEsFn = useServerFn(generateLessonSpanishDraft);
   const saveEsFn = useServerFn(saveLessonSpanishTranslation);
   const publishEsFn = useServerFn(publishLessonTranslation);
-  const reviewEsFn = useServerFn(markLessonTranslationReviewed);
+  void markLessonTranslationReviewed;
 
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [search, setSearch] = useState("");
