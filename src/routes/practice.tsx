@@ -34,7 +34,9 @@ interface Q {
 function Practice() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const search = Route.useSearch();
   const fetchQ = useServerFn(fetchPracticeQuestions);
+  const fetchMastery = useServerFn(getStudentTopicMastery);
   const submit = useServerFn(submitQuizAttempt);
   const saveFC = useServerFn(createFlashcardFromQuestion);
 
@@ -49,8 +51,20 @@ function Practice() {
 
   useEffect(() => {
     if (!user) return;
-    fetchQ({ data: { limit: 10 } }).then((qs) => setQuestions(qs as Q[]));
-  }, [user, fetchQ]);
+    const load = async () => {
+      let topic: string | undefined;
+      if (search.mode === "weak") {
+        try {
+          const m = await fetchMastery();
+          const weak = m.filter((x) => x.hasData && x.status === "weak").sort((a, b) => a.mastery - b.mastery)[0];
+          topic = weak?.topic;
+        } catch { /* fallback random */ }
+      }
+      const qs = await fetchQ({ data: topic ? { limit: 10, topic: topic as never } : { limit: 10 } });
+      setQuestions(qs as Q[]);
+    };
+    load();
+  }, [user, fetchQ, fetchMastery, search.mode]);
 
   if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">Cargando…</div></StudentAppShell>;
 
