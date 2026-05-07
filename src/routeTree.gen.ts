@@ -31,6 +31,7 @@ import { Route as LessonsIndexRouteImport } from './routes/lessons.index'
 import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
 
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
@@ -142,6 +143,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLessonsRoute = AdminLessonsRouteImport.update({
+  id: '/lessons',
+  path: '/lessons',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/lessons': typeof AdminLessonsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/lessons': typeof AdminLessonsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/simulator': typeof SimulatorRoute
   '/weather-lab': typeof WeatherLabRoute
+  '/admin/lessons': typeof AdminLessonsRoute
   '/admin/users': typeof AdminUsersRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/lessons'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/lessons'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/simulator'
     | '/weather-lab'
+    | '/admin/lessons'
     | '/admin/users'
     | '/lessons/$slug'
     | '/verify/$id'
@@ -471,14 +483,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/lessons': {
+      id: '/admin/lessons'
+      path: '/lessons'
+      fullPath: '/admin/lessons'
+      preLoaderRoute: typeof AdminLessonsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminLessonsRoute: typeof AdminLessonsRoute
   AdminUsersRoute: typeof AdminUsersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminLessonsRoute: AdminLessonsRoute,
   AdminUsersRoute: AdminUsersRoute,
 }
 
