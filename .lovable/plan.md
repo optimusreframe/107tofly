@@ -1,101 +1,75 @@
+# Continuación — Sprint 1.5 (cierre perf) + Sprint 2 (i18n)
 
-# Plan Maestro — 107toFly Production Ready
-
-Basado en la auditoría QA previa. 6 sprints secuenciales. Cada uno es entregable independiente.
-
----
-
-## Sprint 1 — P0 Performance & UX Fundamentals
-**Objetivo:** que la app deje de sentirse lenta y rota en la primera carga.
-
-1. **Consolidar loaders de `/dashboard`**
-   - Combinar los 12+ `serverFn` del `StudentAppShell` + `dashboard.tsx` en 1–2 `getDashboardBundle()` server functions.
-   - Devolver `{ profile, progress, streak, nextLesson, recentAttempts, settings }` en una sola llamada.
-   - Archivos: `src/server/study.functions.ts`, `src/routes/dashboard.tsx`, `src/components/layouts/StudentAppShell.tsx`.
-
-2. **Skeletons en lugar de "Cargando..."**
-   - Crear `DashboardSkeleton`, `LessonsListSkeleton`, `LessonDetailSkeleton`, `PracticeSkeleton`.
-   - Reemplazar todos los `if (loading) return <p>Cargando...</p>`.
-
-3. **Fix manifest PWA 401** en preview (revisar headers en `vite.config.ts` / wrangler).
-
-**Criterio de aceptación:** `/dashboard` carga < 1.5s con skeleton inmediato.
+Sprint 1 dejó `/dashboard` con bundle único + skeleton. Cierro perf en las otras rutas críticas y arranco i18n, que es el siguiente bloqueante de calidad percibida.
 
 ---
 
-## Sprint 2 — P1 i18n Completo
-**Objetivo:** español real en toda la app pública y privada.
+## Bloque A — Cerrar Sprint 1 (skeletons restantes)
 
-1. **Landing Hero ES** — el hero hardcoded en `src/routes/index.tsx` lee `landing_sections` o i18n key, no string EN.
-2. **Auth errors mapeados** — wrapper en `src/lib/auth-errors.ts` que traduce `Invalid login credentials`, `Email not confirmed`, etc. a i18n keys.
-3. **Audit completo de strings sueltos** en `admin.*`, `settings`, `onboarding`, `certificate`, `verify.$id`.
-4. **Locale switcher visible** en header público + student app.
+1. **`LessonsListSkeleton`** en `src/components/`  
+   Cards grises con shimmer (6 items). Usar en `src/routes/lessons.index.tsx` reemplazando el `Cargando...` actual.
 
-**Criterio:** 0 strings EN visibles cuando `locale=es`.
+2. **`LessonDetailSkeleton`**  
+   Hero + 3 bloques de contenido + botón. Usar en `src/routes/lessons.$slug.tsx` y `src/routes/lesson.tsx`.
 
----
+3. **`PracticeSkeleton`**  
+   Card de pregunta + 4 opciones placeholder. Usar en `src/routes/practice.tsx`.
 
-## Sprint 3 — P1 Contenido ES (Bulk AI Translation)
-**Objetivo:** poblar `lessons` y `questions` en español usando la infraestructura AI ya construida.
+4. **Fix manifest PWA**  
+   Verificar `public/manifest.webmanifest` se sirve público (no 401). Revisar `vite.config.ts` / `wrangler.jsonc` si hay regla que requiera auth en `/manifest.webmanifest`.
 
-1. **Bulk action en `/admin/lessons`** — botón "Traducir todas las published EN faltantes" → loop con rate-limit (1/seg) llamando `generateLessonTranslation`, dejar en `translation_status='ai_draft'`.
-2. **Bulk action en `/admin/questions`** — idem.
-3. **Dashboard de cobertura de traducción** — card que muestra `X/Y lessons ES`, `X/Y questions ES`, link a revisar drafts.
-4. **Review queue UI** — vista filtrada `translation_status='ai_draft'` con accept/edit/publish rápido.
-
-**Criterio:** ≥ 90% del contenido published EN tiene draft ES generado.
+**Aceptación:** ninguna ruta del student app muestra texto "Cargando…" plano; manifest devuelve 200 sin sesión.
 
 ---
 
-## Sprint 4 — P2 E2E Validation & Real Data
-**Objetivo:** validar flujos completos con datos reales.
+## Bloque B — Sprint 2: i18n completo
 
-1. **Seed de cuenta de prueba** — script `bun run scripts/seed-test-student.ts` que crea un alumno con attempts, progress, 1 certificado.
-2. **Flujo certificate E2E** — completar simulator con pass score → emite certificado → `/verify/:id` lo muestra → PDF download usa `certificate.disclaimer_es` y `template_style`.
-3. **Lesson → Quiz → XP → Streak** validado.
-4. **Flashcards SRS** revisar que `due_date` avanza correctamente.
+### B1. Landing Hero ES real
+- Auditar `src/routes/index.tsx`: cualquier string EN hardcoded → `t('landing.hero.*')` con keys nuevas en `src/i18n/en.ts` y `src/i18n/es.ts`.
+- Si el hero ya lee de `landing_sections` (CMS), asegurar que el render usa `locale` actual con fallback EN→ES.
 
-**Criterio:** flujo "registro → onboarding → 1 lesson → 1 quiz → 1 sim → cert" sin errores.
+### B2. Mapeo de errores de auth a i18n
+- Nuevo archivo `src/lib/auth-errors.ts` con función `mapAuthError(err: unknown): string` que traduce los mensajes comunes de Supabase:
+  - `Invalid login credentials` → `auth.errors.invalidCredentials`
+  - `Email not confirmed` → `auth.errors.emailNotConfirmed`
+  - `User already registered` → `auth.errors.userExists`
+  - `Password should be at least 6 characters` → `auth.errors.weakPassword`
+  - fallback → `auth.errors.generic`
+- Aplicar en `src/routes/auth.tsx`, `forgot-password.tsx`, `reset-password.tsx`, `onboarding.tsx`.
 
----
+### B3. Auditoría de strings sueltos
+Pasar por:
+- `src/routes/admin.*` (labels, botones, toasts)
+- `src/routes/settings.tsx`
+- `src/routes/certificate.tsx`, `verify.$id.tsx`
+- `src/components/layouts/StudentAppShell.tsx`, `AdminAppShell.tsx`
 
-## Sprint 5 — P2 Mobile QA Sistemático
-**Objetivo:** admin y student usables en 390px.
+Cada string visible no envuelto en `t(...)` se mueve a `i18n/en.ts` + `i18n/es.ts`. Sin renombrar keys existentes.
 
-1. **Admin responsive** — `admin.lessons`, `admin.questions`, `admin.users`, `admin.settings` con tabla → cards en mobile.
-2. **Student app polish** — bottom nav fija, safe areas iOS, scroll horizontal eliminado.
-3. **PWA install prompt** + testing real en iOS/Android.
+### B4. Locale switcher visible
+- Botón ES/EN en `SiteHeader.tsx` (público) y en `StudentAppShell.tsx` (privado).
+- Persistir en `localStorage.locale` (ya soportado en `src/i18n/index.ts`).
+- Toggle inmediato sin recarga: `i18n.changeLanguage(next)` + `localStorage.setItem`.
 
-**Criterio:** Lighthouse mobile ≥ 90 en performance, accessibility, best-practices.
-
----
-
-## Sprint 6 — P3 Hardening Producción
-**Objetivo:** robustez y observabilidad.
-
-1. **Error boundaries** por route + `defaultErrorComponent` en router.
-2. **Rate limiting** en server functions sensibles (AI translation, certificate emit).
-3. **Audit logs view** — `/admin/audit` con filtros.
-4. **SEO completo** — meta tags por route, sitemap.xml, robots.txt, JSON-LD del curso.
-5. **Analytics events** — track login, lesson_complete, quiz_pass, cert_issued.
-6. **Backup strategy** — documentar export periódico de DB.
-
-**Criterio:** app publicada, monitoreada, lista para usuarios reales.
+**Aceptación:** con `locale=es` no hay texto EN visible en landing, auth, dashboard, lessons, practice, settings, admin. Switcher funcional en header público y privado.
 
 ---
 
-## Orden recomendado de ejecución
+## Detalles técnicos
+
+- No tocar `client.ts`, `types.ts`, archivos auto-generados.
+- No introducir dependencias nuevas.
+- No tocar lógica de negocio — sólo UI/strings/skeletons.
+- Typecheck obligatorio al final de cada bloque (`bunx tsc --noEmit`).
+
+---
+
+## Orden de ejecución
 
 ```text
-S1 (perf+skel) → S2 (i18n) → S3 (contenido ES) → S4 (E2E) → S5 (mobile) → S6 (hardening)
+A1-A3 (skeletons)  →  A4 (manifest)  →  B1 (hero)  →  B2 (auth errors)  →  B3 (audit)  →  B4 (switcher)
 ```
 
-S1 y S2 desbloquean percepción de calidad inmediata. S3 desbloquea el valor real para usuarios hispanohablantes. S4–S6 son pre-launch.
+## Pregunta
 
----
-
-## Decisiones pendientes que necesito de ti
-
-1. ¿Empezamos por **S1 (performance)** o prefieres **S3 (contenido ES bulk)** primero porque ya está la infra?
-2. ¿Hay un **deadline** o evento de lanzamiento que deba respetar el orden?
-3. ¿Quieres incluir **pagos/memberships** en este roadmap o se queda fuera?
+¿Ejecuto **Bloque A completo + B1 (hero)** en este turno y dejo B2–B4 para el siguiente, o prefieres que arranque directo por **B1 (hero ES)** porque es lo más visible para usuarios?
