@@ -174,6 +174,7 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
               <span>107<span className="text-gradient">toFly</span></span>
             </Link>
             <div className="flex items-center gap-2">
+              <StreakBadge compact />
               <button onClick={toggleLang} aria-label="Toggle language" className="grid h-10 min-w-10 place-items-center rounded-full border border-border bg-card/60 px-2 text-xs hover:bg-accent active:scale-95 transition">
                 <Languages className="h-3.5 w-3.5" />
               </button>
