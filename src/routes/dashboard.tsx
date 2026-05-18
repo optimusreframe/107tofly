@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
-import { supabase } from "@/integrations/supabase/client";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchDueFlashcards, getStudentReadiness, getStudentTopicMastery } from "@/server/study.functions";
-import { getNextLesson, getStudentRecentActivity, type ActivityItem } from "@/server/student-settings.functions";
+import { getDashboardBundle, type DashboardBundle } from "@/server/dashboard-bundle.functions";
+import type { ActivityItem } from "@/server/student-settings.functions";
 import {
   Flame,
   Sparkles,
