@@ -1,84 +1,101 @@
-# 107toFly — Mega QA Audit Plan
 
-Estoy en modo plan (solo lectura), así que no puedo ejecutar la auditoría ni generar el PDF en este turno. Apruébame el plan y en el siguiente turno ejecuto todo y entrego el PDF descargable. No tocaré código de la app.
+# Plan Maestro — 107toFly Production Ready
 
-## Alcance
-
-Auditoría profunda **read-only** de:
-- Landing pública (`/`)
-- Auth (`/auth`, `/forgot-password`, `/reset-password`)
-- Student App (todas las rutas listadas)
-- Admin App (todas las rutas `/admin/*`)
-- Backend (tablas, RLS, conteos, server functions)
-- i18n ES/EN, dark/light, responsive (mobile/tablet/desktop), PWA
-- Comparación contra el plan inicial
-
-No se modifica código, base de datos ni configuración.
-
-## Metodología
-
-1. **Inspección de código** (read-only)
-   - Leer rutas en `src/routes/*`, server functions en `src/server/*`, i18n en `src/i18n/*`, layouts y `app_settings`/runtime hooks.
-   - Mapear cada feature del plan inicial a archivos reales y a server functions usadas.
-   - Identificar mocks, hardcodes, keys crudas, placeholders, botones muertos.
-
-2. **Inspección de DB** (solo SELECT vía `supabase--read_query`)
-   - Conteos por tabla, ejemplos de filas representativas.
-   - Verificar dedupe `translation_group_id`, `lesson_quiz_progress`, `app_settings` activos.
-   - Confirmar RLS y `user_roles` para el admin de prueba.
-
-3. **Pruebas en navegador** (browser tools, sesión real)
-   - Login con las credenciales provistas.
-   - Recorrer cada ruta Student y Admin en viewports 1440 (desktop), 820 (tablet), 390 (iPhone).
-   - Probar dark/light, ES/EN, navegación, formularios, mutaciones clave (sin acciones destructivas en datos reales: no revoke real, no reset progress, no delete usuarios; se documenta el comportamiento sin ejecutar).
-   - Capturar errores de consola y network.
-   - Screenshots por sección clave (para incrustar en el PDF).
-
-4. **Análisis cruzado**
-   - Cada hallazgo se etiqueta por: severidad (P0/P1/P2/P3), área, evidencia (archivo + ruta + screenshot), recomendación.
-
-## Acciones destructivas — explícitamente NO se ejecutan
-
-Para no contaminar la cuenta admin real:
-- No se revoca/emite certificados reales.
-- No se cambian roles ni membresía.
-- No se hace reset progress.
-- No se publican cambios en landing/lessons/questions.
-- No se generan traducciones AI (consume LOVABLE_API_KEY).
-- Se documenta UX y backend leyendo el código + abriendo el modal sin confirmar.
-
-Si quieres que SÍ se ejecuten algunas (ej. probar AI translation con 1 pregunta), dímelo antes de aprobar.
-
-## Entregable
-
-**Un PDF descargable** en `/mnt/documents/107tofly-audit-report.pdf` con la estructura exacta que pediste:
-
-A. Executive Summary
-B. Critical Bugs (tabla)
-C. Functional Gaps (tabla)
-D. Visual / UX Issues (tabla, por ruta + device)
-E. i18n Issues (tabla)
-F. Admin App Issues (tabla por módulo)
-G. Student App Issues (tabla por módulo)
-H. Backend / DB Issues (tabla)
-I. Initial Plan Completion Matrix (✅/🟡/❌/⚠️ por requisito)
-J. Prioritized Fix Plan (P0/P1/P2/P3 con archivos, backend, riesgo, orden, criterios de aceptación)
-
-El PDF se genera con `reportlab` (texto + tablas + screenshots embebidos), se hace QA visual página por página, y se entrega con `<presentation-artifact>` para descarga directa.
-
-## Tiempo / costo estimado
-
-Auditoría profunda + browser walk + PDF: ~varios minutos de ejecución, varias llamadas a tools. Sin cambios en la app, sin costo de AI gateway (no se generan traducciones).
-
-## Lo que NO incluye este sprint
-
-- Ningún fix de código.
-- Ninguna migración.
-- Ningún cambio de configuración.
-- Ningún seed de contenido.
-
-Después del PDF, tú eliges qué sprint atacar primero.
+Basado en la auditoría QA previa. 6 sprints secuenciales. Cada uno es entregable independiente.
 
 ---
 
-Apruébalo y procedo a ejecutar la auditoría completa y entregarte el PDF.
+## Sprint 1 — P0 Performance & UX Fundamentals
+**Objetivo:** que la app deje de sentirse lenta y rota en la primera carga.
+
+1. **Consolidar loaders de `/dashboard`**
+   - Combinar los 12+ `serverFn` del `StudentAppShell` + `dashboard.tsx` en 1–2 `getDashboardBundle()` server functions.
+   - Devolver `{ profile, progress, streak, nextLesson, recentAttempts, settings }` en una sola llamada.
+   - Archivos: `src/server/study.functions.ts`, `src/routes/dashboard.tsx`, `src/components/layouts/StudentAppShell.tsx`.
+
+2. **Skeletons en lugar de "Cargando..."**
+   - Crear `DashboardSkeleton`, `LessonsListSkeleton`, `LessonDetailSkeleton`, `PracticeSkeleton`.
+   - Reemplazar todos los `if (loading) return <p>Cargando...</p>`.
+
+3. **Fix manifest PWA 401** en preview (revisar headers en `vite.config.ts` / wrangler).
+
+**Criterio de aceptación:** `/dashboard` carga < 1.5s con skeleton inmediato.
+
+---
+
+## Sprint 2 — P1 i18n Completo
+**Objetivo:** español real en toda la app pública y privada.
+
+1. **Landing Hero ES** — el hero hardcoded en `src/routes/index.tsx` lee `landing_sections` o i18n key, no string EN.
+2. **Auth errors mapeados** — wrapper en `src/lib/auth-errors.ts` que traduce `Invalid login credentials`, `Email not confirmed`, etc. a i18n keys.
+3. **Audit completo de strings sueltos** en `admin.*`, `settings`, `onboarding`, `certificate`, `verify.$id`.
+4. **Locale switcher visible** en header público + student app.
+
+**Criterio:** 0 strings EN visibles cuando `locale=es`.
+
+---
+
+## Sprint 3 — P1 Contenido ES (Bulk AI Translation)
+**Objetivo:** poblar `lessons` y `questions` en español usando la infraestructura AI ya construida.
+
+1. **Bulk action en `/admin/lessons`** — botón "Traducir todas las published EN faltantes" → loop con rate-limit (1/seg) llamando `generateLessonTranslation`, dejar en `translation_status='ai_draft'`.
+2. **Bulk action en `/admin/questions`** — idem.
+3. **Dashboard de cobertura de traducción** — card que muestra `X/Y lessons ES`, `X/Y questions ES`, link a revisar drafts.
+4. **Review queue UI** — vista filtrada `translation_status='ai_draft'` con accept/edit/publish rápido.
+
+**Criterio:** ≥ 90% del contenido published EN tiene draft ES generado.
+
+---
+
+## Sprint 4 — P2 E2E Validation & Real Data
+**Objetivo:** validar flujos completos con datos reales.
+
+1. **Seed de cuenta de prueba** — script `bun run scripts/seed-test-student.ts` que crea un alumno con attempts, progress, 1 certificado.
+2. **Flujo certificate E2E** — completar simulator con pass score → emite certificado → `/verify/:id` lo muestra → PDF download usa `certificate.disclaimer_es` y `template_style`.
+3. **Lesson → Quiz → XP → Streak** validado.
+4. **Flashcards SRS** revisar que `due_date` avanza correctamente.
+
+**Criterio:** flujo "registro → onboarding → 1 lesson → 1 quiz → 1 sim → cert" sin errores.
+
+---
+
+## Sprint 5 — P2 Mobile QA Sistemático
+**Objetivo:** admin y student usables en 390px.
+
+1. **Admin responsive** — `admin.lessons`, `admin.questions`, `admin.users`, `admin.settings` con tabla → cards en mobile.
+2. **Student app polish** — bottom nav fija, safe areas iOS, scroll horizontal eliminado.
+3. **PWA install prompt** + testing real en iOS/Android.
+
+**Criterio:** Lighthouse mobile ≥ 90 en performance, accessibility, best-practices.
+
+---
+
+## Sprint 6 — P3 Hardening Producción
+**Objetivo:** robustez y observabilidad.
+
+1. **Error boundaries** por route + `defaultErrorComponent` en router.
+2. **Rate limiting** en server functions sensibles (AI translation, certificate emit).
+3. **Audit logs view** — `/admin/audit` con filtros.
+4. **SEO completo** — meta tags por route, sitemap.xml, robots.txt, JSON-LD del curso.
+5. **Analytics events** — track login, lesson_complete, quiz_pass, cert_issued.
+6. **Backup strategy** — documentar export periódico de DB.
+
+**Criterio:** app publicada, monitoreada, lista para usuarios reales.
+
+---
+
+## Orden recomendado de ejecución
+
+```text
+S1 (perf+skel) → S2 (i18n) → S3 (contenido ES) → S4 (E2E) → S5 (mobile) → S6 (hardening)
+```
+
+S1 y S2 desbloquean percepción de calidad inmediata. S3 desbloquea el valor real para usuarios hispanohablantes. S4–S6 son pre-launch.
+
+---
+
+## Decisiones pendientes que necesito de ti
+
+1. ¿Empezamos por **S1 (performance)** o prefieres **S3 (contenido ES bulk)** primero porque ya está la infra?
+2. ¿Hay un **deadline** o evento de lanzamiento que deba respetar el orden?
+3. ¿Quieres incluir **pagos/memberships** en este roadmap o se queda fuera?
