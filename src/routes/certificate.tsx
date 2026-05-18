@@ -82,10 +82,10 @@ function Certificate() {
         ? { bg: [250, 245, 230] as [number, number, number], fg: [60, 40, 20] as [number, number, number], muted: [120, 100, 80] as [number, number, number], border: [160, 120, 60] as [number, number, number], link: [120, 80, 30] as [number, number, number] }
         : { bg: [15, 23, 42] as [number, number, number], fg: [226, 232, 240] as [number, number, number], muted: [148, 163, 184] as [number, number, number], border: [96, 165, 250] as [number, number, number], link: [125, 211, 252] as [number, number, number] };
     const titleText = style === "classic"
-      ? "107toFly — Certificate of Completion"
+      ? t("student.certificate.pdfTitleClassic")
       : style === "minimal"
-        ? "Certificate of Completion · 107toFly"
-        : "107toFly · Course Completion Certificate";
+        ? t("student.certificate.pdfTitleMinimal")
+        : t("student.certificate.pdfTitlePremium");
 
     doc.setFillColor(...palette.bg);
     doc.rect(0, 0, W, H, "F");
@@ -105,13 +105,13 @@ function Certificate() {
     doc.text(cert.display_name, W / 2, 200, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    doc.text("has successfully completed the 107toFly Part 107 Preparation Program,", W / 2, 240, { align: "center" });
-    doc.text("aligned with the FAA ACS, Remote Pilot Study Guide and 14 CFR Part 107 / 89.", W / 2, 258, { align: "center" });
+    doc.text(t("student.certificate.pdfBody1"), W / 2, 240, { align: "center" });
+    doc.text(t("student.certificate.pdfBody2"), W / 2, 258, { align: "center" });
     const y = 330;
     doc.setFontSize(10); doc.setTextColor(...palette.muted);
-    doc.text("FINAL SCORE", W / 2 - 180, y, { align: "center" });
-    doc.text("HOURS", W / 2, y, { align: "center" });
-    doc.text("CERTIFICATE ID", W / 2 + 180, y, { align: "center" });
+    doc.text(t("student.certificate.finalScoreUpper"), W / 2 - 180, y, { align: "center" });
+    doc.text(t("student.certificate.hoursUpper"), W / 2, y, { align: "center" });
+    doc.text(t("student.certificate.certIdUpper"), W / 2 + 180, y, { align: "center" });
     doc.setFontSize(20); doc.setTextColor(...palette.fg); doc.setFont("helvetica", "bold");
     doc.text(`${Math.round(cert.final_score)}%`, W / 2 - 180, y + 28, { align: "center" });
     doc.text(`${cert.hours_estimated}h`, W / 2, y + 28, { align: "center" });
@@ -121,10 +121,10 @@ function Certificate() {
     doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(...palette.muted);
     doc.text(doc.splitTextToSize(disclaimer, W - 140), W / 2, H - 70, { align: "center" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-    doc.text(`Issued ${new Date(cert.issued_at).toLocaleDateString()}`, W / 2, H - 40, { align: "center" });
+    doc.text(t("student.certificate.issuedOn", { date: new Date(cert.issued_at).toLocaleDateString(isEs ? "es-ES" : "en-US") }), W / 2, H - 40, { align: "center" });
     const verifyUrl = `${window.location.origin}/verify/${cert.id}`;
     doc.setTextColor(...palette.link); doc.setFontSize(8);
-    doc.textWithLink(`Verify: ${verifyUrl}`, W / 2, H - 24, { align: "center", url: verifyUrl });
+    doc.textWithLink(t("student.certificate.verifyLabel", { url: verifyUrl }), W / 2, H - 24, { align: "center", url: verifyUrl });
     doc.save(`107toFly-Certificate-${cert.id.slice(0, 8)}-${style}.pdf`);
   };
 
@@ -146,7 +146,7 @@ function Certificate() {
             {templateStyle === "premium" && <div aria-hidden className="absolute inset-0 bg-foreground/30" />}
             <div className="relative">
               <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${templateStyle === "premium" ? "bg-background/20 backdrop-blur" : "border border-current/30"}`}>
-                <Award className="h-3.5 w-3.5" /> 107toFly · Course Completion
+                <Award className="h-3.5 w-3.5" /> {t("student.certificate.courseCompletionBadge")}
               </div>
               <div className="mt-6 font-display text-sm uppercase tracking-[0.3em] opacity-80">{t("student.certificate.thisCertifies")}</div>
               <div className="mt-3 font-display text-4xl font-semibold md:text-5xl">{cert?.display_name ?? t("student.certificate.yourName")}</div>
