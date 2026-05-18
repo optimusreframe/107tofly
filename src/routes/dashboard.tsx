@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
-import { supabase } from "@/integrations/supabase/client";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchDueFlashcards, getStudentReadiness, getStudentTopicMastery } from "@/server/study.functions";
-import { getNextLesson, getStudentRecentActivity, type ActivityItem } from "@/server/student-settings.functions";
+import { getDashboardBundle, type DashboardBundle } from "@/server/dashboard-bundle.functions";
+import type { ActivityItem } from "@/server/student-settings.functions";
 import {
   Flame,
   Sparkles,
@@ -22,9 +22,9 @@ import {
   Award,
 } from "lucide-react";
 
-type Mastery = Awaited<ReturnType<typeof getStudentTopicMastery>>;
-type Readiness = Awaited<ReturnType<typeof getStudentReadiness>>;
-type NextLesson = Awaited<ReturnType<typeof getNextLesson>>;
+type Mastery = DashboardBundle["mastery"];
+type Readiness = DashboardBundle["readiness"];
+type NextLesson = DashboardBundle["nextLesson"];
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -74,19 +74,9 @@ function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const fetchDue = useServerFn(fetchDueFlashcards);
-  const fetchReadiness = useServerFn(getStudentReadiness);
-  const fetchMastery = useServerFn(getStudentTopicMastery);
-  const fetchNext = useServerFn(getNextLesson);
-  const fetchActivity = useServerFn(getStudentRecentActivity);
-  const [progress, setProgress] = useState<ProgressRow | null>(null);
-  const [name, setName] = useState<string>("Pilot");
-  const [dueCount, setDueCount] = useState<number | null>(null);
-  const [activity, setActivity] = useState<number[] | null>(null);
-  const [readinessData, setReadinessData] = useState<Readiness | null>(null);
-  const [mastery, setMastery] = useState<Mastery | null>(null);
-  const [nextLesson, setNextLesson] = useState<NextLesson | null>(null);
-  const [recent, setRecent] = useState<ActivityItem[] | null>(null);
+  const fetchBundle = useServerFn(getDashboardBundle);
+  const [bundle, setBundle] = useState<DashboardBundle | null>(null);
+  const [bundleError, setBundleError] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -94,63 +84,27 @@ function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("progress")
-      .select("study_pct,practice_pct,review_pct,readiness,xp,streak")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => data && setProgress(data as ProgressRow));
-    supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.display_name) setName(data.display_name);
-      });
-    fetchDue().then((d) => setDueCount(Array.isArray(d) ? d.length : 0)).catch(() => setDueCount(0));
-    fetchReadiness().then(setReadinessData).catch(() => setReadinessData(null));
-    fetchMastery()
-      .then((d) => {
-        const arr = Array.isArray(d)
-          ? d
-          : Array.isArray((d as { topics?: unknown })?.topics)
-            ? ((d as { topics: Mastery }).topics)
-            : Array.isArray((d as { mastery?: unknown })?.mastery)
-              ? ((d as { mastery: Mastery }).mastery)
-              : ([] as unknown as Mastery);
-        setMastery(arr);
+    let cancelled = false;
+    fetchBundle()
+      .then((b) => {
+        if (!cancelled) setBundle(b);
       })
-      .catch(() => setMastery([] as unknown as Mastery));
+      .catch(() => {
+        if (!cancelled) setBundleError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, fetchBundle]);
 
-    // Build last-7-days activity from real signals (lessons + quizzes + sims)
-    const since = new Date();
-    since.setDate(since.getDate() - 6);
-    since.setHours(0, 0, 0, 0);
-    const sinceIso = since.toISOString();
-    Promise.all([
-      supabase.from("lesson_completions").select("completed_at").eq("user_id", user.id).gte("completed_at", sinceIso),
-      supabase.from("quiz_attempts").select("started_at").eq("user_id", user.id).gte("started_at", sinceIso),
-      supabase.from("exam_simulations").select("started_at").eq("user_id", user.id).gte("started_at", sinceIso),
-    ]).then(([lc, qa, es]) => {
-      const counts = new Array(7).fill(0) as number[];
-      const bucket = (iso?: string | null) => {
-        if (!iso) return;
-        const d = new Date(iso);
-        d.setHours(0, 0, 0, 0);
-        const idx = Math.round((d.getTime() - since.getTime()) / (1000 * 60 * 60 * 24));
-        if (idx >= 0 && idx < 7) counts[idx] += 1;
-      };
-      (lc.data ?? []).forEach((r: { completed_at: string }) => bucket(r.completed_at));
-      (qa.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
-      (es.data ?? []).forEach((r: { started_at: string }) => bucket(r.started_at));
-      setActivity(counts);
-    }).catch(() => setActivity([]));
-
-    fetchNext().then(setNextLesson).catch(() => setNextLesson(null));
-    fetchActivity().then(setRecent).catch(() => setRecent([]));
-  }, [user, fetchDue, fetchReadiness, fetchMastery, fetchNext, fetchActivity]);
-
+  const progress = (bundle?.progress ?? null) as ProgressRow | null;
+  const name = bundle?.profile?.display_name ?? "Pilot";
+  const dueCount = bundle?.dueCount ?? null;
+  const activity = bundle?.weeklyActivity ?? null;
+  const readinessData: Readiness | null = bundle?.readiness ?? null;
+  const mastery: Mastery | null = bundle?.mastery ?? null;
+  const nextLesson: NextLesson | null = bundle?.nextLesson ?? null;
+  const recent: ActivityItem[] | null = bundle?.recentActivity ?? null;
 
   const readiness = readinessData?.score ?? progress?.readiness ?? 0;
   const readinessStatusKey = readinessData?.status ?? (readiness >= 85 ? "ready" : readiness >= 70 ? "almost" : readiness >= 50 ? "building" : "foundation");
@@ -160,10 +114,10 @@ function Dashboard() {
     { label: t("student.dashboard.review"), value: progress?.review_pct ?? 0, color: "oklch(0.68 0.16 155)" },
   ];
 
-  if (loading || !user) {
+  if (loading || !user || (!bundle && !bundleError)) {
     return (
       <StudentAppShell>
-        <div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div>
+        <DashboardSkeleton />
       </StudentAppShell>
     );
   }
