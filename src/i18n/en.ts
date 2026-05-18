@@ -651,6 +651,14 @@ export default {
       primary: "Start the course",
       secondary: "Meet FlyCoach AI",
     },
+    featuresItems: {
+      course4w: { title: "4-week course", desc: "Daily 2h route with microlessons, guided examples and ACS-aligned quizzes." },
+      mapLab: { title: "Interactive Map Lab", desc: "Master sectional charts, Class B/C/D/E/G, MSL vs AGL and LAANC authorizations." },
+      weatherLab: { title: "Weather Lab", desc: "Decode METAR and TAF visually. Simulate wind, ceiling and density altitude." },
+      flycoach: { title: "FlyCoach AI", desc: "A tutor that explains, asks back and creates mnemonics using only official FAA sources." },
+      spaced: { title: "Spaced repetition", desc: "Your mistakes become smart flashcards that come back at just the right time." },
+      certificate: { title: "Internal certificate", desc: "Course Completion aligned with ACS. Does not replace the official FAA certificate." },
+    },
   },
   footer: {
     tagline: "Your copilot to pass the FAA Part 107. Learn, practice, repeat, fly.",
