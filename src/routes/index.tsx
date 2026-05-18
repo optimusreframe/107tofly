@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import {
   Plane,
   Map,
@@ -36,54 +36,11 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const features = [
-  {
-    icon: Compass,
-    title: "Curso 4 semanas",
-    desc: "Ruta diaria de 2 h con microlecciones, ejemplos guiados y quizzes alineados al ACS.",
-  },
-  {
-    icon: Map,
-    title: "Map Lab interactivo",
-    desc: "Domina sectional charts, Class B/C/D/E/G, MSL vs AGL y autorizaciones LAANC.",
-  },
-  {
-    icon: CloudSun,
-    title: "Weather Lab",
-    desc: "Decodifica METAR y TAF visualmente. Simula viento, ceiling y density altitude.",
-  },
-  {
-    icon: Brain,
-    title: "FlyCoach AI",
-    desc: "Tutor que explica, repregunta y crea mnemotecnias usando solo fuentes oficiales FAA.",
-  },
-  {
-    icon: Sparkles,
-    title: "Spaced repetition",
-    desc: "Tus errores se convierten en flashcards inteligentes que vuelven justo a tiempo.",
-  },
-  {
-    icon: Award,
-    title: "Certificado interno",
-    desc: "Course Completion alineado al ACS. No reemplaza el certificado oficial FAA.",
-  },
-];
-
-const modules = [
-  "Regulaciones Part 107",
-  "Remote ID y registro",
-  "Espacio aéreo (NAS)",
-  "Sectional charts",
-  "Clima y METAR/TAF",
-  "Loading & Performance",
-  "Operaciones y comunicaciones",
-  "ADM y factores humanos",
-  "Emergencias",
-  "Mantenimiento y preflight",
-];
+const featureIcons = [Compass, Map, CloudSun, Brain, Sparkles, Award];
+const featureKeys = ["course4w", "mapLab", "weatherLab", "flycoach", "spaced", "certificate"] as const;
 
 function Index() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const locale = (i18n.language?.startsWith("es") ? "es" : "en") as "en" | "es";
   const [cms, setCms] = useState<Record<string, { title?: string | null; subtitle?: string | null; body?: string | null; cta_label?: string | null; cta_href?: string | null; image_url?: string | null; content?: Record<string, unknown> | null }>>({});
 
@@ -113,6 +70,8 @@ function Index() {
       ? hero!.body
       : null;
 
+  const modules = t("landing.modules.items", { returnObjects: true }) as string[];
+
   return (
     <PageShell>
       {/* Hero */}
@@ -123,48 +82,48 @@ function Index() {
               <span className="grid h-4 w-4 place-items-center rounded-full bg-success" >
                 <CheckCircle2 className="h-3 w-3 text-success-foreground" />
               </span>
-              Alineado al FAA ACS · Part 107
+              {t("landing.hero.badge")}
             </div>
             <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
               {heroTitle ? (
                 heroTitle
               ) : (
-                <>From zero to{" "}
-                <span className="text-gradient">Remote Pilot</span>
+                <>{t("landing.hero.titleBefore")}{" "}
+                <span className="text-gradient">{t("landing.hero.titleHighlight")}</span>
                 <br />
-                ready.</>
+                {t("landing.hero.titleAfter")}</>
               )}
             </h1>
             <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              {heroSubtitle ?? "Aprende, practica, falla, entiende, repite. 107toFly es tu copiloto app-like para dominar el examen FAA Part 107 con confianza."}
+              {heroSubtitle ?? t("landing.hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 to="/course"
                 className="group inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background shadow-elevated transition hover:opacity-90"
               >
-                Empezar lección gratis
+                {t("landing.hero.ctaPrimary")}
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
               </Link>
               <Link
                 to="/simulator"
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-3 text-sm font-medium backdrop-blur transition hover:bg-accent"
               >
-                Probar readiness quiz
+                {t("landing.hero.ctaSecondary")}
               </Link>
             </div>
             <div className="mt-8 flex items-center gap-6 text-xs text-muted-foreground">
               <div>
                 <div className="font-display text-xl font-semibold text-foreground">28</div>
-                días de ruta
+                {t("landing.hero.stat1")}
               </div>
               <div>
                 <div className="font-display text-xl font-semibold text-foreground">600+</div>
-                preguntas ACS
+                {t("landing.hero.stat2")}
               </div>
               <div>
                 <div className="font-display text-xl font-semibold text-foreground">10</div>
-                módulos oficiales
+                {t("landing.hero.stat3")}
               </div>
             </div>
           </div>
@@ -174,7 +133,7 @@ function Index() {
             <div className="glass-strong rounded-3xl p-5 shadow-elevated">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-muted-foreground">Readiness Score</div>
+                  <div className="text-xs text-muted-foreground">{t("landing.hero.readinessScore")}</div>
                   <div className="font-display text-3xl font-semibold">87<span className="text-base text-muted-foreground">/100</span></div>
                 </div>
                 <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--gradient-sky)] text-primary-foreground animate-float-slow">
@@ -183,9 +142,9 @@ function Index() {
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {[
-                  { label: "Mapas", v: 92, c: "bg-primary" },
-                  { label: "Clima", v: 78, c: "bg-sky" },
-                  { label: "Reglas", v: 85, c: "bg-success" },
+                  { label: t("student.topics.sectional"), v: 92, c: "bg-primary" },
+                  { label: t("student.topics.weather"), v: 78, c: "bg-sky" },
+                  { label: t("student.topics.regulations"), v: 85, c: "bg-success" },
                 ].map((r) => (
                   <div key={r.label} className="rounded-2xl border border-border bg-card/70 p-3">
                     <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{r.label}</div>
@@ -198,10 +157,13 @@ function Index() {
               </div>
               <div className="mt-4 rounded-2xl border border-border bg-card/70 p-4">
                 <div className="flex items-center gap-2 text-xs font-medium text-primary">
-                  <Sparkles className="h-3.5 w-3.5" /> FlyCoach sugiere
+                  <Sparkles className="h-3.5 w-3.5" /> {t("landing.hero.flycoachSuggests")}
                 </div>
                 <p className="mt-1 text-sm">
-                  Repasa <span className="font-medium">TAF interpretation</span> · 8 flashcards vencen hoy.
+                  <Trans
+                    i18nKey="landing.hero.flycoachLine"
+                    components={[<span key="0" className="font-medium" />]}
+                  />
                 </p>
               </div>
             </div>
@@ -209,8 +171,8 @@ function Index() {
               <div className="flex items-center gap-2 text-xs">
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-success/15 text-success">🔥</span>
                 <div>
-                  <div className="font-medium">12 días streak</div>
-                  <div className="text-muted-foreground">+240 XP esta semana</div>
+                  <div className="font-medium">{t("landing.hero.streakDays", { n: 12 })}</div>
+                  <div className="text-muted-foreground">{t("landing.hero.xpWeek", { xp: 240 })}</div>
                 </div>
               </div>
             </div>
@@ -222,26 +184,28 @@ function Index() {
       <section className="mx-auto mt-28 max-w-6xl px-6">
         <div className="max-w-2xl">
           <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-            Diseñado para que <span className="text-gradient">entiendas</span>, no solo memorices.
+            <Trans i18nKey="landing.features.title" components={[<span key="0" className="text-gradient" />]} />
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Cada lección, quiz y simulación se mapea a las fuentes oficiales FAA: ACS,
-            Remote Pilot Study Guide, Testing Supplement, AC 107-2A y 14 CFR Part 107 / 89.
+            {t("landing.features.subtitle")}
           </p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="group glass rounded-3xl p-5 transition hover:-translate-y-0.5 hover:shadow-elevated"
-            >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--gradient-sky)] text-primary-foreground">
-                <f.icon className="h-5 w-5" />
+          {featureKeys.map((key, i) => {
+            const Icon = featureIcons[i];
+            return (
+              <div
+                key={key}
+                className="group glass rounded-3xl p-5 transition hover:-translate-y-0.5 hover:shadow-elevated"
+              >
+                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--gradient-sky)] text-primary-foreground">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 font-display text-lg font-semibold">{t(`landing.featuresItems.${key}.title`)}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">{t(`landing.featuresItems.${key}.desc`)}</p>
               </div>
-              <h3 className="mt-4 font-display text-lg font-semibold">{f.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -250,22 +214,17 @@ function Index() {
         <div className="grid items-center gap-10 lg:grid-cols-2">
           <div>
             <div className="text-xs font-medium uppercase tracking-wider text-primary">
-              Demo interactivo
+              {t("landing.quiz.eyebrow")}
             </div>
             <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">
-              Pregunta real estilo UAG.
-              <br />Sin ayuda, sin trampa.
+              {t("landing.quiz.title")}
+              <br />{t("landing.quiz.titleLine2")}
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Cada pregunta lleva su código ACS, fuente oficial y explicación inmediata
-              del FlyCoach. Falla sin miedo: aquí es donde se aprende.
+              {t("landing.quiz.subtitle")}
             </p>
             <ul className="mt-6 space-y-2 text-sm">
-              {[
-                "Banco de preguntas mapeado al ACS",
-                "Explicación + por qué las otras opciones fallan",
-                "Convierte errores en flashcards automáticamente",
-              ].map((l) => (
+              {[t("landing.quiz.bullet1"), t("landing.quiz.bullet2"), t("landing.quiz.bullet3")].map((l) => (
                 <li key={l} className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> {l}
                 </li>
@@ -279,7 +238,7 @@ function Index() {
       {/* Modules */}
       <section className="mx-auto mt-28 max-w-6xl px-6">
         <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-          10 módulos. Todo el temario oficial.
+          {t("landing.modules.title")}
         </h2>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {modules.map((m, i) => (
@@ -299,23 +258,23 @@ function Index() {
         <div className="glass-strong relative overflow-hidden rounded-3xl p-10 text-center shadow-elevated md:p-16">
           <div aria-hidden className="absolute inset-0 -z-10 bg-[var(--gradient-aurora)] opacity-20" />
           <h2 className="mx-auto max-w-2xl font-display text-3xl font-semibold tracking-tight md:text-5xl">
-            Tu copiloto para aprobar la <span className="text-gradient">Part 107</span>.
+            <Trans i18nKey="landing.cta.title" components={[<span key="0" className="text-gradient" />]} />
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Empieza hoy con una lección gratis. Sin tarjeta. Sin ruido.
+            {t("landing.cta.subtitle")}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link
               to="/course"
               className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90"
             >
-              Comenzar curso <ArrowRight className="h-4 w-4" />
+              {t("landing.cta.primary")} <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/flycoach"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-sm font-medium backdrop-blur transition hover:bg-accent"
             >
-              Conocer FlyCoach AI
+              {t("landing.cta.secondary")}
             </Link>
           </div>
         </div>

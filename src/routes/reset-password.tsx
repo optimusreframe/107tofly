@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
+import { mapAuthError } from "@/lib/auth-errors";
 import { Plane, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -40,7 +41,7 @@ function ResetPage() {
       setInfo(t("auth.passwordUpdated"));
       setTimeout(() => navigate({ to: "/dashboard" }), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(mapAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ function ResetPage() {
             {info && <p className="text-sm text-success">{info}</p>}
             {!ready && (
               <p className="text-xs text-muted-foreground">
-                Abre este enlace desde el correo de recuperación para continuar.
+                {t("auth.openFromEmail")}
               </p>
             )}
             <button
