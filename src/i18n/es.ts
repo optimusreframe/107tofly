@@ -45,6 +45,7 @@ export default {
       analytics: "Analíticas",
       settings: "Ajustes",
       backToApp: "Volver a la app",
+      backToAppShort: "← App",
       console: "Consola de Admin",
       sections: "Secciones de admin",
     },
