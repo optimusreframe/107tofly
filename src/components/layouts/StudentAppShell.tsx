@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteFooter } from "@/components/SiteFooter";
 import { usePublicRuntime } from "@/hooks/use-public-runtime";
+import { StreakBadge } from "@/components/StreakBadge";
 
 const PRIMARY = [
   { to: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
@@ -141,6 +142,7 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
 
           <div className="flex min-h-screen flex-1 flex-col min-w-0">
             <header className="sticky top-0 z-40 flex h-14 items-center justify-end gap-2 border-b border-border/40 bg-background/60 px-4 backdrop-blur-xl">
+              <StreakBadge />
               <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center gap-1 rounded-full border border-border bg-card/60 px-3 text-xs font-medium hover:bg-accent transition">
                 <span className="flex items-center gap-1"><Languages className="h-3.5 w-3.5" />{lang}</span>
               </button>
@@ -172,6 +174,7 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
               <span>107<span className="text-gradient">toFly</span></span>
             </Link>
             <div className="flex items-center gap-2">
+              <StreakBadge compact />
               <button onClick={toggleLang} aria-label="Toggle language" className="grid h-10 min-w-10 place-items-center rounded-full border border-border bg-card/60 px-2 text-xs hover:bg-accent active:scale-95 transition">
                 <Languages className="h-3.5 w-3.5" />
               </button>
