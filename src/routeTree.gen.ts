@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherLabRouteImport } from './routes/weather-lab'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -43,6 +44,11 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 const WeatherLabRoute = WeatherLabRouteImport.update({
   id: '/weather-lab',
   path: '/weather-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SimulatorRoute = SimulatorRouteImport.update({
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
@@ -275,6 +283,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
@@ -309,6 +318,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/simulator'
+    | '/sitemap.xml'
     | '/weather-lab'
     | '/admin/analytics'
     | '/admin/certificates'
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/simulator'
+    | '/sitemap.xml'
     | '/weather-lab'
     | '/admin/analytics'
     | '/admin/certificates'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/simulator'
+    | '/sitemap.xml'
     | '/weather-lab'
     | '/admin/analytics'
     | '/admin/certificates'
@@ -406,6 +418,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SimulatorRoute: typeof SimulatorRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WeatherLabRoute: typeof WeatherLabRoute
   LessonsSlugRoute: typeof LessonsSlugRoute
   VerifyIdRoute: typeof VerifyIdRoute
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/weather-lab'
       fullPath: '/weather-lab'
       preLoaderRoute: typeof WeatherLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/simulator': {
@@ -670,6 +690,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SimulatorRoute: SimulatorRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   WeatherLabRoute: WeatherLabRoute,
   LessonsSlugRoute: LessonsSlugRoute,
   VerifyIdRoute: VerifyIdRoute,

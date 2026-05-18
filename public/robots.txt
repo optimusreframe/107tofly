@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /lessons
+Disallow: /practice
+Disallow: /flashcards
+Disallow: /flycoach
+Disallow: /simulator
+Disallow: /achievements
+Disallow: /certificate
+Disallow: /course
+Disallow: /map-lab
+Disallow: /weather-lab
+Disallow: /mission
+
+Sitemap: https://p107tofly.lovable.app/sitemap.xml
