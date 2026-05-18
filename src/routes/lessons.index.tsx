@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Lock, PlayCircle, Clock } from "lucide-react";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
+import { LessonsListSkeleton } from "@/components/LessonsListSkeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { getLessons } from "@/server/lessons.functions";
 
@@ -36,8 +37,8 @@ function LessonsPage() {
     getLessons({ data: { locale } }).then(setLessons).catch((e) => console.error(e));
   }, [user, locale]);
 
-  if (loading || !user) {
-    return <StudentAppShell><div className="mx-auto max-w-6xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
+  if (loading || !user || lessons === null) {
+    return <StudentAppShell><LessonsListSkeleton /></StudentAppShell>;
   }
 
   const weeks = [1, 2, 3, 4];

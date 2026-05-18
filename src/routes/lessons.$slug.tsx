@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock } from "lucide-react";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
+import { LessonDetailSkeleton } from "@/components/LessonDetailSkeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { getLesson, getLessons } from "@/server/lessons.functions";
 import { completeLesson } from "@/server/study.functions";
@@ -44,7 +45,7 @@ function LessonDetail() {
   }, [slug, user, locale]);
 
   if (loading || !user || !data) {
-    return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
+    return <StudentAppShell><LessonDetailSkeleton /></StudentAppShell>;
   }
 
   if (!data.lesson) {

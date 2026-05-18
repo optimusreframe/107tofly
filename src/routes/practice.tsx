@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
+import { PracticeSkeleton } from "@/components/PracticeSkeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/server/study.functions";
 import { Check, X, Sparkles, BookmarkPlus, ArrowRight } from "lucide-react";
@@ -71,7 +72,7 @@ function Practice() {
     load();
   }, [user, fetchQ, fetchMastery, search.mode, locale]);
 
-  if (loading || !user) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("common.loading")}</div></StudentAppShell>;
+  if (loading || !user) return <StudentAppShell><PracticeSkeleton /></StudentAppShell>;
 
   if (done) {
     return (
@@ -92,7 +93,7 @@ function Practice() {
     );
   }
 
-  if (!questions.length) return <StudentAppShell><div className="mx-auto max-w-3xl px-6 pt-24 text-muted-foreground">{t("student.practice.loading")}</div></StudentAppShell>;
+  if (!questions.length) return <StudentAppShell><PracticeSkeleton /></StudentAppShell>;
 
   const q = questions[idx];
   const isCorrect = picked !== null && picked === q.correct_index;
