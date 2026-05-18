@@ -1,75 +1,46 @@
-# Continuación — Sprint 1.5 (cierre perf) + Sprint 2 (i18n)
+# Estado de sprints
 
-Sprint 1 dejó `/dashboard` con bundle único + skeleton. Cierro perf en las otras rutas críticas y arranco i18n, que es el siguiente bloqueante de calidad percibida.
+## ✅ Sprint 1 — Performance dashboard
+- `getDashboardBundle` server fn (consolida 14+ llamadas → 1 round trip).
+- `DashboardSkeleton` reemplazó "Cargando…" plano.
 
----
+## ✅ Sprint 1.5 — Skeletons restantes
+- `LessonsListSkeleton`, `LessonDetailSkeleton`, `PracticeSkeleton` en sus rutas.
+- PWA manifest 401: gating del entorno preview, no defecto de código.
 
-## Bloque A — Cerrar Sprint 1 (skeletons restantes)
-
-1. **`LessonsListSkeleton`** en `src/components/`  
-   Cards grises con shimmer (6 items). Usar en `src/routes/lessons.index.tsx` reemplazando el `Cargando...` actual.
-
-2. **`LessonDetailSkeleton`**  
-   Hero + 3 bloques de contenido + botón. Usar en `src/routes/lessons.$slug.tsx` y `src/routes/lesson.tsx`.
-
-3. **`PracticeSkeleton`**  
-   Card de pregunta + 4 opciones placeholder. Usar en `src/routes/practice.tsx`.
-
-4. **Fix manifest PWA**  
-   Verificar `public/manifest.webmanifest` se sirve público (no 401). Revisar `vite.config.ts` / `wrangler.jsonc` si hay regla que requiera auth en `/manifest.webmanifest`.
-
-**Aceptación:** ninguna ruta del student app muestra texto "Cargando…" plano; manifest devuelve 200 sin sesión.
+## ✅ Sprint 2 — i18n completo
+- **B1** Landing hero ES (claves `landing.hero.*`).
+- **B2** `src/lib/auth-errors.ts` con `mapAuthError()` → claves `auth.errors.*`; aplicado en auth/forgot/reset.
+- **B3** Auditoría loose strings: `certificate.tsx` PDF + badge, `AdminAppShell` botón "← App" → todas en `t()`. Claves `student.certificate.pdfTitle*`, `pdfBody1/2`, `courseCompletionBadge`, `issuedOn`, `verifyLabel`, `*Upper`, `admin.nav.backToAppShort` añadidas a `es.ts` + `en.ts`. `programLine`/`thisCertifies` ES corregidas (estaban en EN).
+- **B4** Switcher ES/EN visible en `SiteHeader` (público) y `StudentAppShell` (desktop + mobile), persistido en `localStorage` + `profiles.locale`.
 
 ---
 
-## Bloque B — Sprint 2: i18n completo
+# Candidatos Sprint 3
 
-### B1. Landing Hero ES real
-- Auditar `src/routes/index.tsx`: cualquier string EN hardcoded → `t('landing.hero.*')` con keys nuevas en `src/i18n/en.ts` y `src/i18n/es.ts`.
-- Si el hero ya lee de `landing_sections` (CMS), asegurar que el render usa `locale` actual con fallback EN→ES.
+Elegir 1-2 según prioridad de producto:
 
-### B2. Mapeo de errores de auth a i18n
-- Nuevo archivo `src/lib/auth-errors.ts` con función `mapAuthError(err: unknown): string` que traduce los mensajes comunes de Supabase:
-  - `Invalid login credentials` → `auth.errors.invalidCredentials`
-  - `Email not confirmed` → `auth.errors.emailNotConfirmed`
-  - `User already registered` → `auth.errors.userExists`
-  - `Password should be at least 6 characters` → `auth.errors.weakPassword`
-  - fallback → `auth.errors.generic`
-- Aplicar en `src/routes/auth.tsx`, `forgot-password.tsx`, `reset-password.tsx`, `onboarding.tsx`.
+### Opción A — Calidad/QA (estabilidad antes de lanzar)
+- Tests E2E críticos (auth, lesson flow, practice, certificate issuance) con Vitest + happy-dom.
+- Error boundaries por ruta con `errorComponent` consistente.
+- Sentry/console error tracking centralizado.
 
-### B3. Auditoría de strings sueltos
-Pasar por:
-- `src/routes/admin.*` (labels, botones, toasts)
-- `src/routes/settings.tsx`
-- `src/routes/certificate.tsx`, `verify.$id.tsx`
-- `src/components/layouts/StudentAppShell.tsx`, `AdminAppShell.tsx`
+### Opción B — UX/Accesibilidad
+- Auditoría a11y (focus rings, ARIA, contraste en dark mode).
+- Mejorar empty states (lessons, achievements, flashcards).
+- Loading states optimistas (mutations sin spinner).
 
-Cada string visible no envuelto en `t(...)` se mueve a `i18n/en.ts` + `i18n/es.ts`. Sin renombrar keys existentes.
+### Opción C — Engagement/Retention
+- Notificaciones de reminder (campo `reminderOn` en settings ya existe, falta scheduler).
+- Streak system + push web notifications.
+- Email transaccional (welcome, certificate issued).
 
-### B4. Locale switcher visible
-- Botón ES/EN en `SiteHeader.tsx` (público) y en `StudentAppShell.tsx` (privado).
-- Persistir en `localStorage.locale` (ya soportado en `src/i18n/index.ts`).
-- Toggle inmediato sin recarga: `i18n.changeLanguage(next)` + `localStorage.setItem`.
+### Opción D — SEO/Marketing landing
+- Meta tags por ruta (og:image dinámica para `/verify/$id`).
+- Sitemap + robots.txt.
+- Schema.org JSON-LD para Course/Certification.
 
-**Aceptación:** con `locale=es` no hay texto EN visible en landing, auth, dashboard, lessons, practice, settings, admin. Switcher funcional en header público y privado.
-
----
-
-## Detalles técnicos
-
-- No tocar `client.ts`, `types.ts`, archivos auto-generados.
-- No introducir dependencias nuevas.
-- No tocar lógica de negocio — sólo UI/strings/skeletons.
-- Typecheck obligatorio al final de cada bloque (`bunx tsc --noEmit`).
-
----
-
-## Orden de ejecución
-
-```text
-A1-A3 (skeletons)  →  A4 (manifest)  →  B1 (hero)  →  B2 (auth errors)  →  B3 (audit)  →  B4 (switcher)
-```
-
-## Pregunta
-
-¿Ejecuto **Bloque A completo + B1 (hero)** en este turno y dejo B2–B4 para el siguiente, o prefieres que arranque directo por **B1 (hero ES)** porque es lo más visible para usuarios?
+### Opción E — Admin polish
+- Bulk operations (delete múltiple en users/lessons).
+- Filtros + búsqueda en admin tables.
+- Audit log de cambios admin.
