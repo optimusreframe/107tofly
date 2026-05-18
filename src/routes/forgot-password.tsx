@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
+import { mapAuthError } from "@/lib/auth-errors";
 import { Plane, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +29,7 @@ function ForgotPage() {
       if (error) throw error;
       setInfo(t("auth.resetSent"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(mapAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ function ForgotPage() {
               <input
                 type="email"
                 required
-                placeholder="email@ejemplo.com"
+                placeholder={t("auth.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-transparent outline-none"

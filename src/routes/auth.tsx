@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { PageShell } from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
+import { mapAuthError } from "@/lib/auth-errors";
 import { Plane, Mail, Lock, User as UserIcon } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -46,7 +49,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        setInfo("Cuenta creada. Revisa tu email para confirmar y luego inicia sesión.");
+        setInfo(t("auth.accountCreated"));
         setMode("login");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -54,7 +57,7 @@ function AuthPage() {
         navigate({ to: "/dashboard" });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado");
+      setError(mapAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -71,10 +74,10 @@ function AuthPage() {
         </Link>
         <div className="glass-strong mt-8 w-full rounded-3xl p-8 shadow-glass">
           <h1 className="font-display text-2xl font-semibold tracking-tight">
-            {mode === "login" ? "Bienvenido de vuelta" : "Crea tu cuenta"}
+            {mode === "login" ? t("auth.welcomeBack") : t("auth.createAccount")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "login" ? "Continúa tu camino al Part 107." : "Empieza tu plan de estudio personalizado."}
+            {mode === "login" ? t("auth.loginSubtitle") : t("auth.signupSubtitle")}
           </p>
 
           <form onSubmit={submit} className="mt-6 space-y-3">
@@ -82,7 +85,7 @@ function AuthPage() {
               <Field icon={<UserIcon className="h-4 w-4" />}>
                 <input
                   className="w-full bg-transparent outline-none"
-                  placeholder="Nombre"
+                  placeholder={t("auth.namePlaceholder")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -93,7 +96,7 @@ function AuthPage() {
                 type="email"
                 required
                 className="w-full bg-transparent outline-none"
-                placeholder="email@ejemplo.com"
+                placeholder={t("auth.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -104,7 +107,7 @@ function AuthPage() {
                 required
                 minLength={6}
                 className="w-full bg-transparent outline-none"
-                placeholder="Contraseña"
+                placeholder={t("auth.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -118,7 +121,7 @@ function AuthPage() {
               disabled={loading}
               className="mt-2 w-full rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
             >
-              {loading ? "..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+              {loading ? "..." : mode === "login" ? t("auth.signIn") : t("auth.signUp")}
             </button>
           </form>
 
@@ -131,11 +134,11 @@ function AuthPage() {
               }}
               className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
             >
-              {mode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+              {mode === "login" ? t("auth.noAccount") : t("auth.haveAccount")}
             </button>
             {mode === "login" && (
               <Link to="/forgot-password" className="text-center text-xs text-muted-foreground hover:text-foreground">
-                ¿Olvidaste tu contraseña?
+                {t("auth.forgot")}
               </Link>
             )}
           </div>
