@@ -80,7 +80,7 @@ export function AdminAppShell({ children }: { children: ReactNode }) {
             </div>
             {isMobile && (
               <Link to="/dashboard" className="text-xs text-muted-foreground underline-offset-4 hover:underline">
-                ← App
+                {t("admin.nav.backToAppShort")}
               </Link>
             )}
           </header>
