@@ -142,6 +142,7 @@ export function StudentAppShell({ children }: { children: ReactNode }) {
 
           <div className="flex min-h-screen flex-1 flex-col min-w-0">
             <header className="sticky top-0 z-40 flex h-14 items-center justify-end gap-2 border-b border-border/40 bg-background/60 px-4 backdrop-blur-xl">
+              <StreakBadge />
               <button onClick={toggleLang} aria-label="Toggle language" className="grid h-9 place-items-center gap-1 rounded-full border border-border bg-card/60 px-3 text-xs font-medium hover:bg-accent transition">
                 <span className="flex items-center gap-1"><Languages className="h-3.5 w-3.5" />{lang}</span>
               </button>
