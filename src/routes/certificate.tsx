@@ -146,7 +146,7 @@ function Certificate() {
             {templateStyle === "premium" && <div aria-hidden className="absolute inset-0 bg-foreground/30" />}
             <div className="relative">
               <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${templateStyle === "premium" ? "bg-background/20 backdrop-blur" : "border border-current/30"}`}>
-                <Award className="h-3.5 w-3.5" /> 107toFly · Course Completion
+                <Award className="h-3.5 w-3.5" /> {t("student.certificate.courseCompletionBadge")}
               </div>
               <div className="mt-6 font-display text-sm uppercase tracking-[0.3em] opacity-80">{t("student.certificate.thisCertifies")}</div>
               <div className="mt-3 font-display text-4xl font-semibold md:text-5xl">{cert?.display_name ?? t("student.certificate.yourName")}</div>
