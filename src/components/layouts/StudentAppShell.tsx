@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteFooter } from "@/components/SiteFooter";
 import { usePublicRuntime } from "@/hooks/use-public-runtime";
+import { StreakBadge } from "@/components/StreakBadge";
 
 const PRIMARY = [
   { to: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
