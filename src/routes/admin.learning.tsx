@@ -18,6 +18,7 @@ import {
 } from "@/lib/admin-learning.functions";
 import { translateUnitToSpanish } from "@/lib/admin-unit-translations.functions";
 import { Languages } from "lucide-react";
+import { ExerciseFormEditor } from "@/components/admin/ExerciseFormEditor";
 
 export const Route = createFileRoute("/admin/learning")({
   head: () => ({ meta: [{ title: "Learning Units — Admin · 107toFly" }, { name: "robots", content: "noindex" }] }),
