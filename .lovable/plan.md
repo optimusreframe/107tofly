@@ -1,46 +1,70 @@
-# Estado de sprints
+# Sprint 1 — Foundation Integrity
 
-## ✅ Sprint 1 — Performance dashboard
-- `getDashboardBundle` server fn (consolida 14+ llamadas → 1 round trip).
-- `DashboardSkeleton` reemplazó "Cargando…" plano.
+Gate obligatorio antes de tocar el nuevo modelo educativo (learning_units, Session Player, etc.). Este sprint solo endurece el motor actual y añade pruebas. No hay rediseño ni features nuevas.
 
-## ✅ Sprint 1.5 — Skeletons restantes
-- `LessonsListSkeleton`, `LessonDetailSkeleton`, `PracticeSkeleton` en sus rutas.
-- PWA manifest 401: gating del entorno preview, no defecto de código.
+## 1. Evaluación server-side + DTO seguro
 
-## ✅ Sprint 2 — i18n completo
-- **B1** Landing hero ES (claves `landing.hero.*`).
-- **B2** `src/lib/auth-errors.ts` con `mapAuthError()` → claves `auth.errors.*`; aplicado en auth/forgot/reset.
-- **B3** Auditoría loose strings: `certificate.tsx` PDF + badge, `AdminAppShell` botón "← App" → todas en `t()`. Claves `student.certificate.pdfTitle*`, `pdfBody1/2`, `courseCompletionBadge`, `issuedOn`, `verifyLabel`, `*Upper`, `admin.nav.backToAppShort` añadidas a `es.ts` + `en.ts`. `programLine`/`thisCertifies` ES corregidas (estaban en EN).
-- **B4** Switcher ES/EN visible en `SiteHeader` (público) y `StudentAppShell` (desktop + mobile), persistido en `localStorage` + `profiles.locale`.
+**Problema:** el frontend recibe `correct_index` y calcula `is_correct`. Se puede forjar 100%.
 
----
+- Crear `src/lib/quiz-eval.server.ts` con:
+  - `evaluateAttempt({ questionIds, picks, mode })` → carga preguntas con service role, calcula `is_correct` y `score` en el servidor, devuelve `{ score, results:[{question_id, is_correct, correct_index, explanation}] }`.
+- Nuevo tipo `PublicQuestion` (sin `correct_index`, sin `explanation`) usado por todos los fetchers públicos:
+  - `src/lib/study.functions.ts` → `fetchPracticeQuestions` proyecta solo columnas públicas.
+  - `src/lib/lesson-quiz.functions.ts` → `getLessonQuiz` idem.
+  - `simulator` fetch idem.
+- Server functions de submit reciben solo `picks` (índices) y `questionIds`, ignoran cualquier `is_correct` cliente:
+  - `submitLessonQuiz` (lesson-quiz.functions)
+  - `submitPractice` / `submitSimulator` (study.functions)
+- Respuesta post-submit devuelve `correct_index` + `explanation` **solo entonces**, para pintar feedback.
 
-# Candidatos Sprint 3
+## 2. Frontend adaptado al nuevo contrato
 
-Elegir 1-2 según prioridad de producto:
+- `LessonDailyQuiz.tsx`, `practice.tsx`, `simulator.tsx`:
+  - Quitar acceso a `q.correct_index` durante la fase de respuesta.
+  - Guardar `picks[]`; llamar al submit del servidor; renderizar feedback usando el `results[]` que vuelve.
+- Admin (`admin.questions.tsx`, `admin-translations`) sigue usando el DTO completo (fetcher administrativo separado que ya requiere `requireSupabaseAuth` + rol admin) — sin cambios de UI.
 
-### Opción A — Calidad/QA (estabilidad antes de lanzar)
-- Tests E2E críticos (auth, lesson flow, practice, certificate issuance) con Vitest + happy-dom.
-- Error boundaries por ruta con `errorComponent` consistente.
-- Sentry/console error tracking centralizado.
+## 3. Conteo dinámico de lecciones y certificados correctos
 
-### Opción B — UX/Accesibilidad
-- Auditoría a11y (focus rings, ARIA, contraste en dark mode).
-- Mejorar empty states (lessons, achievements, flashcards).
-- Loading states optimistas (mutations sin spinner).
+- Eliminar el literal “28 días / 28 lecciones”.
+- Fuente única: `countPublishedLessons({ locale })` en `src/lib/lessons.functions.ts` que cuenta `lessons` con `status='published'` deduplicando por `slug` (canonical: prefiere locale del usuario, cae a `en`).
+- Reemplazar usos en `lessons.functions.ts` (badge “Halfway”), dashboard bundle, readiness y en `issueCertificate` (`hours_estimated` y umbral de cobertura basados en el conteo real).
+- Readiness: verificar que `lessonsTotal` y `questionsTotal` provienen del mismo conteo canonical y no cambian por locale.
 
-### Opción C — Engagement/Retention
-- Notificaciones de reminder (campo `reminderOn` en settings ya existe, falta scheduler).
-- Streak system + push web notifications.
-- Email transaccional (welcome, certificate issued).
+## 4. .env y secretos
 
-### Opción D — SEO/Marketing landing
-- Meta tags por ruta (og:image dinámica para `/verify/$id`).
-- Sitemap + robots.txt.
-- Schema.org JSON-LD para Course/Certification.
+- Añadir a `.gitignore`: `.env`, `.env.*`, `!.env.example`.
+- Verificar que no hay `.env` trackeado; si aparece, `git rm --cached`. Crear `.env.example` con nombres (sin valores).
 
-### Opción E — Admin polish
-- Bulk operations (delete múltiple en users/lessons).
-- Filtros + búsqueda en admin tables.
-- Audit log de cambios admin.
+## 5. Testing + CI
+
+- Vitest (`vitest.config.ts`, `bun add -d vitest @vitest/coverage-v8`):
+  - `quiz-eval.server.test.ts` — evalúa correcto/incorrecto, ignora `is_correct` inyectado, rechaza `questionIds` inexistentes, calcula score bien con preguntas mixtas.
+  - `lessons-count.test.ts` — deduplicación por slug y filtro por status.
+  - `readiness.test.ts` — no cambia por locale, no da 100 sin cobertura.
+- Playwright (`playwright.config.ts`, `bun add -d @playwright/test`):
+  - smoke: landing renderiza, `/auth` carga, login test user, dashboard muestra Daily Flight sin errores console, quiz de lección responde y guarda score.
+- GitHub Actions `.github/workflows/ci.yml`:
+  - jobs: `install → typecheck (tsgo) → lint → vitest → build:dev → playwright smoke` en push/PR a `main`.
+
+## 6. Criterios de aceptación (verificación)
+
+- `curl` a un endpoint de práctica no contiene `correct_index` en el payload inicial.
+- Test que envía `is_correct:true` con `picks` incorrectos → servidor devuelve score 0.
+- Certificado emitido usa `lessonsTotal` real (no 28).
+- `bun run build:dev`, `tsgo`, `vitest`, `playwright` verdes en CI.
+- `git ls-files | grep -E '^\.env$'` vacío.
+
+## Fuera de alcance (Sprint 2+)
+
+- Nuevas tablas `learning_units / concepts / exercises / mastery`.
+- Session Player, Daily Flight adaptativo, Map/Weather Lab 2.0, Mission Engine, Readiness 2.0, Simulator 2.0.
+- Rediseño visual estilo Duolingo.
+
+## Detalles técnicos
+
+- `PublicQuestion = Pick<Question,'id'|'topic'|'acs_code'|'source'|'question'|'options'|'locale'|'translation_group_id'>`.
+- `evaluateAttempt` usa `supabaseAdmin` cargado con `await import('@/integrations/supabase/client.server')` dentro del handler (import graph safety).
+- Submits siguen otorgando XP vía `runtime-settings` y flashcards de errores exactamente como hoy — solo cambia la fuente de verdad de `is_correct`.
+- `admin.questions.tsx` mantiene su DTO completo detrás de `requireSupabaseAuth` + `has_role('admin')`; no se toca UI.
+- No se borran tablas ni columnas; `correct_index` sigue en DB, solo deja de salir en respuestas públicas.
