@@ -114,7 +114,7 @@ export const submitExercise = createServerFn({ method: "POST" })
       .select("id,concept_id,kind,answer,explanation")
       .eq("id", data.exerciseId)
       .maybeSingle();
-    if (error || !ex) throw new Response("Exercise not found", { status: 404 });
+    if (error || !ex) { logger.warn("submitExercise.notfound", { exerciseId: data.exerciseId }); throw new Response("Exercise not found", { status: 404 }); }
 
     const kind = ex.kind as ExerciseKind;
     const correct = evaluatePick(kind, ex.answer, data.pick);
