@@ -148,6 +148,7 @@ export async function getFeatureFlags() {
     maintenanceMode: s["features.maintenance_mode"],
     paymentsEnabled: s["features.payments_enabled"],
     mediaUploadsEnabled: s["features.media_uploads_enabled"],
+    sessionPlayerEnabled: s["features.session_player_enabled"],
   };
 }
 
