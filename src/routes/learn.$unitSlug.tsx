@@ -6,7 +6,7 @@ import { getUnitBySlug } from "@/lib/learning-units.functions";
 import { startSession, submitExercise, endSession, reportExercise } from "@/lib/session-player.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Flag } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/learn/$unitSlug")({
