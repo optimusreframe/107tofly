@@ -54,6 +54,7 @@ const PUBLIC_KEYS: SettingKey[] = [
   "features.maintenance_mode",
   "features.payments_enabled",
   "features.media_uploads_enabled",
+  "features.session_player_enabled",
 ];
 
 const CACHE_TTL_MS = 30_000;
