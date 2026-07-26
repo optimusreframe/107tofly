@@ -146,7 +146,24 @@ function LearnUnit() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={async () => {
+                if (!current || !unit) return;
+                const note = window.prompt("Report an issue with this exercise (optional):") ?? undefined;
+                try {
+                  await reportFn({ data: { exerciseId: current.id, unitId: unit.id, note } });
+                  toast.success("Thanks — reported");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Report failed");
+                }
+              }}
+            >
+              <Flag className="h-3.5 w-3.5 mr-1" /> Report
+            </Button>
             {!feedback ? (
               <Button onClick={commit} disabled={pick == null || submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
