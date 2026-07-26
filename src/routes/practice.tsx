@@ -28,10 +28,9 @@ interface Q {
   source: string;
   question: string;
   options: string[];
-  explanation: string;
-  common_mistake: string | null;
-  correct_index: number;
 }
+
+type SubmitResult = Awaited<ReturnType<typeof submitQuizAttempt>>;
 
 function Practice() {
   const { t, i18n } = useTranslation();
