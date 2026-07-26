@@ -277,15 +277,17 @@ export const getDueReview = createServerFn({ method: "GET" })
     const { data: mastery } = allConceptIds.length
       ? await supabase
           .from("mastery")
-          .select("concept_id,next_due_at")
+          .select("concept_id,next_due_at,level")
           .eq("user_id", userId)
           .in("concept_id", allConceptIds)
-      : { data: [] as Array<{ concept_id: string; next_due_at: string | null }> };
+      : { data: [] as Array<{ concept_id: string; next_due_at: string | null; level: number }> };
     const nowMs = Date.now();
     const dueSet = new Set<string>();
     const seenSet = new Set<string>();
+    const levelByConcept = new Map<string, number>();
     for (const m of mastery ?? []) {
       seenSet.add(m.concept_id as string);
+      levelByConcept.set(m.concept_id as string, Number(m.level ?? 0));
       if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= nowMs) {
         dueSet.add(m.concept_id as string);
       }
@@ -295,9 +297,12 @@ export const getDueReview = createServerFn({ method: "GET" })
       const ids = conceptByUnit.get(u.id as string) ?? [];
       const dueCount = ids.filter((id) => dueSet.has(id)).length;
       const newCount = ids.filter((id) => !seenSet.has(id)).length;
+      // Mastery %: average level / 5, unseen concepts count as 0.
+      const totalLevels = ids.reduce((sum, id) => sum + (levelByConcept.get(id) ?? 0), 0);
+      const masteryPct = ids.length ? Math.round((totalLevels / (ids.length * 5)) * 100) : 0;
       return {
         id: u.id, slug: u.slug, title: u.title, summary: u.summary,
-        conceptCount: ids.length, dueCount, newCount,
+        conceptCount: ids.length, dueCount, newCount, masteryPct,
       };
     });
     return { units: out };
