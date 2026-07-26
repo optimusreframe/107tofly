@@ -94,16 +94,15 @@ export const submitExercise = createServerFn({ method: "POST" })
       unitId: z.string().uuid(),
       pick: z.unknown(),
       latencyMs: z.number().min(0).max(600_000).optional(),
+      usedHint: z.boolean().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertEnabled();
     const { supabase, userId } = context;
-    // Cap answer submissions to prevent scripted brute-forcing of `answer` in responses.
     await enforceRateLimit(supabase, userId, { windowSec: 60, max: 60, kinds: ["answer"] });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Load full exercise with answer/explanation via admin (bypasses public DTO restriction).
     const { data: ex, error } = await supabaseAdmin
       .from("exercises")
       .select("id,concept_id,kind,answer,explanation")
@@ -114,7 +113,6 @@ export const submitExercise = createServerFn({ method: "POST" })
     const kind = ex.kind as ExerciseKind;
     const correct = evaluatePick(kind, ex.answer, data.pick);
 
-    // Update mastery (SM-2 lite).
     const { data: existing } = await supabase
       .from("mastery")
       .select("level,correct_streak")
@@ -143,6 +141,7 @@ export const submitExercise = createServerFn({ method: "POST" })
       kind: "answer",
       correct,
       latency_ms: data.latencyMs ?? null,
+      note: data.usedHint ? "hint" : null,
     });
 
     return {
