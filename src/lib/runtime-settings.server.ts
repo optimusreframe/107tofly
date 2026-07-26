@@ -178,4 +178,5 @@ export const RUNTIME_CONNECTED_KEYS: string[] = [
   "features.flycoach_enabled",
   "features.certificates_enabled",
   "features.maintenance_mode",
+  "features.session_player_enabled",
 ];
