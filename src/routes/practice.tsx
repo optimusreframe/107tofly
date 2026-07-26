@@ -6,7 +6,8 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { PracticeSkeleton } from "@/components/PracticeSkeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/lib/study.functions";
-import { Check, X, Sparkles, BookmarkPlus, ArrowRight } from "lucide-react";
+import { getDueReview } from "@/lib/session-player.functions";
+import { Check, X, Sparkles, BookmarkPlus, ArrowRight, Sparkle } from "lucide-react";
 
 export const Route = createFileRoute("/practice")({
   validateSearch: (s: Record<string, unknown>) => ({
