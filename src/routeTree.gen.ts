@@ -23,6 +23,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
 import { Route as FlashcardsRouteImport } from './routes/flashcards'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DailyFlightRouteImport } from './routes/daily-flight'
 import { Route as CourseRouteImport } from './routes/course'
 import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -112,6 +113,11 @@ const FlashcardsRoute = FlashcardsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DailyFlightRoute = DailyFlightRouteImport.update({
+  id: '/daily-flight',
+  path: '/daily-flight',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CourseRoute = CourseRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certificate'
     | '/course'
+    | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certificate'
     | '/course'
+    | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certificate'
     | '/course'
+    | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
@@ -442,6 +454,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
+  DailyFlightRoute: typeof DailyFlightRoute
   DashboardRoute: typeof DashboardRoute
   FlashcardsRoute: typeof FlashcardsRoute
   FlycoachRoute: typeof FlycoachRoute
@@ -560,6 +573,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daily-flight': {
+      id: '/daily-flight'
+      path: '/daily-flight'
+      fullPath: '/daily-flight'
+      preLoaderRoute: typeof DailyFlightRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/course': {
@@ -740,6 +760,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
+  DailyFlightRoute: DailyFlightRoute,
   DashboardRoute: DashboardRoute,
   FlashcardsRoute: FlashcardsRoute,
   FlycoachRoute: FlycoachRoute,
