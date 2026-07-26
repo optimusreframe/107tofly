@@ -21,6 +21,7 @@ export const ADMIN_NAV = [
   { to: "/admin", labelKey: "admin.nav.overview", icon: LayoutDashboard, ready: true },
   { to: "/admin/users", labelKey: "admin.nav.users", icon: Users, ready: true },
   { to: "/admin/lessons", labelKey: "admin.nav.lessons", icon: BookOpen, ready: true },
+  { to: "/admin/learning", labelKey: "admin.nav.learning", icon: GraduationCap, ready: true },
   { to: "/admin/questions", labelKey: "admin.nav.questions", icon: ListChecks, ready: true },
   { to: "/admin/certificates", labelKey: "admin.nav.certificates", icon: Award, ready: true },
   { to: "/admin/landing", labelKey: "admin.nav.landing", icon: Globe, ready: true },
