@@ -13,6 +13,7 @@ import {
   getAdminQuestionAnalytics,
   getAdminStudentFunnel,
 } from "@/lib/admin.functions";
+import { getEngineMetrics, type EngineMetrics } from "@/lib/admin-engine.functions";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({
@@ -38,10 +39,12 @@ function AdminAnalyticsPage() {
   const fTopics = useServerFn(getAdminTopicAnalytics);
   const fQuestions = useServerFn(getAdminQuestionAnalytics);
   const fFunnel = useServerFn(getAdminStudentFunnel);
+  const fEngine = useServerFn(getEngineMetrics);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [topics, setTopics] = useState<Topics | null>(null);
   const [questions, setQuestions] = useState<Questions | null>(null);
   const [funnel, setFunnel] = useState<Funnel | null>(null);
+  const [engine, setEngine] = useState<EngineMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,10 +53,10 @@ function AdminAnalyticsPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    Promise.all([fOverview(), fTopics(), fQuestions(), fFunnel()])
-      .then(([o, t, q, f]) => { setOverview(o); setTopics(t); setQuestions(q); setFunnel(f); })
+    Promise.all([fOverview(), fTopics(), fQuestions(), fFunnel(), fEngine()])
+      .then(([o, t, q, f, e]) => { setOverview(o); setTopics(t); setQuestions(q); setFunnel(f); setEngine(e); })
       .catch((e) => setError(e?.message ?? "Error"));
-  }, [isAdmin, fOverview, fTopics, fQuestions, fFunnel]);
+  }, [isAdmin, fOverview, fTopics, fQuestions, fFunnel, fEngine]);
 
   if (authLoading || rolesLoading) {
     return <AdminAppShell><div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div></AdminAppShell>;
@@ -131,6 +134,61 @@ function AdminAnalyticsPage() {
             </div>
           )}
         </section>
+
+        {/* Learning Engine 2.0 metrics */}
+        <section className="mb-8">
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Learning Engine 2.0</h2>
+          {!engine ? (
+            <div className="text-sm text-muted-foreground">{t("common.loading")}</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                {[
+                  { label: "Units (published)", value: `${engine.publishedUnits}/${engine.totalUnits}` },
+                  { label: "Concepts", value: engine.totalConcepts },
+                  { label: "Exercises", value: engine.totalExercises },
+                  { label: "Active learners 7d", value: engine.activeLearners7d },
+                  { label: "Answers 7d", value: engine.answers7d },
+                  { label: "Correct rate 7d", value: `${engine.correctRate7d}%` },
+                  { label: "Mastery rows", value: engine.totalMasteryRows },
+                  { label: "Mastered concepts", value: engine.masteredConcepts },
+                  { label: "Open feedback", value: engine.feedbackOpen },
+                ].map((c) => (
+                  <div key={c.label} className="rounded-2xl border border-border bg-card/60 p-4">
+                    <div className="font-display text-2xl font-semibold">{c.value}</div>
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{c.label}</div>
+                  </div>
+                ))}
+              </div>
+              {engine.topReported.length > 0 && (
+                <div className="mt-4 overflow-x-auto rounded-2xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Exercise</th>
+                        <th className="px-3 py-2 text-left">Kind</th>
+                        <th className="px-3 py-2 text-left">Concept</th>
+                        <th className="px-3 py-2 text-right">Reports</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {engine.topReported.map((r) => (
+                        <tr key={r.exerciseId} className="border-t border-border">
+                          <td className="px-3 py-2 font-mono text-xs">{r.exerciseId.slice(0, 8)}…</td>
+                          <td className="px-3 py-2">{r.kind ?? "—"}</td>
+                          <td className="px-3 py-2">{r.conceptTitle ?? "—"}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{r.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+
 
         {/* Funnel */}
         <section className="mb-8">

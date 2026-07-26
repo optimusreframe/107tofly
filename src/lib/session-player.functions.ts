@@ -5,6 +5,7 @@ import { evaluatePick, type ExerciseKind } from "./session-eval.server";
 import { nextDueAt, nextLevel, MAX_LEVEL } from "./srs";
 import { getFeatureFlags, getStudySettings } from "./runtime-settings.server";
 import { touchDailyActivity } from "./streak.server";
+import { enforceRateLimit } from "./rate-limit.server";
 
 // Public DTO — never expose `answer` or `explanation` before submit.
 const PUBLIC_EXERCISE_COLS = "id,concept_id,kind,payload,difficulty,locale";
@@ -98,6 +99,8 @@ export const submitExercise = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertEnabled();
     const { supabase, userId } = context;
+    // Cap answer submissions to prevent scripted brute-forcing of `answer` in responses.
+    await enforceRateLimit(supabase, userId, { windowSec: 60, max: 60, kinds: ["answer"] });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Load full exercise with answer/explanation via admin (bypasses public DTO restriction).
@@ -204,6 +207,7 @@ export const reportExercise = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertEnabled();
     const { supabase, userId } = context;
+    await enforceRateLimit(supabase, userId, { windowSec: 300, max: 10, kinds: ["feedback"] });
     const { data: ex } = await supabase
       .from("exercises")
       .select("id,concept_id")
@@ -362,6 +366,7 @@ export const submitDailyFlightExercise = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertEnabled();
     const { supabase, userId } = context;
+    await enforceRateLimit(supabase, userId, { windowSec: 60, max: 60, kinds: ["answer"] });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: ex, error } = await supabaseAdmin
