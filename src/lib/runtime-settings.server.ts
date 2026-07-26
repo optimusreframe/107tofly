@@ -29,6 +29,7 @@ export const SETTING_DEFAULTS = {
   "features.maintenance_mode": false,
   "features.payments_enabled": false,
   "features.media_uploads_enabled": false,
+  "features.session_player_enabled": false,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
