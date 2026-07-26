@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/lib/study.functions";
 import { getDueReview } from "@/lib/session-player.functions";
 import { Check, X, Sparkles, BookmarkPlus, ArrowRight, Sparkle } from "lucide-react";
+import { MasteryRing } from "@/components/MasteryRing";
 
 export const Route = createFileRoute("/practice")({
   validateSearch: (s: Record<string, unknown>) => ({
