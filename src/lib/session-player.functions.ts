@@ -191,3 +191,90 @@ export const endSession = createServerFn({ method: "POST" })
 
     return { total, correct, score, passed, xpAwarded: xp };
   });
+
+export const reportExercise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      exerciseId: z.string().uuid(),
+      unitId: z.string().uuid().optional(),
+      note: z.string().max(500).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertEnabled();
+    const { supabase, userId } = context;
+    const { data: ex } = await supabase
+      .from("exercises")
+      .select("id,concept_id")
+      .eq("id", data.exerciseId)
+      .maybeSingle();
+    if (!ex) throw new Response("Exercise not found", { status: 404 });
+    await supabase.from("session_events").insert({
+      user_id: userId,
+      unit_id: data.unitId ?? null,
+      concept_id: ex.concept_id as string,
+      exercise_id: ex.id as string,
+      kind: "feedback",
+      note: data.note ?? null,
+    });
+    return { ok: true };
+  });
+
+// Adaptive review: list published units with due-concept counts for this user.
+export const getDueReview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertEnabled();
+    const { supabase, userId } = context;
+    const locale = "en"; // client can pass locale later; keep simple
+    const { data: units } = await supabase
+      .from("learning_units")
+      .select("id,slug,locale,title,summary,order_index")
+      .eq("status", "published")
+      .eq("locale", locale)
+      .order("order_index", { ascending: true });
+    const unitList = units ?? [];
+    if (unitList.length === 0) return { units: [] as Array<any> };
+
+    const unitIds = unitList.map((u) => u.id as string);
+    const { data: concepts } = await supabase
+      .from("concepts")
+      .select("id,unit_id")
+      .in("unit_id", unitIds);
+    const conceptByUnit = new Map<string, string[]>();
+    for (const c of concepts ?? []) {
+      const arr = conceptByUnit.get(c.unit_id as string) ?? [];
+      arr.push(c.id as string);
+      conceptByUnit.set(c.unit_id as string, arr);
+    }
+    const allConceptIds = (concepts ?? []).map((c) => c.id as string);
+
+    const { data: mastery } = allConceptIds.length
+      ? await supabase
+          .from("mastery")
+          .select("concept_id,next_due_at")
+          .eq("user_id", userId)
+          .in("concept_id", allConceptIds)
+      : { data: [] as Array<{ concept_id: string; next_due_at: string | null }> };
+    const nowMs = Date.now();
+    const dueSet = new Set<string>();
+    const seenSet = new Set<string>();
+    for (const m of mastery ?? []) {
+      seenSet.add(m.concept_id as string);
+      if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= nowMs) {
+        dueSet.add(m.concept_id as string);
+      }
+    }
+
+    const out = unitList.map((u) => {
+      const ids = conceptByUnit.get(u.id as string) ?? [];
+      const dueCount = ids.filter((id) => dueSet.has(id)).length;
+      const newCount = ids.filter((id) => !seenSet.has(id)).length;
+      return {
+        id: u.id, slug: u.slug, title: u.title, summary: u.summary,
+        conceptCount: ids.length, dueCount, newCount,
+      };
+    });
+    return { units: out };
+  });
