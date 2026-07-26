@@ -381,6 +381,7 @@ export const submitDailyFlightExercise = createServerFn({ method: "POST" })
       exerciseId: z.string().uuid(),
       pick: z.unknown(),
       latencyMs: z.number().min(0).max(600_000).optional(),
+      usedHint: z.boolean().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -428,7 +429,7 @@ export const submitDailyFlightExercise = createServerFn({ method: "POST" })
       kind: "answer",
       correct,
       latency_ms: data.latencyMs ?? null,
-      note: DAILY_FLIGHT_MARK,
+      note: data.usedHint ? `${DAILY_FLIGHT_MARK}:hint` : DAILY_FLIGHT_MARK,
     });
 
     return {
@@ -458,23 +459,41 @@ export const endDailyFlight = createServerFn({ method: "POST" })
 
     const { data: answers } = await supabase
       .from("session_events")
-      .select("correct")
+      .select("correct,note,concept_id")
       .eq("user_id", userId)
       .eq("kind", "answer")
-      .eq("note", DAILY_FLIGHT_MARK)
+      .in("note", [DAILY_FLIGHT_MARK, `${DAILY_FLIGHT_MARK}:hint`])
       .gte("created_at", since);
-    const total = answers?.length ?? 0;
-    const correct = (answers ?? []).filter((a) => a.correct === true).length;
+    const list = answers ?? [];
+    const total = list.length;
+    const correct = list.filter((a) => a.correct === true).length;
+    const hintCount = list.filter((a) => (a.note as string) === `${DAILY_FLIGHT_MARK}:hint`).length;
     const score = total > 0 ? Math.round((correct / total) * 100) : 0;
 
     const { lessonQuizPassXp, quizPassScore } = await getStudySettings();
     const passed = score >= Number(quizPassScore ?? 70);
-    const xp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
+    const baseXp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
+    const penaltyFactor = Math.max(0, 1 - 0.25 * hintCount);
+    const xp = Math.round(baseXp * penaltyFactor);
+
+    const conceptIds = Array.from(new Set(list.map((a) => a.concept_id as string).filter(Boolean)));
+    let conceptsDueSoon = 0;
+    if (conceptIds.length) {
+      const { data: mrows } = await supabase
+        .from("mastery")
+        .select("next_due_at")
+        .eq("user_id", userId)
+        .in("concept_id", conceptIds);
+      const soonMs = Date.now() + 24 * 60 * 60_000;
+      for (const m of mrows ?? []) {
+        if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= soonMs) conceptsDueSoon++;
+      }
+    }
 
     await supabase.from("session_events").insert({
       user_id: userId, unit_id: null, kind: "end", correct: passed, note: DAILY_FLIGHT_MARK,
     });
     if (total > 0) await touchDailyActivity(supabase, userId);
 
-    return { total, correct, score, passed, xpAwarded: xp };
+    return { total, correct, score, passed, xpAwarded: xp, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon };
   });
