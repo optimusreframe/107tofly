@@ -39,24 +39,22 @@ export const upsertAdminUnit = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const patch = {
+      slug: data.slug, locale: data.locale, title: data.title, summary: data.summary,
+      order_index: data.order_index, status: data.status,
+      translation_group_id: data.translation_group_id ?? null,
+    } as never;
     if (data.id) {
       const { data: row, error } = await supabaseAdmin
-        .from("learning_units").update({
-          slug: data.slug, locale: data.locale, title: data.title, summary: data.summary,
-          order_index: data.order_index, status: data.status,
-          translation_group_id: data.translation_group_id ?? null,
-        }).eq("id", data.id).select().single();
+        .from("learning_units").update(patch).eq("id", data.id).select().single();
       if (error) throw error;
       return { unit: row };
     }
     const { data: row, error } = await supabaseAdmin
-      .from("learning_units").insert({
-        slug: data.slug, locale: data.locale, title: data.title, summary: data.summary,
-        order_index: data.order_index, status: data.status,
-        translation_group_id: data.translation_group_id ?? null,
-      }).select().single();
+      .from("learning_units").insert(patch).select().single();
     if (error) throw error;
     return { unit: row };
+
   });
 
 export const deleteAdminUnit = createServerFn({ method: "POST" })
