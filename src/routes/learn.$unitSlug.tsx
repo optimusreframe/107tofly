@@ -3,7 +3,7 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getUnitBySlug } from "@/lib/learning-units.functions";
-import { startSession, submitExercise, endSession } from "@/lib/session-player.functions";
+import { startSession, submitExercise, endSession, reportExercise } from "@/lib/session-player.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
