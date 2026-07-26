@@ -12,7 +12,7 @@ const TOPICS = ["regulations","airspace","sectional","weather","performance","op
 // Sensitive fields are only returned by the *submit* endpoints, after the user commits picks.
 const PUBLIC_QUESTION_COLS = "id,topic,acs_code,source,question,options,locale,translation_group_id";
 
-// ============ FETCH PRACTICE QUESTIONS ============
+// ============ FETCH PRACTICE QUESTIONS (public DTO, no answers) ============
 export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
@@ -23,9 +23,8 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const locale = data.locale ?? "en";
-    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale,translation_group_id";
     const buildQ = (loc: "en"|"es") => {
-      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale", loc).limit(data.limit);
+      let q = supabase.from("questions").select(PUBLIC_QUESTION_COLS).eq("status","published").eq("locale", loc).limit(data.limit);
       if (data.topic) q = q.eq("topic", data.topic);
       return q;
     };
@@ -38,7 +37,7 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
     }
     if (rows.length < data.limit) {
       const need = data.limit - rows.length;
-      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale","en").limit(need * 2);
+      let q = supabase.from("questions").select(PUBLIC_QUESTION_COLS).eq("status","published").eq("locale","en").limit(need * 2);
       if (data.topic) q = q.eq("topic", data.topic);
       const r = await q;
       if (r.error) throw r.error;
