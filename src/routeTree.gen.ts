@@ -32,6 +32,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LessonsIndexRouteImport } from './routes/lessons.index'
 import { Route as VerifyIdRouteImport } from './routes/verify.$id'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
+import { Route as LearnUnitSlugRouteImport } from './routes/learn.$unitSlug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
@@ -156,6 +157,11 @@ const LessonsSlugRoute = LessonsSlugRouteImport.update({
   path: '/lessons/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnUnitSlugRoute = LearnUnitSlugRouteImport.update({
+  id: '/learn/$unitSlug',
+  path: '/learn/$unitSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/learn/$unitSlug': typeof LearnUnitSlugRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
   '/lessons/': typeof LessonsIndexRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/learn/$unitSlug': typeof LearnUnitSlugRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
   '/lessons': typeof LessonsIndexRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/learn/$unitSlug': typeof LearnUnitSlugRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/verify/$id': typeof VerifyIdRoute
   '/lessons/': typeof LessonsIndexRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/questions'
     | '/admin/settings'
     | '/admin/users'
+    | '/learn/$unitSlug'
     | '/lessons/$slug'
     | '/verify/$id'
     | '/lessons/'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/admin/questions'
     | '/admin/settings'
     | '/admin/users'
+    | '/learn/$unitSlug'
     | '/lessons/$slug'
     | '/verify/$id'
     | '/lessons'
@@ -394,6 +405,7 @@ export interface FileRouteTypes {
     | '/admin/questions'
     | '/admin/settings'
     | '/admin/users'
+    | '/learn/$unitSlug'
     | '/lessons/$slug'
     | '/verify/$id'
     | '/lessons/'
@@ -420,6 +432,7 @@ export interface RootRouteChildren {
   SimulatorRoute: typeof SimulatorRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WeatherLabRoute: typeof WeatherLabRoute
+  LearnUnitSlugRoute: typeof LearnUnitSlugRoute
   LessonsSlugRoute: typeof LessonsSlugRoute
   VerifyIdRoute: typeof VerifyIdRoute
   LessonsIndexRoute: typeof LessonsIndexRoute
@@ -588,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LessonsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/$unitSlug': {
+      id: '/learn/$unitSlug'
+      path: '/learn/$unitSlug'
+      fullPath: '/learn/$unitSlug'
+      preLoaderRoute: typeof LearnUnitSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -692,6 +712,7 @@ const rootRouteChildren: RootRouteChildren = {
   SimulatorRoute: SimulatorRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WeatherLabRoute: WeatherLabRoute,
+  LearnUnitSlugRoute: LearnUnitSlugRoute,
   LessonsSlugRoute: LessonsSlugRoute,
   VerifyIdRoute: VerifyIdRoute,
   LessonsIndexRoute: LessonsIndexRoute,
@@ -699,12 +720,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
