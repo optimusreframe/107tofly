@@ -67,15 +67,19 @@ export const submitQuizAttempt = createServerFn({ method: "POST" })
     answers: z.array(z.object({
       question_id: z.string().uuid(),
       selected_index: z.number().min(0).max(10),
-      is_correct: z.boolean(),
+      // is_correct from client is IGNORED (kept optional for backward compat).
+      is_correct: z.boolean().optional(),
       time_ms: z.number().optional(),
     })).min(1).max(120),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const total = data.answers.length;
-    const correct = data.answers.filter(a => a.is_correct).length;
-    const score = (correct / total) * 100;
+    // Server-side authoritative evaluation — client is_correct is discarded.
+    const evaluation = await evaluateAttempt(supabase, data.answers.map((a) => ({
+      question_id: a.question_id,
+      selected_index: a.selected_index,
+    })));
+    const { total, correct, score, results } = evaluation;
 
     const { data: attempt, error: aerr } = await supabase
       .from("quiz_attempts")
@@ -91,20 +95,21 @@ export const submitQuizAttempt = createServerFn({ method: "POST" })
       .single();
     if (aerr || !attempt) throw aerr ?? new Error("attempt insert failed");
 
-    const rows = data.answers.map(a => ({
+    const timeById = new Map(data.answers.map((a) => [a.question_id, a.time_ms]));
+    const rows = results.map((r) => ({
       attempt_id: attempt.id,
       user_id: userId,
-      question_id: a.question_id,
-      selected_index: a.selected_index,
-      is_correct: a.is_correct,
-      time_ms: a.time_ms,
+      question_id: r.question_id,
+      selected_index: r.selected_index,
+      is_correct: r.is_correct,
+      time_ms: timeById.get(r.question_id),
     }));
     await supabase.from("quiz_answers").insert(rows);
 
     // recompute progress
     await recomputeProgress(supabase, userId);
 
-    return { attempt_id: attempt.id, score, correct, total };
+    return { attempt_id: attempt.id, score, correct, total, results };
   });
 
 // ============ COMPLETE LESSON ============
