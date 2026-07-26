@@ -178,48 +178,4 @@ function LearnUnit() {
   );
 }
 
-function ExerciseView({ ex, pick, setPick, disabled }: { ex: Ex; pick: any; setPick: (v: any) => void; disabled: boolean }) {
-  const p = ex.payload ?? {};
-  if (ex.kind === "mcq") {
-    const prompt: string = p.prompt ?? p.question ?? "";
-    const options: string[] = Array.isArray(p.options) ? p.options : [];
-    return (
-      <div>
-        <div className="text-base font-medium mb-3">{prompt}</div>
-        <div className="grid gap-2">
-          {options.map((opt, i) => {
-            const selected = pick === i;
-            return (
-              <button
-                key={i}
-                type="button"
-                disabled={disabled}
-                onClick={() => setPick(i)}
-                className={`text-left rounded-lg border p-3 text-sm transition ${selected ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"} disabled:opacity-70`}
-              >
-                {opt}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-  if (ex.kind === "cloze") {
-    const prompt: string = p.prompt ?? "";
-    return (
-      <div>
-        <div className="text-base font-medium mb-3">{prompt}</div>
-        <input
-          type="text"
-          disabled={disabled}
-          value={typeof pick === "string" ? pick : ""}
-          onChange={(e) => setPick(e.target.value)}
-          className="w-full rounded-md border bg-background p-2 text-sm"
-          placeholder="Type your answer"
-        />
-      </div>
-    );
-  }
-  return <div className="text-sm text-muted-foreground">Unsupported exercise kind: {ex.kind}</div>;
-}
+import { ExerciseView } from "@/components/ExerciseView";
