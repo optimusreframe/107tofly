@@ -12,7 +12,7 @@ import {
   publishAdminLandingSection,
   archiveAdminLandingSection,
   duplicateAdminLandingSection,
-} from "@/server/admin.functions";
+} from "@/lib/admin.functions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

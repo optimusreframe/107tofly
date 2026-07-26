@@ -6,7 +6,7 @@ import { Loader2, Save, RotateCcw, AlertTriangle } from "lucide-react";
 import { AdminAppShell } from "@/components/layouts/AdminAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-role";
-import { getAdminSettings, updateAdminSettingsBulk } from "@/server/admin.functions";
+import { getAdminSettings, updateAdminSettingsBulk } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

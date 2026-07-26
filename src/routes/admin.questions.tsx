@@ -13,13 +13,13 @@ import {
   updateAdminQuestion,
   archiveAdminQuestion,
   duplicateAdminQuestion,
-} from "@/server/admin.functions";
+} from "@/lib/admin.functions";
 import {
   generateQuestionSpanishDraft,
   saveQuestionSpanishTranslation,
   publishQuestionTranslation,
   markQuestionTranslationReviewed,
-} from "@/server/admin-translations.functions";
+} from "@/lib/admin-translations.functions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -12,7 +12,7 @@ import {
   getAdminCertificateDetail,
   revokeAdminCertificate,
   reissueAdminCertificate,
-} from "@/server/admin.functions";
+} from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

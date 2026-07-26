@@ -3,7 +3,7 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useState, useEffect } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { saveOnboarding } from "@/server/study.functions";
+import { saveOnboarding } from "@/lib/study.functions";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/onboarding")({

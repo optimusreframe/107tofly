@@ -7,8 +7,8 @@ import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock } from "lucide-rea
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { LessonDetailSkeleton } from "@/components/LessonDetailSkeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { getLesson, getLessons } from "@/server/lessons.functions";
-import { completeLesson } from "@/server/study.functions";
+import { getLesson, getLessons } from "@/lib/lessons.functions";
+import { completeLesson } from "@/lib/study.functions";
 import { LessonDailyQuiz } from "@/components/LessonDailyQuiz";
 
 type LessonResp = Awaited<ReturnType<typeof getLesson>>;

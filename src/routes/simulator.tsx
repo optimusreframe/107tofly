@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchPracticeQuestions, submitExamSimulation } from "@/server/study.functions";
+import { fetchPracticeQuestions, submitExamSimulation } from "@/lib/study.functions";
 import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { Clock, Target, ListChecks, ArrowRight, ArrowLeft, Flag, Sparkles } from "lucide-react";
 

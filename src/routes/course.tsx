@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { CheckCircle2, Lock, PlayCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getLessons } from "@/server/lessons.functions";
+import { getLessons } from "@/lib/lessons.functions";
 
 type Lesson = Awaited<ReturnType<typeof getLessons>>[number];
 
