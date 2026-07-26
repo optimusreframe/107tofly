@@ -236,8 +236,13 @@ function SessionPlayerEntry() {
   if (!loaded || units.length === 0) return null;
   return (
     <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
-        <Sparkle className="h-3.5 w-3.5" /> Session Player · Adaptive review
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
+          <Sparkle className="h-3.5 w-3.5" /> Session Player · Adaptive review
+        </div>
+        <Link to="/daily-flight" className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20">
+          <Sparkle className="h-3 w-3" /> Daily Flight <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
       <div className="mt-3 grid gap-2 md:grid-cols-2">
         {units.map((u) => (
