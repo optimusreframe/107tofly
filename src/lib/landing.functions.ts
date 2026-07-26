@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const getPublicLandingSections = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ locale: z.enum(["en", "es"]) }).parse(d))
