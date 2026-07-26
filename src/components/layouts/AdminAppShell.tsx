@@ -13,6 +13,7 @@ import {
   Shield,
   ArrowLeft,
   GraduationCap,
+  MessageSquareWarning,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDeviceMode } from "@/hooks/use-device-mode";
