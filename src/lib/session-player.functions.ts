@@ -278,3 +278,178 @@ export const getDueReview = createServerFn({ method: "GET" })
     });
     return { units: out };
   });
+
+// ---------- Daily Flight (cross-unit adaptive mini-session) ----------
+const DAILY_FLIGHT_SIZE = 6;
+const DAILY_FLIGHT_MARK = "daily_flight";
+
+export const startDailyFlight = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertEnabled();
+    const { supabase, userId } = context;
+
+    // Pull all published units + concepts (respect locale later if needed).
+    const { data: units } = await supabase
+      .from("learning_units")
+      .select("id,locale")
+      .eq("status", "published");
+    const unitIds = (units ?? []).map((u) => u.id as string);
+    if (unitIds.length === 0) return { exercises: [] as Array<Record<string, any>> };
+
+    const { data: concepts } = await supabase
+      .from("concepts")
+      .select("id,unit_id")
+      .in("unit_id", unitIds);
+    const conceptIds = (concepts ?? []).map((c) => c.id as string);
+    if (conceptIds.length === 0) return { exercises: [] as Array<Record<string, any>> };
+
+    const { data: mastery } = await supabase
+      .from("mastery")
+      .select("concept_id,next_due_at,level")
+      .eq("user_id", userId)
+      .in("concept_id", conceptIds);
+    const nowMs = Date.now();
+    const levelBy = new Map<string, number>();
+    const dueSet = new Set<string>();
+    const seenSet = new Set<string>();
+    for (const m of mastery ?? []) {
+      const cid = m.concept_id as string;
+      seenSet.add(cid);
+      levelBy.set(cid, Number(m.level ?? 0));
+      if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= nowMs) dueSet.add(cid);
+    }
+
+    // Priority: due → weakest (lowest level, seen) → new/unseen.
+    const dueIds = conceptIds.filter((id) => dueSet.has(id));
+    const weakIds = conceptIds
+      .filter((id) => seenSet.has(id) && !dueSet.has(id))
+      .sort((a, b) => (levelBy.get(a) ?? 0) - (levelBy.get(b) ?? 0));
+    const newIds = conceptIds.filter((id) => !seenSet.has(id));
+    const pickIds = [...dueIds, ...weakIds, ...newIds].slice(0, DAILY_FLIGHT_SIZE);
+
+    const { data: exs } = await supabase
+      .from("exercises")
+      .select(`${PUBLIC_EXERCISE_COLS},concepts(unit_id)`)
+      .in("concept_id", pickIds);
+
+    const byConcept = new Map<string, Record<string, any>>();
+    for (const e of exs ?? []) {
+      const cid = (e as any).concept_id as string;
+      if (!byConcept.has(cid)) {
+        const unit_id = ((e as any).concepts as { unit_id: string } | null)?.unit_id ?? null;
+        byConcept.set(cid, { ...e, unit_id });
+      }
+    }
+    const exercises = pickIds.map((id) => byConcept.get(id)).filter(Boolean) as Array<Record<string, any>>;
+
+    await supabase.from("session_events").insert({
+      user_id: userId, unit_id: null, kind: "start", note: DAILY_FLIGHT_MARK,
+    });
+
+    return { exercises };
+  });
+
+export const submitDailyFlightExercise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      exerciseId: z.string().uuid(),
+      pick: z.unknown(),
+      latencyMs: z.number().min(0).max(600_000).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertEnabled();
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: ex, error } = await supabaseAdmin
+      .from("exercises")
+      .select("id,concept_id,kind,answer,explanation,concepts(unit_id)")
+      .eq("id", data.exerciseId)
+      .maybeSingle();
+    if (error || !ex) throw new Response("Exercise not found", { status: 404 });
+
+    const kind = ex.kind as ExerciseKind;
+    const correct = evaluatePick(kind, ex.answer, data.pick);
+    const unitId = ((ex as any).concepts as { unit_id: string } | null)?.unit_id ?? null;
+
+    const { data: existing } = await supabase
+      .from("mastery")
+      .select("level,correct_streak")
+      .eq("user_id", userId)
+      .eq("concept_id", ex.concept_id as string)
+      .maybeSingle();
+    const prevLevel = Number(existing?.level ?? 0);
+    const prevStreak = Number(existing?.correct_streak ?? 0);
+    const newLevel = nextLevel(prevLevel, correct);
+    const newStreak = correct ? Math.min(999, prevStreak + 1) : 0;
+    const due = nextDueAt(newLevel);
+    await supabase.from("mastery").upsert({
+      user_id: userId,
+      concept_id: ex.concept_id as string,
+      level: newLevel,
+      correct_streak: newStreak,
+      last_seen_at: new Date().toISOString(),
+      next_due_at: due.toISOString(),
+    });
+
+    await supabase.from("session_events").insert({
+      user_id: userId,
+      unit_id: unitId,
+      concept_id: ex.concept_id as string,
+      exercise_id: ex.id as string,
+      kind: "answer",
+      correct,
+      latency_ms: data.latencyMs ?? null,
+      note: DAILY_FLIGHT_MARK,
+    });
+
+    return {
+      correct,
+      explanation: ex.explanation ?? null,
+      answer: ex.answer,
+      mastery: { level: newLevel, prevLevel, nextDueAt: due.toISOString(), maxLevel: MAX_LEVEL },
+    };
+  });
+
+export const endDailyFlight = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertEnabled();
+    const { supabase, userId } = context;
+
+    const { data: startEv } = await supabase
+      .from("session_events")
+      .select("created_at")
+      .eq("user_id", userId)
+      .eq("kind", "start")
+      .eq("note", DAILY_FLIGHT_MARK)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const since = (startEv?.created_at as string | undefined) ?? new Date(Date.now() - 60 * 60_000).toISOString();
+
+    const { data: answers } = await supabase
+      .from("session_events")
+      .select("correct")
+      .eq("user_id", userId)
+      .eq("kind", "answer")
+      .eq("note", DAILY_FLIGHT_MARK)
+      .gte("created_at", since);
+    const total = answers?.length ?? 0;
+    const correct = (answers ?? []).filter((a) => a.correct === true).length;
+    const score = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+    const { lessonQuizPassXp, quizPassScore } = await getStudySettings();
+    const passed = score >= Number(quizPassScore ?? 70);
+    const xp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
+
+    await supabase.from("session_events").insert({
+      user_id: userId, unit_id: null, kind: "end", correct: passed, note: DAILY_FLIGHT_MARK,
+    });
+    if (total > 0) await touchDailyActivity(supabase, userId);
+
+    return { total, correct, score, passed, xpAwarded: xp };
+  });
