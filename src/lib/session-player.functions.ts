@@ -6,6 +6,7 @@ import { nextDueAt, nextLevel, MAX_LEVEL } from "./srs";
 import { getFeatureFlags, getStudySettings } from "./runtime-settings.server";
 import { touchDailyActivity } from "./streak.server";
 import { enforceRateLimit } from "./rate-limit.server";
+import { logger } from "./logger.server";
 
 // Public DTO — never expose `answer` or `explanation` before submit.
 const PUBLIC_EXERCISE_COLS = "id,concept_id,kind,payload,difficulty,locale";
@@ -51,16 +52,21 @@ export const startSession = createServerFn({ method: "POST" })
     const nowMs = Date.now();
     const dueSet = new Set<string>();
     const seen = new Set<string>();
+    const levelBy = new Map<string, number>();
     for (const m of mastery ?? []) {
-      seen.add(m.concept_id as string);
+      const cid = m.concept_id as string;
+      seen.add(cid);
+      levelBy.set(cid, Number(m.level ?? 0));
       if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= nowMs) {
-        dueSet.add(m.concept_id as string);
+        dueSet.add(cid);
       }
     }
+    // Within each bucket, weakest concept (lowest level) first — adaptive priority.
+    const byLevelAsc = (a: string, b: string) => (levelBy.get(a) ?? 0) - (levelBy.get(b) ?? 0);
     const prioritized: string[] = [
-      ...conceptIds.filter((id) => dueSet.has(id)),
+      ...conceptIds.filter((id) => dueSet.has(id)).sort(byLevelAsc),
       ...conceptIds.filter((id) => !seen.has(id)),
-      ...conceptIds.filter((id) => seen.has(id) && !dueSet.has(id)),
+      ...conceptIds.filter((id) => seen.has(id) && !dueSet.has(id)).sort(byLevelAsc),
     ];
 
     const pickConceptIds = prioritized.slice(0, SESSION_SIZE);
@@ -108,7 +114,7 @@ export const submitExercise = createServerFn({ method: "POST" })
       .select("id,concept_id,kind,answer,explanation")
       .eq("id", data.exerciseId)
       .maybeSingle();
-    if (error || !ex) throw new Response("Exercise not found", { status: 404 });
+    if (error || !ex) { logger.warn("submitExercise.notfound", { exerciseId: data.exerciseId }); throw new Response("Exercise not found", { status: 404 }); }
 
     const kind = ex.kind as ExerciseKind;
     const correct = evaluatePick(kind, ex.answer, data.pick);
@@ -277,15 +283,17 @@ export const getDueReview = createServerFn({ method: "GET" })
     const { data: mastery } = allConceptIds.length
       ? await supabase
           .from("mastery")
-          .select("concept_id,next_due_at")
+          .select("concept_id,next_due_at,level")
           .eq("user_id", userId)
           .in("concept_id", allConceptIds)
-      : { data: [] as Array<{ concept_id: string; next_due_at: string | null }> };
+      : { data: [] as Array<{ concept_id: string; next_due_at: string | null; level: number }> };
     const nowMs = Date.now();
     const dueSet = new Set<string>();
     const seenSet = new Set<string>();
+    const levelByConcept = new Map<string, number>();
     for (const m of mastery ?? []) {
       seenSet.add(m.concept_id as string);
+      levelByConcept.set(m.concept_id as string, Number(m.level ?? 0));
       if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= nowMs) {
         dueSet.add(m.concept_id as string);
       }
@@ -295,9 +303,12 @@ export const getDueReview = createServerFn({ method: "GET" })
       const ids = conceptByUnit.get(u.id as string) ?? [];
       const dueCount = ids.filter((id) => dueSet.has(id)).length;
       const newCount = ids.filter((id) => !seenSet.has(id)).length;
+      // Mastery %: average level / 5, unseen concepts count as 0.
+      const totalLevels = ids.reduce((sum, id) => sum + (levelByConcept.get(id) ?? 0), 0);
+      const masteryPct = ids.length ? Math.round((totalLevels / (ids.length * 5)) * 100) : 0;
       return {
         id: u.id, slug: u.slug, title: u.title, summary: u.summary,
-        conceptCount: ids.length, dueCount, newCount,
+        conceptCount: ids.length, dueCount, newCount, masteryPct,
       };
     });
     return { units: out };

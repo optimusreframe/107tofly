@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/lib/study.functions";
 import { getDueReview } from "@/lib/session-player.functions";
 import { Check, X, Sparkles, BookmarkPlus, ArrowRight, Sparkle } from "lucide-react";
+import { MasteryRing } from "@/components/MasteryRing";
 
 export const Route = createFileRoute("/practice")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -215,7 +216,7 @@ function Practice() {
   );
 }
 
-type DueUnit = { id: string; slug: string; title: string; summary: string | null; conceptCount: number; dueCount: number; newCount: number };
+type DueUnit = { id: string; slug: string; title: string; summary: string | null; conceptCount: number; dueCount: number; newCount: number; masteryPct: number };
 
 function SessionPlayerEntry() {
   const fetchDue = useServerFn(getDueReview);
@@ -250,18 +251,21 @@ function SessionPlayerEntry() {
             key={u.id}
             to="/learn/$unitSlug"
             params={{ unitSlug: u.slug }}
-            className="rounded-xl border border-border bg-card/70 p-3 text-left transition hover:border-primary/50 hover:bg-card"
+            className="flex items-center gap-3 rounded-xl border border-border bg-card/70 p-3 text-left transition hover:border-primary/50 hover:bg-card"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{u.title}</span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              {u.dueCount > 0
-                ? `${u.dueCount} due for review`
-                : u.newCount > 0
-                ? `${u.newCount} new concepts`
-                : "All caught up"}
+            <MasteryRing pct={u.masteryPct} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="truncate text-sm font-medium">{u.title}</span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {u.dueCount > 0
+                  ? `${u.dueCount} due for review`
+                  : u.newCount > 0
+                  ? `${u.newCount} new concepts`
+                  : "All caught up"}
+              </div>
             </div>
           </Link>
         ))}
