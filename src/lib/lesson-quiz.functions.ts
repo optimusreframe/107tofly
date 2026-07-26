@@ -3,20 +3,22 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
 import { getStudySettings } from "./runtime-settings.server";
+import { evaluateAttempt } from "./quiz-eval.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
 const QUIZ_SIZE = 6;
 
-type QuestionRow = {
+// Public question DTO — NO correct_index, NO explanation, NO common_mistake.
+// Sensitive fields only ship from submitLessonQuizAttempt's results[] after the user commits.
+const PUBLIC_COLS = "id,topic,acs_code,source,question,options,locale,translation_group_id";
+
+type PublicQuestionRow = {
   id: string;
   topic: string;
   acs_code: string | null;
   source: string | null;
   question: string;
   options: string[];
-  explanation: string;
-  common_mistake: string | null;
-  correct_index: number;
   locale: string;
   translation_group_id: string | null;
 };
