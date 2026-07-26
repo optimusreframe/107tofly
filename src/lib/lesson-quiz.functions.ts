@@ -58,19 +58,18 @@ export const getLessonQuiz = createServerFn({ method: "POST" })
     const topic = (lesson.topic as string | null) ?? null;
     if (!topic) return { lesson: { id: lesson.id, slug: lesson.slug, topic: null }, questions: [], fallback: false, topic: null };
 
-    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale,translation_group_id";
     const fetchByLocale = async (loc: "en" | "es") => {
       const { data: rows, error } = await supabase
         .from("questions")
-        .select(cols)
+        .select(PUBLIC_COLS)
         .eq("status", "published")
         .eq("topic", topic as (typeof TOPICS)[number])
         .eq("locale", loc);
       if (error) throw error;
-      return (rows ?? []) as unknown as QuestionRow[];
+      return (rows ?? []) as unknown as PublicQuestionRow[];
     };
 
-    let rows: QuestionRow[] = [];
+    let rows: PublicQuestionRow[] = [];
     let fallback = false;
     if (locale !== "en") {
       rows = await fetchByLocale(locale);
