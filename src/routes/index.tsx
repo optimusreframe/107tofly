@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { QuizDemo } from "@/components/QuizDemo";
-import { getPublicLandingSections } from "@/server/admin.functions";
+import { getPublicLandingSections } from "@/lib/landing.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
