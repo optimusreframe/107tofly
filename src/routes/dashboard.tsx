@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { getDashboardBundle, type DashboardBundle } from "@/server/dashboard-bundle.functions";
-import type { ActivityItem } from "@/server/student-settings.functions";
+import { getDashboardBundle, type DashboardBundle } from "@/lib/dashboard-bundle.functions";
+import type { ActivityItem } from "@/lib/student-settings.functions";
 import {
   Flame,
   Sparkles,

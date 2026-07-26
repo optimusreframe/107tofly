@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getPublicRuntimeSettings } from "@/server/runtime-settings.functions";
+import { getPublicRuntimeSettings } from "@/lib/runtime-settings.functions";
 
 export type PublicRuntime = Awaited<ReturnType<typeof getPublicRuntimeSettings>>;
 

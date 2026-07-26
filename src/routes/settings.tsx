@@ -14,7 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   getStudentSettings, updateStudentSettings, resetMyProgress,
-} from "@/server/student-settings.functions";
+} from "@/lib/student-settings.functions";
 import { LogOut, Settings as SettingsIcon, Bell, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({

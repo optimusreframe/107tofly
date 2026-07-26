@@ -6,7 +6,7 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { usePublicRuntime } from "@/hooks/use-public-runtime";
 import { supabase } from "@/integrations/supabase/client";
-import { issueCertificate } from "@/server/study.functions";
+import { issueCertificate } from "@/lib/study.functions";
 import { Award, ShieldCheck, FileCheck2, AlertTriangle, Download } from "lucide-react";
 
 export const Route = createFileRoute("/certificate")({

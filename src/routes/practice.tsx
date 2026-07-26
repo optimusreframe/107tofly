@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { PracticeSkeleton } from "@/components/PracticeSkeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/server/study.functions";
+import { fetchPracticeQuestions, submitQuizAttempt, createFlashcardFromQuestion, getStudentTopicMastery } from "@/lib/study.functions";
 import { Check, X, Sparkles, BookmarkPlus, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/practice")({

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchDueFlashcards, gradeFlashcard } from "@/server/study.functions";
+import { fetchDueFlashcards, gradeFlashcard } from "@/lib/study.functions";
 import { RotateCcw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/flashcards")({

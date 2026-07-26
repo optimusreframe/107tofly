@@ -6,7 +6,7 @@ import { Shield, Users, BookOpen, ListChecks, Award, FileCheck, Brain, LifeBuoy 
 import { AdminAppShell, ADMIN_NAV } from "@/components/layouts/AdminAppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-role";
-import { getAdminMetrics } from "@/server/admin.functions";
+import { getAdminMetrics } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({

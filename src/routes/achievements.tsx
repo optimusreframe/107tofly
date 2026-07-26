@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { Award, Plane, Map, CloudSun, Shield, Trophy, Sparkles, Target, Zap, BookMarked } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getAchievements } from "@/server/lessons.functions";
+import { getAchievements } from "@/lib/lessons.functions";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   first_takeoff: Plane,

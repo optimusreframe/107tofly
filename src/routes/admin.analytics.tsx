@@ -12,7 +12,7 @@ import {
   getAdminTopicAnalytics,
   getAdminQuestionAnalytics,
   getAdminStudentFunnel,
-} from "@/server/admin.functions";
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({

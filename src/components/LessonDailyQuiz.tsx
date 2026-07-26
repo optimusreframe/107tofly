@@ -6,7 +6,7 @@ import {
   getLessonQuizStatus,
   submitLessonQuizAttempt,
   createFlashcardsFromMissed,
-} from "@/server/lesson-quiz.functions";
+} from "@/lib/lesson-quiz.functions";
 
 type Question = Awaited<ReturnType<typeof getLessonQuiz>>["questions"][number];
 type Status = Awaited<ReturnType<typeof getLessonQuizStatus>>;
