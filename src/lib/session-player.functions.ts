@@ -51,16 +51,21 @@ export const startSession = createServerFn({ method: "POST" })
     const nowMs = Date.now();
     const dueSet = new Set<string>();
     const seen = new Set<string>();
+    const levelBy = new Map<string, number>();
     for (const m of mastery ?? []) {
-      seen.add(m.concept_id as string);
+      const cid = m.concept_id as string;
+      seen.add(cid);
+      levelBy.set(cid, Number(m.level ?? 0));
       if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= nowMs) {
-        dueSet.add(m.concept_id as string);
+        dueSet.add(cid);
       }
     }
+    // Within each bucket, weakest concept (lowest level) first — adaptive priority.
+    const byLevelAsc = (a: string, b: string) => (levelBy.get(a) ?? 0) - (levelBy.get(b) ?? 0);
     const prioritized: string[] = [
-      ...conceptIds.filter((id) => dueSet.has(id)),
+      ...conceptIds.filter((id) => dueSet.has(id)).sort(byLevelAsc),
       ...conceptIds.filter((id) => !seen.has(id)),
-      ...conceptIds.filter((id) => seen.has(id) && !dueSet.has(id)),
+      ...conceptIds.filter((id) => seen.has(id) && !dueSet.has(id)).sort(byLevelAsc),
     ];
 
     const pickConceptIds = prioritized.slice(0, SESSION_SIZE);
