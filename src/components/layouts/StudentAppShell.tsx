@@ -16,6 +16,7 @@ import {
   Moon,
   Languages,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
