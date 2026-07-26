@@ -14,6 +14,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MissionRouteImport } from './routes/mission'
@@ -68,6 +69,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -238,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/progress': typeof ProgressRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/progress': typeof ProgressRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -313,6 +321,7 @@ export interface FileRoutesById {
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/progress': typeof ProgressRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -352,6 +361,7 @@ export interface FileRouteTypes {
     | '/mission'
     | '/onboarding'
     | '/practice'
+    | '/progress'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/mission'
     | '/onboarding'
     | '/practice'
+    | '/progress'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/mission'
     | '/onboarding'
     | '/practice'
+    | '/progress'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   MissionRoute: typeof MissionRoute
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
+  ProgressRoute: typeof ProgressRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SimulatorRoute: typeof SimulatorRoute
@@ -510,6 +523,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -770,6 +790,7 @@ const rootRouteChildren: RootRouteChildren = {
   MissionRoute: MissionRoute,
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
+  ProgressRoute: ProgressRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SimulatorRoute: SimulatorRoute,

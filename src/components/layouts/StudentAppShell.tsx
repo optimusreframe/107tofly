@@ -16,6 +16,7 @@ import {
   Moon,
   Languages,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,6 +35,7 @@ const PRIMARY = [
   { to: "/simulator", icon: Plane, key: "nav.simulator" },
   { to: "/flashcards", icon: Brain, key: "nav.flashcards" },
   { to: "/flycoach", icon: Sparkles, key: "nav.flycoach" },
+  { to: "/progress", icon: TrendingUp, key: "nav.progress" },
   { to: "/achievements", icon: Trophy, key: "nav.achievements" },
   { to: "/certificate", icon: Award, key: "nav.certificate" },
   { to: "/settings", icon: Settings, key: "nav.settings" },

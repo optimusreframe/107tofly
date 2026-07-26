@@ -7,6 +7,7 @@ export default {
     simulator: "Simulador",
     flycoach: "FlyCoach",
     flashcards: "Flashcards",
+    progress: "Progreso",
     achievements: "Logros",
     certificate: "Certificado",
     settings: "Configuración",
