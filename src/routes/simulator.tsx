@@ -87,7 +87,6 @@ function Simulator() {
       question_id: q.id,
       topic: q.topic as never,
       selected_index: picks[i] ?? -1,
-      is_correct: picks[i] === q.correct_index,
     }));
     const duration = Math.min(EXAM_SECONDS, Math.round((Date.now() - startedRef.current) / 1000));
     const res = await submitSim({ data: { duration_sec: duration, answers } });
