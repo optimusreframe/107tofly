@@ -26,8 +26,6 @@ interface Q {
   source: string;
   question: string;
   options: string[];
-  explanation: string;
-  correct_index: number;
 }
 
 const EXAM_LEN = 60;
