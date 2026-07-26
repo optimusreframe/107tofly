@@ -947,6 +947,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["session_event_kind"]
           latency_ms: number | null
+          note: string | null
           unit_id: string | null
           user_id: string
         }
@@ -958,6 +959,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["session_event_kind"]
           latency_ms?: number | null
+          note?: string | null
           unit_id?: string | null
           user_id: string
         }
@@ -969,6 +971,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["session_event_kind"]
           latency_ms?: number | null
+          note?: string | null
           unit_id?: string | null
           user_id?: string
         }
@@ -1045,7 +1048,7 @@ export type Database = {
         | "emergencies"
         | "remote_id"
         | "maintenance"
-      session_event_kind: "start" | "answer" | "end"
+      session_event_kind: "start" | "answer" | "end" | "feedback"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1188,7 +1191,7 @@ export const Constants = {
         "remote_id",
         "maintenance",
       ],
-      session_event_kind: ["start", "answer", "end"],
+      session_event_kind: ["start", "answer", "end", "feedback"],
     },
   },
 } as const

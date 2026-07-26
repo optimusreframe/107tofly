@@ -3,10 +3,10 @@ import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getUnitBySlug } from "@/lib/learning-units.functions";
-import { startSession, submitExercise, endSession } from "@/lib/session-player.functions";
+import { startSession, submitExercise, endSession, reportExercise } from "@/lib/session-player.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Flag } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/learn/$unitSlug")({
@@ -28,6 +28,7 @@ function LearnUnit() {
   const startFn = useServerFn(startSession);
   const submitFn = useServerFn(submitExercise);
   const endFn = useServerFn(endSession);
+  const reportFn = useServerFn(reportExercise);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +146,24 @@ function LearnUnit() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={async () => {
+                if (!current || !unit) return;
+                const note = window.prompt("Report an issue with this exercise (optional):") ?? undefined;
+                try {
+                  await reportFn({ data: { exerciseId: current.id, unitId: unit.id, note } });
+                  toast.success("Thanks — reported");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Report failed");
+                }
+              }}
+            >
+              <Flag className="h-3.5 w-3.5 mr-1" /> Report
+            </Button>
             {!feedback ? (
               <Button onClick={commit} disabled={pick == null || submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
