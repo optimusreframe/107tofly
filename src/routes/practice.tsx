@@ -214,3 +214,53 @@ function Practice() {
     </StudentAppShell>
   );
 }
+
+type DueUnit = { id: string; slug: string; title: string; summary: string | null; conceptCount: number; dueCount: number; newCount: number };
+
+function SessionPlayerEntry() {
+  const fetchDue = useServerFn(getDueReview);
+  const [units, setUnits] = useState<DueUnit[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetchDue({});
+        setUnits((r?.units ?? []) as DueUnit[]);
+      } catch {
+        // feature flag off or no access — hide silently
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, []);
+  if (!loaded || units.length === 0) return null;
+  return (
+    <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
+        <Sparkle className="h-3.5 w-3.5" /> Session Player · Adaptive review
+      </div>
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        {units.map((u) => (
+          <Link
+            key={u.id}
+            to="/learn/$unitSlug"
+            params={{ unitSlug: u.slug }}
+            className="rounded-xl border border-border bg-card/70 p-3 text-left transition hover:border-primary/50 hover:bg-card"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{u.title}</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {u.dueCount > 0
+                ? `${u.dueCount} due for review`
+                : u.newCount > 0
+                ? `${u.newCount} new concepts`
+                : "All caught up"}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
