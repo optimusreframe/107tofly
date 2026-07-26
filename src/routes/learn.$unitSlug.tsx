@@ -178,5 +178,3 @@ function LearnUnit() {
     </StudentAppShell>
   );
 }
-
-import { ExerciseView } from "@/components/ExerciseView";
