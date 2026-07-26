@@ -45,6 +45,8 @@ function AdminLearningPage() {
   const listExercises = useServerFn(listAdminExercises);
   const saveExercise = useServerFn(upsertAdminExercise);
   const delExercise = useServerFn(deleteAdminExercise);
+  const translateUnitFn = useServerFn(translateUnitToSpanish);
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
