@@ -416,8 +416,8 @@ async function recomputeProgress(supabase: any, userId: string) {
   const quizAvg = attempts && attempts.length ? attempts.reduce((s: number, a: { score: number }) => s + Number(a.score), 0) / attempts.length : 0;
   const simAvg = sims && sims.length ? sims.reduce((s: number, a: { score: number }) => s + Number(a.score), 0) / sims.length : 0;
   const srRetention = cards && cards.length ? Math.min(100, (cards.filter((c: { repetitions: number }) => c.repetitions >= 2).length / cards.length) * 100) : 0;
-  const lessonsTotal = 28;
-  const studyPct = Math.min(100, Math.round(((lessons?.length ?? 0) / lessonsTotal) * 100));
+  const lessonsTotal = await countCanonicalPublishedLessons(supabase);
+  const studyPct = lessonsTotal > 0 ? Math.min(100, Math.round(((lessons?.length ?? 0) / lessonsTotal) * 100)) : 0;
   const practicePct = Math.round(quizAvg);
   const reviewPct = Math.round(srRetention);
   const readiness = Math.round(0.4 * quizAvg + 0.25 * simAvg + 0.2 * srRetention + 0.15 * studyPct);
@@ -446,8 +446,8 @@ export const getStudentReadiness = createServerFn({ method: "GET" })
       supabase.from("exam_simulations").select("score, finished_at").eq("user_id", userId).order("finished_at", { ascending: false }).limit(5),
       supabase.from("flashcards").select("repetitions, due_date").eq("user_id", userId),
     ]);
-    const lessonsTotal = 28;
-    const studyPct = Math.min(100, ((lessons?.length ?? 0) / lessonsTotal) * 100);
+    const lessonsTotal = await countCanonicalPublishedLessons(supabase);
+    const studyPct = lessonsTotal > 0 ? Math.min(100, ((lessons?.length ?? 0) / lessonsTotal) * 100) : 0;
     const quizAvg = attempts && attempts.length ? attempts.reduce((s, a) => s + Number(a.score), 0) / attempts.length : 0;
     const bestSim = sims && sims.length ? Math.max(...sims.map((s) => Number(s.score))) : 0;
     const fcRetention = cards && cards.length
