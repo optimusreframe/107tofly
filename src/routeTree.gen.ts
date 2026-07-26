@@ -23,6 +23,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
 import { Route as FlashcardsRouteImport } from './routes/flashcards'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DailyFlightRouteImport } from './routes/daily-flight'
 import { Route as CourseRouteImport } from './routes/course'
 import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -40,6 +41,7 @@ import { Route as AdminMediaRouteImport } from './routes/admin.media'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
 import { Route as AdminLearningRouteImport } from './routes/admin.learning'
 import { Route as AdminLandingRouteImport } from './routes/admin.landing'
+import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 
@@ -111,6 +113,11 @@ const FlashcardsRoute = FlashcardsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DailyFlightRoute = DailyFlightRouteImport.update({
+  id: '/daily-flight',
+  path: '/daily-flight',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CourseRoute = CourseRouteImport.update({
@@ -198,6 +205,11 @@ const AdminLandingRoute = AdminLandingRouteImport.update({
   path: '/landing',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCertificatesRoute = AdminCertificatesRouteImport.update({
   id: '/certificates',
   path: '/certificates',
@@ -216,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
@@ -232,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/learning': typeof AdminLearningRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -251,6 +265,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
@@ -267,6 +282,7 @@ export interface FileRoutesByTo {
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/learning': typeof AdminLearningRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -287,6 +303,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
+  '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
   '/flycoach': typeof FlycoachRoute
@@ -303,6 +320,7 @@ export interface FileRoutesById {
   '/weather-lab': typeof WeatherLabRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/learning': typeof AdminLearningRoute
   '/admin/lessons': typeof AdminLessonsRoute
@@ -324,6 +342,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certificate'
     | '/course'
+    | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
@@ -340,6 +359,7 @@ export interface FileRouteTypes {
     | '/weather-lab'
     | '/admin/analytics'
     | '/admin/certificates'
+    | '/admin/feedback'
     | '/admin/landing'
     | '/admin/learning'
     | '/admin/lessons'
@@ -359,6 +379,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certificate'
     | '/course'
+    | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
@@ -375,6 +396,7 @@ export interface FileRouteTypes {
     | '/weather-lab'
     | '/admin/analytics'
     | '/admin/certificates'
+    | '/admin/feedback'
     | '/admin/landing'
     | '/admin/learning'
     | '/admin/lessons'
@@ -394,6 +416,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certificate'
     | '/course'
+    | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
     | '/flycoach'
@@ -410,6 +433,7 @@ export interface FileRouteTypes {
     | '/weather-lab'
     | '/admin/analytics'
     | '/admin/certificates'
+    | '/admin/feedback'
     | '/admin/landing'
     | '/admin/learning'
     | '/admin/lessons'
@@ -430,6 +454,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
+  DailyFlightRoute: typeof DailyFlightRoute
   DashboardRoute: typeof DashboardRoute
   FlashcardsRoute: typeof FlashcardsRoute
   FlycoachRoute: typeof FlycoachRoute
@@ -548,6 +573,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daily-flight': {
+      id: '/daily-flight'
+      path: '/daily-flight'
+      fullPath: '/daily-flight'
+      preLoaderRoute: typeof DailyFlightRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/course': {
@@ -669,6 +701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLandingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/certificates': {
       id: '/admin/certificates'
       path: '/certificates'
@@ -689,6 +728,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCertificatesRoute: typeof AdminCertificatesRoute
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminLandingRoute: typeof AdminLandingRoute
   AdminLearningRoute: typeof AdminLearningRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
@@ -701,6 +741,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCertificatesRoute: AdminCertificatesRoute,
+  AdminFeedbackRoute: AdminFeedbackRoute,
   AdminLandingRoute: AdminLandingRoute,
   AdminLearningRoute: AdminLearningRoute,
   AdminLessonsRoute: AdminLessonsRoute,
@@ -719,6 +760,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
+  DailyFlightRoute: DailyFlightRoute,
   DashboardRoute: DashboardRoute,
   FlashcardsRoute: FlashcardsRoute,
   FlycoachRoute: FlycoachRoute,
