@@ -3,8 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
 import { getCertificateSettings, getFeatureFlags, getStudySettings } from "./runtime-settings.server";
+import { evaluateAttempt } from "./quiz-eval.server";
+import { countCanonicalPublishedLessons } from "./lessons-count.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
+
+// Public question DTO — never includes correct_index, explanation, or common_mistake.
+// Sensitive fields are only returned by the *submit* endpoints, after the user commits picks.
+const PUBLIC_QUESTION_COLS = "id,topic,acs_code,source,question,options,locale,translation_group_id";
 
 // ============ FETCH PRACTICE QUESTIONS ============
 export const fetchPracticeQuestions = createServerFn({ method: "POST" })
