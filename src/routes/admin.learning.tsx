@@ -16,6 +16,8 @@ import {
   listAdminConcepts, upsertAdminConcept, deleteAdminConcept,
   listAdminExercises, upsertAdminExercise, deleteAdminExercise,
 } from "@/lib/admin-learning.functions";
+import { translateUnitToSpanish } from "@/lib/admin-unit-translations.functions";
+import { Languages } from "lucide-react";
 
 export const Route = createFileRoute("/admin/learning")({
   head: () => ({ meta: [{ title: "Learning Units — Admin · 107toFly" }, { name: "robots", content: "noindex" }] }),
