@@ -29,6 +29,7 @@ export const SETTING_DEFAULTS = {
   "features.maintenance_mode": false,
   "features.payments_enabled": false,
   "features.media_uploads_enabled": false,
+  "features.session_player_enabled": false,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
@@ -53,6 +54,7 @@ const PUBLIC_KEYS: SettingKey[] = [
   "features.maintenance_mode",
   "features.payments_enabled",
   "features.media_uploads_enabled",
+  "features.session_player_enabled",
 ];
 
 const CACHE_TTL_MS = 30_000;
@@ -146,6 +148,7 @@ export async function getFeatureFlags() {
     maintenanceMode: s["features.maintenance_mode"],
     paymentsEnabled: s["features.payments_enabled"],
     mediaUploadsEnabled: s["features.media_uploads_enabled"],
+    sessionPlayerEnabled: s["features.session_player_enabled"],
   };
 }
 
@@ -175,4 +178,5 @@ export const RUNTIME_CONNECTED_KEYS: string[] = [
   "features.flycoach_enabled",
   "features.certificates_enabled",
   "features.maintenance_mode",
+  "features.session_player_enabled",
 ];

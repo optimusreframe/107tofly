@@ -119,6 +119,47 @@ export type Database = {
         }
         Relationships: []
       }
+      concepts: {
+        Row: {
+          body_md: string | null
+          created_at: string
+          id: string
+          locale: string
+          order_index: number
+          title: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          body_md?: string | null
+          created_at?: string
+          id?: string
+          locale?: string
+          order_index?: number
+          title: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          body_md?: string | null
+          created_at?: string
+          id?: string
+          locale?: string
+          order_index?: number
+          title?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concepts_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "learning_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_simulations: {
         Row: {
           correct: number
@@ -154,6 +195,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      exercises: {
+        Row: {
+          answer: Json
+          concept_id: string
+          created_at: string
+          difficulty: number
+          explanation: string | null
+          id: string
+          kind: Database["public"]["Enums"]["exercise_kind"]
+          locale: string
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          answer?: Json
+          concept_id: string
+          created_at?: string
+          difficulty?: number
+          explanation?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["exercise_kind"]
+          locale?: string
+          payload?: Json
+          updated_at?: string
+        }
+        Update: {
+          answer?: Json
+          concept_id?: string
+          created_at?: string
+          difficulty?: number
+          explanation?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["exercise_kind"]
+          locale?: string
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercises_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       flashcards: {
         Row: {
@@ -268,6 +356,48 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      learning_units: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string | null
+          locale: string
+          order_index: number
+          slug: string
+          status: Database["public"]["Enums"]["learning_unit_status"]
+          summary: string | null
+          title: string
+          translation_group_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          locale?: string
+          order_index?: number
+          slug: string
+          status?: Database["public"]["Enums"]["learning_unit_status"]
+          summary?: string | null
+          title: string
+          translation_group_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          locale?: string
+          order_index?: number
+          slug?: string
+          status?: Database["public"]["Enums"]["learning_unit_status"]
+          summary?: string | null
+          title?: string
+          translation_group_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -425,6 +555,47 @@ export type Database = {
             columns: ["source_lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mastery: {
+        Row: {
+          concept_id: string
+          correct_streak: number
+          created_at: string
+          last_seen_at: string | null
+          level: number
+          next_due_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concept_id: string
+          correct_streak?: number
+          created_at?: string
+          last_seen_at?: string | null
+          level?: number
+          next_due_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concept_id?: string
+          correct_streak?: number
+          created_at?: string
+          last_seen_at?: string | null
+          level?: number
+          next_due_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mastery_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
             referencedColumns: ["id"]
           },
         ]
@@ -767,6 +938,64 @@ export type Database = {
         }
         Relationships: []
       }
+      session_events: {
+        Row: {
+          concept_id: string | null
+          correct: boolean | null
+          created_at: string
+          exercise_id: string | null
+          id: string
+          kind: Database["public"]["Enums"]["session_event_kind"]
+          latency_ms: number | null
+          unit_id: string | null
+          user_id: string
+        }
+        Insert: {
+          concept_id?: string | null
+          correct?: boolean | null
+          created_at?: string
+          exercise_id?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["session_event_kind"]
+          latency_ms?: number | null
+          unit_id?: string | null
+          user_id: string
+        }
+        Update: {
+          concept_id?: string | null
+          correct?: boolean | null
+          created_at?: string
+          exercise_id?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["session_event_kind"]
+          latency_ms?: number | null
+          unit_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_events_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_events_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_events_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "learning_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -803,6 +1032,8 @@ export type Database = {
     }
     Enums: {
       app_role: "student" | "admin" | "content_manager" | "support"
+      exercise_kind: "mcq" | "cloze" | "order" | "match"
+      learning_unit_status: "draft" | "review" | "published" | "archived"
       question_topic:
         | "regulations"
         | "airspace"
@@ -814,6 +1045,7 @@ export type Database = {
         | "emergencies"
         | "remote_id"
         | "maintenance"
+      session_event_kind: "start" | "answer" | "end"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -942,6 +1174,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["student", "admin", "content_manager", "support"],
+      exercise_kind: ["mcq", "cloze", "order", "match"],
+      learning_unit_status: ["draft", "review", "published", "archived"],
       question_topic: [
         "regulations",
         "airspace",
@@ -954,6 +1188,7 @@ export const Constants = {
         "remote_id",
         "maintenance",
       ],
+      session_event_kind: ["start", "answer", "end"],
     },
   },
 } as const
