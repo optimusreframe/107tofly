@@ -294,6 +294,14 @@ function Dashboard() {
             <div className="text-sm text-muted-foreground">{t("student.plan.continueSubtitle")}</div>
           </Link>
           <Link
+            to="/progress"
+            className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
+          >
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <div className="mt-3 font-display text-lg font-semibold">{t("nav.progress")}</div>
+            <div className="text-sm text-muted-foreground">{t("student.masteryEmpty", { defaultValue: "Concept mastery & reviews" })}</div>
+          </Link>
+          <Link
             to="/flycoach"
             className="glass rounded-3xl p-5 transition hover:-translate-y-0.5"
           >
