@@ -122,7 +122,7 @@ export const getAchievements = createServerFn({ method: "GET" })
       { id: "safety_first", name: "Safety First", desc: "Lecciones de ADM y emergencias completadas", got: completionsByTopic.has("adm") && completionsByTopic.has("emergencies") },
       { id: "exam_ready", name: "Exam Ready", desc: "Dos simulacros sobre 85%", got: simsPassed >= 2 },
       { id: "perfect_flight", name: "Perfect Flight", desc: "Quiz al 100%", got: perfectQuiz },
-      { id: "half_course", name: "Halfway There", desc: "50% del plan 28 días", got: lessonsTotal ? lessonsDone >= Math.ceil((lessonsTotal as number) / 2) : false },
+      { id: "half_course", name: "Halfway There", desc: "50% del plan", got: lessonsTotal ? lessonsDone >= Math.ceil((lessonsTotal as number) / 2) : false },
       { id: "streak_30", name: "30-Day Streak", desc: "Estudio 30 días consecutivos", got: streak >= 30 },
     ];
 

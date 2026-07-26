@@ -100,7 +100,7 @@ export const getDashboardBundle = createServerFn({ method: "GET" })
     const attempts = attemptsRes.data ?? [];
     const sims = simsRes.data ?? [];
     const cards = cardsRes.data ?? [];
-    const lessonsTotal = 28;
+    const lessonsTotal = lessons.length || 1;
     const studyPct = Math.min(100, ((completions.length) / lessonsTotal) * 100);
     const quizAvg = attempts.length ? attempts.reduce((s, a) => s + Number(a.score), 0) / attempts.length : 0;
     const bestSim = sims.length ? Math.max(...sims.map((s) => Number(s.score))) : 0;

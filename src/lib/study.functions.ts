@@ -3,10 +3,16 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
 import { getCertificateSettings, getFeatureFlags, getStudySettings } from "./runtime-settings.server";
+import { evaluateAttempt } from "./quiz-eval.server";
+import { countCanonicalPublishedLessons } from "./lessons-count.server";
 
 const TOPICS = ["regulations","airspace","sectional","weather","performance","operations","adm","emergencies","remote_id","maintenance"] as const;
 
-// ============ FETCH PRACTICE QUESTIONS ============
+// Public question DTO — never includes correct_index, explanation, or common_mistake.
+// Sensitive fields are only returned by the *submit* endpoints, after the user commits picks.
+const PUBLIC_QUESTION_COLS = "id,topic,acs_code,source,question,options,locale,translation_group_id";
+
+// ============ FETCH PRACTICE QUESTIONS (public DTO, no answers) ============
 export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
@@ -17,9 +23,8 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const locale = data.locale ?? "en";
-    const cols = "id,topic,acs_code,source,question,options,explanation,common_mistake,correct_index,locale,translation_group_id";
     const buildQ = (loc: "en"|"es") => {
-      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale", loc).limit(data.limit);
+      let q = supabase.from("questions").select(PUBLIC_QUESTION_COLS).eq("status","published").eq("locale", loc).limit(data.limit);
       if (data.topic) q = q.eq("topic", data.topic);
       return q;
     };
@@ -32,7 +37,7 @@ export const fetchPracticeQuestions = createServerFn({ method: "POST" })
     }
     if (rows.length < data.limit) {
       const need = data.limit - rows.length;
-      let q = supabase.from("questions").select(cols).eq("status","published").eq("locale","en").limit(need * 2);
+      let q = supabase.from("questions").select(PUBLIC_QUESTION_COLS).eq("status","published").eq("locale","en").limit(need * 2);
       if (data.topic) q = q.eq("topic", data.topic);
       const r = await q;
       if (r.error) throw r.error;
@@ -62,15 +67,19 @@ export const submitQuizAttempt = createServerFn({ method: "POST" })
     answers: z.array(z.object({
       question_id: z.string().uuid(),
       selected_index: z.number().min(0).max(10),
-      is_correct: z.boolean(),
+      // is_correct from client is IGNORED (kept optional for backward compat).
+      is_correct: z.boolean().optional(),
       time_ms: z.number().optional(),
     })).min(1).max(120),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const total = data.answers.length;
-    const correct = data.answers.filter(a => a.is_correct).length;
-    const score = (correct / total) * 100;
+    // Server-side authoritative evaluation — client is_correct is discarded.
+    const evaluation = await evaluateAttempt(supabase, data.answers.map((a) => ({
+      question_id: a.question_id,
+      selected_index: a.selected_index,
+    })));
+    const { total, correct, score, results } = evaluation;
 
     const { data: attempt, error: aerr } = await supabase
       .from("quiz_attempts")
@@ -86,20 +95,21 @@ export const submitQuizAttempt = createServerFn({ method: "POST" })
       .single();
     if (aerr || !attempt) throw aerr ?? new Error("attempt insert failed");
 
-    const rows = data.answers.map(a => ({
+    const timeById = new Map(data.answers.map((a) => [a.question_id, a.time_ms]));
+    const rows = results.map((r) => ({
       attempt_id: attempt.id,
       user_id: userId,
-      question_id: a.question_id,
-      selected_index: a.selected_index,
-      is_correct: a.is_correct,
-      time_ms: a.time_ms,
+      question_id: r.question_id,
+      selected_index: r.selected_index,
+      is_correct: r.is_correct,
+      time_ms: timeById.get(r.question_id),
     }));
     await supabase.from("quiz_answers").insert(rows);
 
     // recompute progress
     await recomputeProgress(supabase, userId);
 
-    return { attempt_id: attempt.id, score, correct, total };
+    return { attempt_id: attempt.id, score, correct, total, results };
   });
 
 // ============ COMPLETE LESSON ============
@@ -241,19 +251,27 @@ export const submitExamSimulation = createServerFn({ method: "POST" })
       question_id: z.string().uuid(),
       topic: z.enum(TOPICS),
       selected_index: z.number(),
-      is_correct: z.boolean(),
+      // is_correct from client is IGNORED (kept optional for backward compat).
+      is_correct: z.boolean().optional(),
     })).min(10).max(120),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const total = data.answers.length;
-    const correct = data.answers.filter(a => a.is_correct).length;
-    const score = (correct / total) * 100;
+    // Server-side authoritative evaluation.
+    const evaluation = await evaluateAttempt(supabase, data.answers.map((a) => ({
+      question_id: a.question_id,
+      selected_index: a.selected_index,
+    })));
+    const { total, correct, score, results } = evaluation;
+
+    // Use client-provided topic tags for breakdown, matched by question_id.
+    const topicById = new Map(data.answers.map((a) => [a.question_id, a.topic]));
     const breakdown: Record<string, { total: number; correct: number }> = {};
-    for (const a of data.answers) {
-      breakdown[a.topic] ??= { total: 0, correct: 0 };
-      breakdown[a.topic].total += 1;
-      if (a.is_correct) breakdown[a.topic].correct += 1;
+    for (const r of results) {
+      const topic = topicById.get(r.question_id) ?? r.topic ?? "unknown";
+      breakdown[topic] ??= { total: 0, correct: 0 };
+      breakdown[topic].total += 1;
+      if (r.is_correct) breakdown[topic].correct += 1;
     }
     const { data: sim, error } = await supabase.from("exam_simulations").insert({
       user_id: userId,
@@ -264,7 +282,7 @@ export const submitExamSimulation = createServerFn({ method: "POST" })
     }).select("id").single();
     if (error) throw error;
     await recomputeProgress(supabase, userId);
-    return { id: sim!.id, score, correct, total, breakdown };
+    return { id: sim!.id, score, correct, total, breakdown, results };
   });
 
 // ============ ISSUE CERTIFICATE ============
@@ -398,8 +416,8 @@ async function recomputeProgress(supabase: any, userId: string) {
   const quizAvg = attempts && attempts.length ? attempts.reduce((s: number, a: { score: number }) => s + Number(a.score), 0) / attempts.length : 0;
   const simAvg = sims && sims.length ? sims.reduce((s: number, a: { score: number }) => s + Number(a.score), 0) / sims.length : 0;
   const srRetention = cards && cards.length ? Math.min(100, (cards.filter((c: { repetitions: number }) => c.repetitions >= 2).length / cards.length) * 100) : 0;
-  const lessonsTotal = 28;
-  const studyPct = Math.min(100, Math.round(((lessons?.length ?? 0) / lessonsTotal) * 100));
+  const lessonsTotal = await countCanonicalPublishedLessons(supabase);
+  const studyPct = lessonsTotal > 0 ? Math.min(100, Math.round(((lessons?.length ?? 0) / lessonsTotal) * 100)) : 0;
   const practicePct = Math.round(quizAvg);
   const reviewPct = Math.round(srRetention);
   const readiness = Math.round(0.4 * quizAvg + 0.25 * simAvg + 0.2 * srRetention + 0.15 * studyPct);
@@ -428,8 +446,8 @@ export const getStudentReadiness = createServerFn({ method: "GET" })
       supabase.from("exam_simulations").select("score, finished_at").eq("user_id", userId).order("finished_at", { ascending: false }).limit(5),
       supabase.from("flashcards").select("repetitions, due_date").eq("user_id", userId),
     ]);
-    const lessonsTotal = 28;
-    const studyPct = Math.min(100, ((lessons?.length ?? 0) / lessonsTotal) * 100);
+    const lessonsTotal = await countCanonicalPublishedLessons(supabase);
+    const studyPct = lessonsTotal > 0 ? Math.min(100, ((lessons?.length ?? 0) / lessonsTotal) * 100) : 0;
     const quizAvg = attempts && attempts.length ? attempts.reduce((s, a) => s + Number(a.score), 0) / attempts.length : 0;
     const bestSim = sims && sims.length ? Math.max(...sims.map((s) => Number(s.score))) : 0;
     const fcRetention = cards && cards.length

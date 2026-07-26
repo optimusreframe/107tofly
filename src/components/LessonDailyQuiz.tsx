@@ -10,6 +10,7 @@ import {
 
 type Question = Awaited<ReturnType<typeof getLessonQuiz>>["questions"][number];
 type Status = Awaited<ReturnType<typeof getLessonQuizStatus>>;
+type SubmitResult = Awaited<ReturnType<typeof submitLessonQuizAttempt>>;
 
 export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" | "es" }) {
   const { t } = useTranslation();
@@ -19,8 +20,7 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
   const [phase, setPhase] = useState<"idle" | "active" | "done">("idle");
   const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState<Record<string, number>>({});
-  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
-  const [result, setResult] = useState<Awaited<ReturnType<typeof submitLessonQuizAttempt>> | null>(null);
+  const [result, setResult] = useState<SubmitResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fcMsg, setFcMsg] = useState<string | null>(null);
@@ -44,7 +44,6 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
     setPhase("active");
     setIdx(0);
     setPicks({});
-    setRevealed({});
     setResult(null);
     setStartTs(Date.now());
   };
@@ -52,9 +51,7 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
   const current = questions[idx];
 
   const onPick = (qid: string, choice: number) => {
-    if (revealed[qid]) return;
     setPicks((p) => ({ ...p, [qid]: choice }));
-    setRevealed((r) => ({ ...r, [qid]: true }));
   };
 
   const onNext = async () => {
@@ -62,24 +59,22 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
       setIdx(idx + 1);
       return;
     }
-    // submit
+    // submit — server evaluates authoritatively.
     setSubmitting(true);
     try {
       const answers = questions.map((q) => ({
         question_id: q.id,
-        selected_index: picks[q.id] ?? -1,
-        is_correct: picks[q.id] === q.correct_index,
+        selected_index: Math.max(0, picks[q.id] ?? -1),
       }));
       const res = await submitLessonQuizAttempt({
         data: {
           lesson_slug: slug,
           duration_sec: Math.round((Date.now() - startTs) / 1000),
-          answers: answers.map((a) => ({ ...a, selected_index: Math.max(0, a.selected_index) })),
+          answers,
         },
       });
       setResult(res);
       setPhase("done");
-      // refresh status (best score)
       const s = await getLessonQuizStatus({ data: { slug } });
       setStatus(s);
     } finally {
@@ -87,7 +82,8 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
     }
   };
 
-  const missedIds = questions.filter((q) => picks[q.id] !== q.correct_index).map((q) => q.id);
+  const resultByQid = new Map((result?.results ?? []).map((r) => [r.question_id, r]));
+  const missedIds = (result?.results ?? []).filter((r) => !r.is_correct).map((r) => r.question_id);
 
   const onSaveMissed = async () => {
     if (missedIds.length === 0) return;
@@ -151,67 +147,39 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
             <span>{t("dailyQuiz.questionXofY", { i: idx + 1, n: questions.length })}</span>
             {current.acs_code && <span className="rounded-full bg-accent px-2 py-0.5">{current.acs_code}</span>}
           </div>
+          <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-[var(--gradient-sky)] transition-all" style={{ width: `${((idx) / questions.length) * 100}%` }} />
+          </div>
           <p className="text-base font-medium md:text-lg">{current.question}</p>
           <div className="mt-4 grid gap-2">
             {(current.options as string[]).map((opt, i) => {
               const picked = picks[current.id] === i;
-              const isCorrect = i === current.correct_index;
-              const showState = revealed[current.id];
-              const cls = showState
-                ? isCorrect
-                  ? "border-success bg-success/10"
-                  : picked
-                    ? "border-destructive bg-destructive/10"
-                    : "border-border"
-                : picked
-                  ? "border-foreground"
-                  : "border-border hover:border-foreground/40";
               return (
                 <button
                   key={i}
                   onClick={() => onPick(current.id, i)}
-                  disabled={revealed[current.id]}
-                  className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition ${cls}`}
+                  className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                    picked ? "border-foreground bg-accent" : "border-border hover:border-foreground/40"
+                  }`}
                 >
                   <span className="mr-2 font-mono text-xs text-muted-foreground">{String.fromCharCode(65 + i)}</span>
                   {opt}
-                  {showState && isCorrect && <CheckCircle2 className="ml-2 inline h-4 w-4 text-success" />}
-                  {showState && picked && !isCorrect && <XCircle className="ml-2 inline h-4 w-4 text-destructive" />}
                 </button>
               );
             })}
           </div>
 
-          {revealed[current.id] && (
-            <div className="mt-4 rounded-2xl bg-accent/50 p-4 text-sm">
-              <div className="font-medium">
-                {picks[current.id] === current.correct_index ? t("dailyQuiz.correct") : t("dailyQuiz.incorrect")}
-              </div>
-              <p className="mt-1 text-muted-foreground">
-                <span className="font-medium text-foreground">{t("dailyQuiz.explanation")}: </span>
-                {current.explanation}
-              </p>
-              {current.common_mistake && (
-                <p className="mt-2 text-muted-foreground">
-                  <span className="font-medium text-foreground">{t("dailyQuiz.commonMistake")}: </span>
-                  {current.common_mistake}
-                </p>
-              )}
-              {current.source && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  <span className="font-medium">{t("dailyQuiz.source")}: </span>{current.source}
-                </p>
-              )}
-              <button
-                onClick={onNext}
-                disabled={submitting}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
-              >
-                {idx < questions.length - 1 ? t("dailyQuiz.next") : submitting ? t("dailyQuiz.finishing") : t("dailyQuiz.finish")}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          <div className="mt-5 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t("dailyQuiz.answerAllHint", { defaultValue: "Se revelan al finalizar." })}</span>
+            <button
+              onClick={onNext}
+              disabled={submitting || picks[current.id] === undefined}
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
+            >
+              {idx < questions.length - 1 ? t("dailyQuiz.next") : submitting ? t("dailyQuiz.finishing") : t("dailyQuiz.finish")}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -230,6 +198,59 @@ export function LessonDailyQuiz({ slug, locale }: { slug: string; locale: "en" |
                 +{result.xp_awarded_now} XP
               </span>
             )}
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {questions.map((q, qi) => {
+              const r = resultByQid.get(q.id);
+              const picked = picks[q.id];
+              return (
+                <div key={q.id} className="rounded-2xl border border-border bg-card/60 p-4">
+                  <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{qi + 1}. {q.acs_code}</span>
+                    <span className={r?.is_correct ? "text-success" : "text-destructive"}>
+                      {r?.is_correct ? t("dailyQuiz.correct") : t("dailyQuiz.incorrect")}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium">{q.question}</p>
+                  <div className="mt-3 grid gap-1.5">
+                    {(q.options as string[]).map((opt, i) => {
+                      const isCorrect = r?.correct_index === i;
+                      const isPicked = picked === i;
+                      return (
+                        <div
+                          key={i}
+                          className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
+                            isCorrect ? "border-success bg-success/10"
+                              : isPicked ? "border-destructive bg-destructive/10"
+                              : "border-border"
+                          }`}
+                        >
+                          <span>
+                            <span className="mr-2 font-mono text-xs text-muted-foreground">{String.fromCharCode(65 + i)}</span>
+                            {opt}
+                          </span>
+                          {isCorrect && <CheckCircle2 className="h-4 w-4 text-success" />}
+                          {isPicked && !isCorrect && <XCircle className="h-4 w-4 text-destructive" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {r?.explanation && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{t("dailyQuiz.explanation")}: </span>
+                      {r.explanation}
+                    </p>
+                  )}
+                  {r?.common_mistake && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{t("dailyQuiz.commonMistake")}: </span>
+                      {r.common_mistake}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
