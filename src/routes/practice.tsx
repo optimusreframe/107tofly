@@ -163,6 +163,7 @@ function Practice() {
   return (
     <StudentAppShell>
       <section className="mx-auto max-w-2xl px-6 pt-12">
+        <SessionPlayerEntry />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span className="uppercase tracking-wider">{t("student.practice.label")} · {t(`student.topics.${q.topic}`, { defaultValue: q.topic })}</span>
           <span>{idx + 1} / {questions.length}</span>
