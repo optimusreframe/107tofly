@@ -138,7 +138,8 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
           z.object({
             question_id: z.string().uuid(),
             selected_index: z.number().min(0).max(10),
-            is_correct: z.boolean(),
+            // is_correct from client is IGNORED (kept optional for backward compat).
+            is_correct: z.boolean().optional(),
             time_ms: z.number().optional(),
           }),
         )
@@ -158,12 +159,16 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
     const lessonId = (lesson?.id as string | undefined) ?? null;
     const topic = data.topic ?? ((lesson?.topic as string | undefined) ?? undefined);
 
+    // Server-side authoritative evaluation.
+    const evaluation = await evaluateAttempt(supabase, data.answers.map((a) => ({
+      question_id: a.question_id,
+      selected_index: a.selected_index,
+    })));
+    const { total, correct, score, results } = evaluation;
+
     const { quizPassScore, lessonQuizPassXp } = await getStudySettings();
     const passThreshold = Number(quizPassScore ?? 70);
     const quizXp = Number(lessonQuizPassXp ?? 20);
-    const total = data.answers.length;
-    const correct = data.answers.filter((a) => a.is_correct).length;
-    const score = Math.round((correct / total) * 100);
     const passed = score >= passThreshold;
 
     const { data: attempt, error: aerr } = await supabase
@@ -185,14 +190,15 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
       .single();
     if (aerr || !attempt) throw aerr ?? new Error("attempt insert failed");
 
+    const timeById = new Map(data.answers.map((a) => [a.question_id, a.time_ms]));
     await supabase.from("quiz_answers").insert(
-      data.answers.map((a) => ({
+      results.map((r) => ({
         attempt_id: attempt.id,
         user_id: userId,
-        question_id: a.question_id,
-        selected_index: a.selected_index,
-        is_correct: a.is_correct,
-        time_ms: a.time_ms,
+        question_id: r.question_id,
+        selected_index: r.selected_index,
+        is_correct: r.is_correct,
+        time_ms: timeById.get(r.question_id),
       })) as never,
     );
 
@@ -254,6 +260,7 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
       best_score: newBest,
       attempts_count: upsertRow.attempts_count,
       xp_awarded_now,
+      results, // per-question feedback (correct_index/explanation/common_mistake)
     };
   });
 
