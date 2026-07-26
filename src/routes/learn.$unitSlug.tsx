@@ -28,6 +28,7 @@ function LearnUnit() {
   const startFn = useServerFn(startSession);
   const submitFn = useServerFn(submitExercise);
   const endFn = useServerFn(endSession);
+  const reportFn = useServerFn(reportExercise);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
