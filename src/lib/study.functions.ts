@@ -251,19 +251,27 @@ export const submitExamSimulation = createServerFn({ method: "POST" })
       question_id: z.string().uuid(),
       topic: z.enum(TOPICS),
       selected_index: z.number(),
-      is_correct: z.boolean(),
+      // is_correct from client is IGNORED (kept optional for backward compat).
+      is_correct: z.boolean().optional(),
     })).min(10).max(120),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const total = data.answers.length;
-    const correct = data.answers.filter(a => a.is_correct).length;
-    const score = (correct / total) * 100;
+    // Server-side authoritative evaluation.
+    const evaluation = await evaluateAttempt(supabase, data.answers.map((a) => ({
+      question_id: a.question_id,
+      selected_index: a.selected_index,
+    })));
+    const { total, correct, score, results } = evaluation;
+
+    // Use client-provided topic tags for breakdown, matched by question_id.
+    const topicById = new Map(data.answers.map((a) => [a.question_id, a.topic]));
     const breakdown: Record<string, { total: number; correct: number }> = {};
-    for (const a of data.answers) {
-      breakdown[a.topic] ??= { total: 0, correct: 0 };
-      breakdown[a.topic].total += 1;
-      if (a.is_correct) breakdown[a.topic].correct += 1;
+    for (const r of results) {
+      const topic = topicById.get(r.question_id) ?? r.topic ?? "unknown";
+      breakdown[topic] ??= { total: 0, correct: 0 };
+      breakdown[topic].total += 1;
+      if (r.is_correct) breakdown[topic].correct += 1;
     }
     const { data: sim, error } = await supabase.from("exam_simulations").insert({
       user_id: userId,
@@ -274,7 +282,7 @@ export const submitExamSimulation = createServerFn({ method: "POST" })
     }).select("id").single();
     if (error) throw error;
     await recomputeProgress(supabase, userId);
-    return { id: sim!.id, score, correct, total, breakdown };
+    return { id: sim!.id, score, correct, total, breakdown, results };
   });
 
 // ============ ISSUE CERTIFICATE ============
