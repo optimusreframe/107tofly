@@ -6,6 +6,7 @@ import { nextDueAt, nextLevel, MAX_LEVEL } from "./srs";
 import { getFeatureFlags, getStudySettings } from "./runtime-settings.server";
 import { touchDailyActivity } from "./streak.server";
 import { enforceRateLimit } from "./rate-limit.server";
+import { logger } from "./logger.server";
 
 // Public DTO — never expose `answer` or `explanation` before submit.
 const PUBLIC_EXERCISE_COLS = "id,concept_id,kind,payload,difficulty,locale";
