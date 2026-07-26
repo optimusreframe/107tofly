@@ -4,7 +4,6 @@ import { MAX_LEVEL } from "./srs";
 
 export type ConceptMastery = {
   id: string;
-  slug: string;
   title: string;
   level: number;
   maxLevel: number;
@@ -45,7 +44,7 @@ export const getMasteryOverview = createServerFn({ method: "GET" })
     const unitIds = unitList.map((u) => u.id as string);
     const { data: concepts } = await supabase
       .from("concepts")
-      .select("id,unit_id,slug,title,order_index")
+      .select("id,unit_id,title,order_index")
       .in("unit_id", unitIds)
       .order("order_index", { ascending: true });
     const conceptList = concepts ?? [];
@@ -84,7 +83,6 @@ export const getMasteryOverview = createServerFn({ method: "GET" })
       const arr = conceptsByUnit.get(c.unit_id as string) ?? [];
       arr.push({
         id: c.id as string,
-        slug: c.slug as string,
         title: c.title as string,
         level,
         maxLevel: MAX_LEVEL,
