@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2, Flag } from "lucide-react";
 import { toast } from "sonner";
+import { ExerciseView } from "@/components/ExerciseView";
 
 export const Route = createFileRoute("/learn/$unitSlug")({
   head: ({ params }) => ({
