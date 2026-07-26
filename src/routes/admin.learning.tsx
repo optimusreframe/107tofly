@@ -302,8 +302,7 @@ function ExerciseEditor({
   onDelete: (ex: Exercise) => Promise<void>;
 }) {
   const list = useMemo(() => (exercises ?? []).filter((e) => e.concept_id === conceptId), [exercises, conceptId]);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
+  void locale;
 
   return (
     <div className="rounded-xl border border-border/50 bg-background/40 p-3">
@@ -313,61 +312,30 @@ function ExerciseEditor({
       </div>
       {list.length === 0 ? <div className="text-xs text-muted-foreground">No exercises.</div> :
         <ul className="space-y-3">
-          {list.map((ex) => {
-            const payloadStr = drafts[ex.id] ?? JSON.stringify(ex.payload, null, 2);
-            const answerStr = answerDrafts[ex.id] ?? JSON.stringify(ex.answer, null, 2);
-            return (
-              <li key={ex.id} className="rounded-lg border border-border/50 p-2 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Select value={ex.kind} onValueChange={(v) => onSave({ ...ex, kind: v })}>
-                    <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
-                    <SelectContent>{KINDS.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <label className="text-xs text-muted-foreground">Difficulty
-                    <Input type="number" min={1} max={5} className="ml-2 inline-block w-16" value={ex.difficulty} onChange={(e) => onSave({ ...ex, difficulty: Math.min(5, Math.max(1, Number(e.target.value) || 1)) })} />
-                  </label>
-                  <Badge variant="outline" className="text-[10px]">{ex.locale}</Badge>
-                  <div className="ml-auto flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => onDelete(ex)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                  </div>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs text-muted-foreground">Payload (JSON)
-                    <Textarea rows={5} className="font-mono text-xs" value={payloadStr}
-                      onChange={(e) => setDrafts((d) => ({ ...d, [ex.id]: e.target.value }))}
-                      onBlur={() => {
-                        try {
-                          const parsed = JSON.parse(drafts[ex.id] ?? payloadStr);
-                          onSave({ ...ex, payload: parsed });
-                          setDrafts((d) => { const { [ex.id]: _, ...rest } = d; return rest; });
-                        } catch { toast.error("Invalid payload JSON"); }
-                      }}
-                    />
-                  </label>
-                  <label className="text-xs text-muted-foreground">Answer (JSON)
-                    <Textarea rows={5} className="font-mono text-xs" value={answerStr}
-                      onChange={(e) => setAnswerDrafts((d) => ({ ...d, [ex.id]: e.target.value }))}
-                      onBlur={() => {
-                        try {
-                          const parsed = JSON.parse(answerDrafts[ex.id] ?? answerStr);
-                          onSave({ ...ex, answer: parsed });
-                          setAnswerDrafts((d) => { const { [ex.id]: _, ...rest } = d; return rest; });
-                        } catch { toast.error("Invalid answer JSON"); }
-                      }}
-                    />
-                  </label>
-                </div>
-                <label className="block text-xs text-muted-foreground">Explanation
-                  <Textarea rows={2} value={ex.explanation ?? ""} onChange={(e) => onSave({ ...ex, explanation: e.target.value })} />
+          {list.map((ex) => (
+            <li key={ex.id} className="rounded-lg border border-border/50 p-3 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={ex.kind} onValueChange={(v) => onSave({ ...ex, kind: v })}>
+                  <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
+                  <SelectContent>{KINDS.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
+                </Select>
+                <label className="text-xs text-muted-foreground">Difficulty
+                  <Input type="number" min={1} max={5} className="ml-2 inline-block w-16" value={ex.difficulty}
+                    onChange={(e) => onSave({ ...ex, difficulty: Math.min(5, Math.max(1, Number(e.target.value) || 1)) })} />
                 </label>
-              </li>
-            );
-          })}
+                <Badge variant="outline" className="text-[10px]">{ex.locale}</Badge>
+                <div className="ml-auto flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => onDelete(ex)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+              <ExerciseFormEditor ex={ex} onChange={(patch) => onSave({ ...ex, ...patch })} />
+              <label className="block text-xs text-muted-foreground">Explanation
+                <Textarea rows={2} value={ex.explanation ?? ""} onChange={(e) => onSave({ ...ex, explanation: e.target.value })} />
+              </label>
+            </li>
+          ))}
         </ul>
       }
-      <p className="mt-2 text-[10px] text-muted-foreground">
-        Kinds: mcq {`{ question, options[] } / answer { index }`} · cloze {`{ text, blanks[] } / answer { blanks[] }`} · order {`{ items[] } / answer { order[] }`} · match {`{ left[], right[] } / answer { pairs: { [l]: r } }`}
-      </p>
     </div>
   );
 }
