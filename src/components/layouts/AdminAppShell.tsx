@@ -12,6 +12,7 @@ import {
   Globe,
   Shield,
   ArrowLeft,
+  GraduationCap,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDeviceMode } from "@/hooks/use-device-mode";

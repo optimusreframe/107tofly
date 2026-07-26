@@ -38,6 +38,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminMediaRouteImport } from './routes/admin.media'
 import { Route as AdminLessonsRouteImport } from './routes/admin.lessons'
+import { Route as AdminLearningRouteImport } from './routes/admin.learning'
 import { Route as AdminLandingRouteImport } from './routes/admin.landing'
 import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -187,6 +188,11 @@ const AdminLessonsRoute = AdminLessonsRouteImport.update({
   path: '/lessons',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLearningRoute = AdminLearningRouteImport.update({
+  id: '/learning',
+  path: '/learning',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLandingRoute = AdminLandingRouteImport.update({
   id: '/landing',
   path: '/landing',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/landing': typeof AdminLandingRoute
+  '/admin/learning': typeof AdminLearningRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/landing': typeof AdminLandingRoute
+  '/admin/learning': typeof AdminLearningRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
@@ -296,6 +304,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/landing': typeof AdminLandingRoute
+  '/admin/learning': typeof AdminLearningRoute
   '/admin/lessons': typeof AdminLessonsRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/questions': typeof AdminQuestionsRoute
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/certificates'
     | '/admin/landing'
+    | '/admin/learning'
     | '/admin/lessons'
     | '/admin/media'
     | '/admin/questions'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/certificates'
     | '/admin/landing'
+    | '/admin/learning'
     | '/admin/lessons'
     | '/admin/media'
     | '/admin/questions'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/certificates'
     | '/admin/landing'
+    | '/admin/learning'
     | '/admin/lessons'
     | '/admin/media'
     | '/admin/questions'
@@ -643,6 +655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLessonsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/learning': {
+      id: '/admin/learning'
+      path: '/learning'
+      fullPath: '/admin/learning'
+      preLoaderRoute: typeof AdminLearningRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/landing': {
       id: '/admin/landing'
       path: '/landing'
@@ -671,6 +690,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCertificatesRoute: typeof AdminCertificatesRoute
   AdminLandingRoute: typeof AdminLandingRoute
+  AdminLearningRoute: typeof AdminLearningRoute
   AdminLessonsRoute: typeof AdminLessonsRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
@@ -682,6 +702,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCertificatesRoute: AdminCertificatesRoute,
   AdminLandingRoute: AdminLandingRoute,
+  AdminLearningRoute: AdminLearningRoute,
   AdminLessonsRoute: AdminLessonsRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
