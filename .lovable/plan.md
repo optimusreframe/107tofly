@@ -1,70 +1,63 @@
-# Sprint 1 — Foundation Integrity
+# Sprint 2 — Learning Engine 2.0 (Foundation)
 
-Gate obligatorio antes de tocar el nuevo modelo educativo (learning_units, Session Player, etc.). Este sprint solo endurece el motor actual y añade pruebas. No hay rediseño ni features nuevas.
+Sprint 1 (Foundation Integrity) is closed. The plan doc explicitly deferred the new educational model to Sprint 2+. This sprint lays the DB + backend + minimal UI for it, without breaking the current lesson/quiz flow.
 
-## 1. Evaluación server-side + DTO seguro
+Guardrails:
+- No visual redesign (Duolingo-style comes later).
+- Current `lessons`, `questions`, `flashcards`, `progress`, certificates keep working unchanged.
+- Feature flag `features.session_player_enabled` (default OFF) gates the new UI.
 
-**Problema:** el frontend recibe `correct_index` y calcula `is_correct`. Se puede forjar 100%.
+## 1. Schema (single migration)
 
-- Crear `src/lib/quiz-eval.server.ts` con:
-  - `evaluateAttempt({ questionIds, picks, mode })` → carga preguntas con service role, calcula `is_correct` y `score` en el servidor, devuelve `{ score, results:[{question_id, is_correct, correct_index, explanation}] }`.
-- Nuevo tipo `PublicQuestion` (sin `correct_index`, sin `explanation`) usado por todos los fetchers públicos:
-  - `src/lib/study.functions.ts` → `fetchPracticeQuestions` proyecta solo columnas públicas.
-  - `src/lib/lesson-quiz.functions.ts` → `getLessonQuiz` idem.
-  - `simulator` fetch idem.
-- Server functions de submit reciben solo `picks` (índices) y `questionIds`, ignoran cualquier `is_correct` cliente:
-  - `submitLessonQuiz` (lesson-quiz.functions)
-  - `submitPractice` / `submitSimulator` (study.functions)
-- Respuesta post-submit devuelve `correct_index` + `explanation` **solo entonces**, para pintar feedback.
+New tables in `public`, each with GRANTs + RLS + policies per project rules:
 
-## 2. Frontend adaptado al nuevo contrato
+- `learning_units` — canonical unit of study (id, slug, locale, title, summary, order_index, lesson_id nullable link, status, translation_group_id, timestamps). Public SELECT for `status='published'`; admin write via `has_role('admin')`.
+- `concepts` — atomic idea inside a unit (id, unit_id, order_index, title, body_md, locale). Public read when parent unit is published.
+- `exercises` — typed practice item bound to a concept (id, concept_id, kind enum: `mcq|cloze|order|match`, payload jsonb, answer jsonb, explanation, difficulty smallint, locale). Answer/explanation NEVER exposed to anon; only `id, concept_id, kind, payload, difficulty, locale` in public DTO.
+- `mastery` — per-user per-concept mastery (user_id, concept_id, level smallint 0–5, correct_streak, last_seen_at, next_due_at). RLS `auth.uid() = user_id`.
+- `session_events` — append-only log of Session Player events (user_id, unit_id, concept_id, exercise_id, kind, correct, latency_ms, created_at). Insert-own only.
 
-- `LessonDailyQuiz.tsx`, `practice.tsx`, `simulator.tsx`:
-  - Quitar acceso a `q.correct_index` durante la fase de respuesta.
-  - Guardar `picks[]`; llamar al submit del servidor; renderizar feedback usando el `results[]` que vuelve.
-- Admin (`admin.questions.tsx`, `admin-translations`) sigue usando el DTO completo (fetcher administrativo separado que ya requiere `requireSupabaseAuth` + rol admin) — sin cambios de UI.
+Seed: none. Content authoring happens later in Admin.
 
-## 3. Conteo dinámico de lecciones y certificados correctos
+## 2. Server functions (all under `src/lib/`)
 
-- Eliminar el literal “28 días / 28 lecciones”.
-- Fuente única: `countPublishedLessons({ locale })` en `src/lib/lessons.functions.ts` que cuenta `lessons` con `status='published'` deduplicando por `slug` (canonical: prefiere locale del usuario, cae a `en`).
-- Reemplazar usos en `lessons.functions.ts` (badge “Halfway”), dashboard bundle, readiness y en `issueCertificate` (`hours_estimated` y umbral de cobertura basados en el conteo real).
-- Readiness: verificar que `lessonsTotal` y `questionsTotal` provienen del mismo conteo canonical y no cambian por locale.
+- `learning-units.functions.ts`: `listPublishedUnits({locale})`, `getUnitBySlug({slug,locale})` with EN fallback (mirrors lesson pattern).
+- `session-player.functions.ts`:
+  - `startSession({unitId})` → picks next due concepts using `mastery.next_due_at` + SRS interval table, returns exercises with **safe DTO only**.
+  - `submitExercise({exerciseId, pick})` → server-side eval (reuses pattern from `quiz-eval.server.ts`), updates `mastery` (SM-2 lite: level±1, next_due_at = now + interval[level]), inserts `session_events`, awards XP via runtime-settings, creates flashcard on wrong answer.
+  - `endSession({unitId})` → summary (correct, xp, mastery deltas).
+- `admin-learning.functions.ts` (admin-gated): CRUD for units/concepts/exercises + AI translation reusing existing Gemini flow.
 
-## 4. .env y secretos
+Import-graph safety: any `client.server` load stays inside handlers, per Sprint 1 rules.
 
-- Añadir a `.gitignore`: `.env`, `.env.*`, `!.env.example`.
-- Verificar que no hay `.env` trackeado; si aparece, `git rm --cached`. Crear `.env.example` con nombres (sin valores).
+## 3. Minimal UI (behind flag)
 
-## 5. Testing + CI
+- `/learn/$unitSlug` route — Session Player MVP:
+  - Card stack, one exercise at a time, immediate feedback per exercise (this is Session Player semantics, distinct from lesson quiz).
+  - Progress bar, XP toast, end-of-session summary.
+- Dashboard: if flag ON and any published unit exists, show "Continue learning" card linking to next due unit; otherwise unchanged.
+- No admin UI in this sprint beyond raw list under `/admin/learning` (table only, create/edit deferred to Sprint 3).
 
-- Vitest (`vitest.config.ts`, `bun add -d vitest @vitest/coverage-v8`):
-  - `quiz-eval.server.test.ts` — evalúa correcto/incorrecto, ignora `is_correct` inyectado, rechaza `questionIds` inexistentes, calcula score bien con preguntas mixtas.
-  - `lessons-count.test.ts` — deduplicación por slug y filtro por status.
-  - `readiness.test.ts` — no cambia por locale, no da 100 sin cobertura.
-- Playwright (`playwright.config.ts`, `bun add -d @playwright/test`):
-  - smoke: landing renderiza, `/auth` carga, login test user, dashboard muestra Daily Flight sin errores console, quiz de lección responde y guarda score.
-- GitHub Actions `.github/workflows/ci.yml`:
-  - jobs: `install → typecheck (tsgo) → lint → vitest → build:dev → playwright smoke` en push/PR a `main`.
+## 4. Tests
 
-## 6. Criterios de aceptación (verificación)
+- Vitest:
+  - `session-eval.test.ts` — server ignores client-sent correctness; wrong pick → mastery level decreases, right pick → increases and pushes `next_due_at`.
+  - `srs-schedule.test.ts` — interval table is monotonic and capped.
+- Playwright smoke: with flag ON and a seeded unit fixture, start session → answer 1 right / 1 wrong → summary renders, `session_events` rows exist.
 
-- `curl` a un endpoint de práctica no contiene `correct_index` en el payload inicial.
-- Test que envía `is_correct:true` con `picks` incorrectos → servidor devuelve score 0.
-- Certificado emitido usa `lessonsTotal` real (no 28).
-- `bun run build:dev`, `tsgo`, `vitest`, `playwright` verdes en CI.
-- `git ls-files | grep -E '^\.env$'` vacío.
+## 5. Acceptance
 
-## Fuera de alcance (Sprint 2+)
+- Migration applies cleanly; every new public table has GRANTs + RLS + policies.
+- Anon fetch of exercises never contains `answer` or `explanation`.
+- Existing dashboard, lessons, practice, simulator, certificate flows unchanged when flag is OFF.
+- CI green (typecheck, vitest, build, playwright smoke).
 
-- Nuevas tablas `learning_units / concepts / exercises / mastery`.
-- Session Player, Daily Flight adaptativo, Map/Weather Lab 2.0, Mission Engine, Readiness 2.0, Simulator 2.0.
-- Rediseño visual estilo Duolingo.
+## Technical notes
 
-## Detalles técnicos
+- SRS interval table (minutes): `[10, 60, 360, 1440, 4320, 10080]` indexed by level 0–5.
+- `mastery.level` clamps to `[0,5]`; on wrong, `level = max(0, level-1)` and `correct_streak = 0`.
+- Reuse `PUBLIC_*_COLS` pattern for exercise projection.
+- Feature flag read via existing `runtime-settings.server.ts` cache.
+- No changes to `lessons`, `questions`, `flashcards`, `progress`, certificates schemas.
 
-- `PublicQuestion = Pick<Question,'id'|'topic'|'acs_code'|'source'|'question'|'options'|'locale'|'translation_group_id'>`.
-- `evaluateAttempt` usa `supabaseAdmin` cargado con `await import('@/integrations/supabase/client.server')` dentro del handler (import graph safety).
-- Submits siguen otorgando XP vía `runtime-settings` y flashcards de errores exactamente como hoy — solo cambia la fuente de verdad de `is_correct`.
-- `admin.questions.tsx` mantiene su DTO completo detrás de `requireSupabaseAuth` + `has_role('admin')`; no se toca UI.
-- No se borran tablas ni columnas; `correct_index` sigue en DB, solo deja de salir en respuestas públicas.
+Out of scope: Daily Flight adaptive engine, Map/Weather Lab 2.0, Mission Engine, Readiness 2.0, Simulator 2.0, Duolingo visual redesign, admin authoring UI (Sprint 3).
