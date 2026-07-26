@@ -6,7 +6,7 @@ import { getUnitBySlug } from "@/lib/learning-units.functions";
 import { startSession, submitExercise, endSession, reportExercise } from "@/lib/session-player.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Loader2, Flag } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Flag, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { ExerciseView } from "@/components/ExerciseView";
 
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/learn/$unitSlug")({
 });
 
 type Ex = { id: string; concept_id: string; kind: string; payload: any; difficulty: number };
+type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number };
 
 function LearnUnit() {
   const { unitSlug } = Route.useParams();
@@ -38,9 +39,10 @@ function LearnUnit() {
   const [idx, setIdx] = useState(0);
   const [feedback, setFeedback] = useState<{ correct: boolean; explanation: string | null; answer: any } | null>(null);
   const [pick, setPick] = useState<any>(null);
-  const [summary, setSummary] = useState<{ total: number; correct: number; score: number; passed: boolean; xpAwarded: number } | null>(null);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [startedAt, setStartedAt] = useState<number>(Date.now());
+  const [hintShown, setHintShown] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -59,6 +61,45 @@ function LearnUnit() {
     })();
   }, []);
 
+  const current = exercises[idx];
+
+  async function commit() {
+    if (pick == null || !current) return;
+    setSubmitting(true);
+    try {
+      const r = await submitFn({
+        data: { exerciseId: current.id, unitId: unit!.id, pick, latencyMs: Date.now() - startedAt, usedHint: hintShown },
+      });
+      setFeedback({ correct: r.correct, explanation: r.explanation, answer: r.answer });
+      if (r.correct) toast.success("Correct"); else toast.error("Not quite");
+    } catch (e: any) { toast.error(e?.message ?? "Submit failed"); }
+    finally { setSubmitting(false); }
+  }
+
+  async function next() {
+    setFeedback(null); setPick(null); setHintShown(false); setStartedAt(Date.now());
+    if (idx + 1 >= exercises.length) {
+      const s = await endFn({ data: { unitId: unit!.id } });
+      setSummary(s as Summary);
+    } else {
+      setIdx(idx + 1);
+    }
+  }
+
+  // Enter to submit/next
+  useEffect(() => {
+    if (loading || error || summary || !current) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      if (feedback) next(); else if (pick != null && !submitting) commit();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [loading, error, summary, current, feedback, pick, submitting]);
+
   if (loading) {
     return <StudentAppShell><div className="mx-auto max-w-3xl p-8 flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading session…</div></StudentAppShell>;
   }
@@ -74,7 +115,17 @@ function LearnUnit() {
           <Card className="p-6 space-y-3">
             <div className="text-4xl font-bold">{summary.score}%</div>
             <div className="text-sm text-muted-foreground">{summary.correct} / {summary.total} correct</div>
-            {summary.xpAwarded > 0 && <div className="text-sm text-primary">+{summary.xpAwarded} XP</div>}
+            {summary.xpAwarded > 0 && <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>}
+            <div className="grid grid-cols-2 gap-3 pt-3 text-sm">
+              <div className="rounded-md border p-3">
+                <div className="text-xs text-muted-foreground">Concepts practiced</div>
+                <div className="text-lg font-semibold">{summary.conceptsPracticed}</div>
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="text-xs text-muted-foreground">Due within 24h</div>
+                <div className="text-lg font-semibold">{summary.conceptsDueSoon}</div>
+              </div>
+            </div>
             <div className="pt-4 flex gap-2">
               <Button onClick={() => navigate({ to: "/dashboard" })}>Back to dashboard</Button>
               <Button variant="outline" onClick={() => window.location.reload()}>Practice again</Button>
@@ -88,40 +139,8 @@ function LearnUnit() {
     return <StudentAppShell><div className="mx-auto max-w-3xl p-8 text-muted-foreground">No exercises in this unit yet.</div></StudentAppShell>;
   }
 
-  const current = exercises[idx];
   const progress = Math.round((idx / exercises.length) * 100);
-
-  async function commit() {
-    if (pick == null || !current) return;
-    setSubmitting(true);
-    try {
-      const r = await submitFn({
-        data: {
-          exerciseId: current.id,
-          unitId: unit!.id,
-          pick,
-          latencyMs: Date.now() - startedAt,
-        },
-      });
-      setFeedback({ correct: r.correct, explanation: r.explanation, answer: r.answer });
-      if (r.correct) toast.success("Correct");
-      else toast.error("Not quite");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Submit failed");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function next() {
-    setFeedback(null); setPick(null); setStartedAt(Date.now());
-    if (idx + 1 >= exercises.length) {
-      const s = await endFn({ data: { unitId: unit!.id } });
-      setSummary(s);
-    } else {
-      setIdx(idx + 1);
-    }
-  }
+  const hint: string | null = current?.payload?.hint ?? null;
 
   return (
     <StudentAppShell>
@@ -137,6 +156,21 @@ function LearnUnit() {
         <Card className="p-6 space-y-4">
           <ExerciseView ex={current} pick={pick} setPick={setPick} disabled={!!feedback} />
 
+          {hint && !feedback && (
+            <div>
+              {!hintShown ? (
+                <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setHintShown(true)}>
+                  <Lightbulb className="h-3.5 w-3.5 mr-1" /> Show hint (−25% XP)
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+                  <div className="flex items-center gap-2 font-medium"><Lightbulb className="h-4 w-4" /> Hint</div>
+                  <p className="mt-1 text-muted-foreground">{hint}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {feedback && (
             <div className={`rounded-lg border p-3 text-sm ${feedback.correct ? "border-success/40 bg-success/10" : "border-destructive/40 bg-destructive/10"}`}>
               <div className="flex items-center gap-2 font-medium">
@@ -148,29 +182,21 @@ function LearnUnit() {
           )}
 
           <div className="flex justify-between items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
+            <Button variant="ghost" size="sm" className="text-muted-foreground"
               onClick={async () => {
                 if (!current || !unit) return;
                 const note = window.prompt("Report an issue with this exercise (optional):") ?? undefined;
-                try {
-                  await reportFn({ data: { exerciseId: current.id, unitId: unit.id, note } });
-                  toast.success("Thanks — reported");
-                } catch (e: any) {
-                  toast.error(e?.message ?? "Report failed");
-                }
-              }}
-            >
+                try { await reportFn({ data: { exerciseId: current.id, unitId: unit.id, note } }); toast.success("Thanks — reported"); }
+                catch (e: any) { toast.error(e?.message ?? "Report failed"); }
+              }}>
               <Flag className="h-3.5 w-3.5 mr-1" /> Report
             </Button>
             {!feedback ? (
               <Button onClick={commit} disabled={pick == null || submitting}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check ⏎"}
               </Button>
             ) : (
-              <Button onClick={next}>{idx + 1 >= exercises.length ? "Finish" : "Next"}</Button>
+              <Button onClick={next}>{idx + 1 >= exercises.length ? "Finish" : "Next ⏎"}</Button>
             )}
           </div>
         </Card>

@@ -16,6 +16,8 @@ import {
   listAdminConcepts, upsertAdminConcept, deleteAdminConcept,
   listAdminExercises, upsertAdminExercise, deleteAdminExercise,
 } from "@/lib/admin-learning.functions";
+import { translateUnitToSpanish } from "@/lib/admin-unit-translations.functions";
+import { Languages } from "lucide-react";
 
 export const Route = createFileRoute("/admin/learning")({
   head: () => ({ meta: [{ title: "Learning Units — Admin · 107toFly" }, { name: "robots", content: "noindex" }] }),
@@ -43,6 +45,8 @@ function AdminLearningPage() {
   const listExercises = useServerFn(listAdminExercises);
   const saveExercise = useServerFn(upsertAdminExercise);
   const delExercise = useServerFn(deleteAdminExercise);
+  const translateUnitFn = useServerFn(translateUnitToSpanish);
+  const [translating, setTranslating] = useState<string | null>(null);
 
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
@@ -173,7 +177,27 @@ function AdminLearningPage() {
                 <div className="rounded-2xl border border-border/60 bg-card/40 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h2 className="font-medium">Unit metadata</h2>
-                    <Button variant="ghost" size="sm" onClick={() => removeUnit(selectedUnit)}><Trash2 className="h-4 w-4" /></Button>
+                    <div className="flex items-center gap-1">
+                      {selectedUnit.locale === "en" && (
+                        <Button variant="outline" size="sm" disabled={translating === selectedUnit.id}
+                          onClick={async () => {
+                            setTranslating(selectedUnit.id);
+                            try {
+                              const r = await translateUnitFn({ data: { unitId: selectedUnit.id } });
+                              toast.success(`Spanish draft ready · ${r.conceptCount} concepts · ${r.exerciseCount} exercises`);
+                              await refreshUnits();
+                              // auto-select the ES unit if present
+                              const fresh = await listUnits();
+                              const esUnit = (fresh.units as Unit[]).find((x) => x.id === r.esUnitId);
+                              if (esUnit) { setUnits(fresh.units as Unit[]); setSelectedUnit(esUnit); }
+                            } catch (e) { toast.error((e as Error).message); }
+                            finally { setTranslating(null); }
+                          }}>
+                          {translating === selectedUnit.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Languages className="mr-1 h-4 w-4" /> Translate to ES</>}
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => removeUnit(selectedUnit)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <label className="text-xs text-muted-foreground">Title

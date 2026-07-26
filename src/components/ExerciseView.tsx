@@ -1,4 +1,5 @@
 import { GripVertical } from "lucide-react";
+import { useEffect } from "react";
 
 type Ex = { id: string; kind: string; payload: any };
 
@@ -8,6 +9,23 @@ export function ExerciseView({ ex, pick, setPick, disabled }: { ex: Ex; pick: an
   if (ex.kind === "mcq") {
     const prompt: string = p.prompt ?? p.question ?? "";
     const options: string[] = Array.isArray(p.options) ? p.options : [];
+
+    // Keyboard shortcuts: digits 1..9 select option.
+    useEffect(() => {
+      if (disabled) return;
+      const onKey = (e: KeyboardEvent) => {
+        const tag = (e.target as HTMLElement | null)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        const n = Number(e.key);
+        if (Number.isInteger(n) && n >= 1 && n <= options.length) {
+          e.preventDefault();
+          setPick(n - 1);
+        }
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [ex.id, disabled, options.length, setPick]);
+
     return (
       <div>
         <div className="text-base font-medium mb-3">{prompt}</div>
@@ -16,8 +34,9 @@ export function ExerciseView({ ex, pick, setPick, disabled }: { ex: Ex; pick: an
             const selected = pick === i;
             return (
               <button key={i} type="button" disabled={disabled} onClick={() => setPick(i)}
-                className={`text-left rounded-lg border p-3 text-sm transition ${selected ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"} disabled:opacity-70`}>
-                {opt}
+                className={`text-left rounded-lg border p-3 text-sm transition flex items-start gap-2 ${selected ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"} disabled:opacity-70`}>
+                <span className="text-xs text-muted-foreground min-w-[1.25rem] mt-0.5">{i + 1}.</span>
+                <span className="flex-1">{opt}</span>
               </button>
             );
           })}
