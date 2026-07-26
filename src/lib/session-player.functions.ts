@@ -159,7 +159,6 @@ export const endSession = createServerFn({ method: "POST" })
     await assertEnabled();
     const { supabase, userId } = context;
 
-    // Count answers since latest start.
     const { data: startEv } = await supabase
       .from("session_events")
       .select("created_at")
@@ -173,25 +172,47 @@ export const endSession = createServerFn({ method: "POST" })
 
     const { data: answers } = await supabase
       .from("session_events")
-      .select("correct")
+      .select("correct,note,concept_id")
       .eq("user_id", userId)
       .eq("unit_id", data.unitId)
       .eq("kind", "answer")
       .gte("created_at", since);
-    const total = answers?.length ?? 0;
-    const correct = (answers ?? []).filter((a) => a.correct === true).length;
+    const list = answers ?? [];
+    const total = list.length;
+    const correct = list.filter((a) => a.correct === true).length;
+    const hintCount = list.filter((a) => a.note === "hint").length;
     const score = total > 0 ? Math.round((correct / total) * 100) : 0;
 
     const { lessonQuizPassXp, quizPassScore } = await getStudySettings();
     const passed = score >= Number(quizPassScore ?? 70);
-    const xp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
+    const baseXp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
+    // Hint penalty: −25% per hint used, floored at 0.
+    const penaltyFactor = Math.max(0, 1 - 0.25 * hintCount);
+    const xp = Math.round(baseXp * penaltyFactor);
+
+    // Mastery snapshot after session for concepts practiced.
+    const conceptIds = Array.from(new Set(list.map((a) => a.concept_id as string).filter(Boolean)));
+    let conceptsDueSoon = 0;
+    let masteryDeltas: Array<{ conceptId: string; level: number }> = [];
+    if (conceptIds.length) {
+      const { data: mrows } = await supabase
+        .from("mastery")
+        .select("concept_id,level,next_due_at")
+        .eq("user_id", userId)
+        .in("concept_id", conceptIds);
+      const soonMs = Date.now() + 24 * 60 * 60_000;
+      for (const m of mrows ?? []) {
+        masteryDeltas.push({ conceptId: m.concept_id as string, level: Number(m.level ?? 0) });
+        if (m.next_due_at && new Date(m.next_due_at as string).getTime() <= soonMs) conceptsDueSoon++;
+      }
+    }
 
     await supabase.from("session_events").insert({
       user_id: userId, unit_id: data.unitId, kind: "end", correct: passed,
     });
     if (total > 0) await touchDailyActivity(supabase, userId);
 
-    return { total, correct, score, passed, xpAwarded: xp };
+    return { total, correct, score, passed, xpAwarded: xp, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon, masteryDeltas };
   });
 
 export const reportExercise = createServerFn({ method: "POST" })
