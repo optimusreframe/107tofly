@@ -13,6 +13,7 @@ import {
   getAdminQuestionAnalytics,
   getAdminStudentFunnel,
 } from "@/lib/admin.functions";
+import { getEngineMetrics, type EngineMetrics } from "@/lib/admin-engine.functions";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({
@@ -38,10 +39,12 @@ function AdminAnalyticsPage() {
   const fTopics = useServerFn(getAdminTopicAnalytics);
   const fQuestions = useServerFn(getAdminQuestionAnalytics);
   const fFunnel = useServerFn(getAdminStudentFunnel);
+  const fEngine = useServerFn(getEngineMetrics);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [topics, setTopics] = useState<Topics | null>(null);
   const [questions, setQuestions] = useState<Questions | null>(null);
   const [funnel, setFunnel] = useState<Funnel | null>(null);
+  const [engine, setEngine] = useState<EngineMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,10 +53,10 @@ function AdminAnalyticsPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    Promise.all([fOverview(), fTopics(), fQuestions(), fFunnel()])
-      .then(([o, t, q, f]) => { setOverview(o); setTopics(t); setQuestions(q); setFunnel(f); })
+    Promise.all([fOverview(), fTopics(), fQuestions(), fFunnel(), fEngine()])
+      .then(([o, t, q, f, e]) => { setOverview(o); setTopics(t); setQuestions(q); setFunnel(f); setEngine(e); })
       .catch((e) => setError(e?.message ?? "Error"));
-  }, [isAdmin, fOverview, fTopics, fQuestions, fFunnel]);
+  }, [isAdmin, fOverview, fTopics, fQuestions, fFunnel, fEngine]);
 
   if (authLoading || rolesLoading) {
     return <AdminAppShell><div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div></AdminAppShell>;
