@@ -38,6 +38,7 @@ export default {
       overview: "Resumen",
       users: "Usuarios",
       lessons: "Lecciones",
+      learning: "Unidades de Aprendizaje",
       questions: "Preguntas",
       certificates: "Certificados",
       landing: "Landing",
