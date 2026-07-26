@@ -38,7 +38,7 @@ export const startSession = createServerFn({ method: "POST" })
       .eq("unit_id", data.unitId);
     const conceptIds = (concepts ?? []).map((c) => c.id as string);
     if (conceptIds.length === 0) {
-      return { unit, exercises: [] as Array<Record<string, unknown>> };
+      return { unit, exercises: [] as Array<Record<string, any>> };
     }
 
     // Prefer due-first: concepts whose mastery.next_due_at <= now, else new/unseen.
@@ -69,14 +69,14 @@ export const startSession = createServerFn({ method: "POST" })
       .in("concept_id", pickConceptIds);
 
     // One exercise per concept (first, deterministic).
-    const byConcept = new Map<string, Record<string, unknown>>();
+    const byConcept = new Map<string, Record<string, any>>();
     for (const e of exs ?? []) {
       const cid = e.concept_id as string;
-      if (!byConcept.has(cid)) byConcept.set(cid, e as Record<string, unknown>);
+      if (!byConcept.has(cid)) byConcept.set(cid, e as Record<string, any>);
     }
     const exercises = pickConceptIds
       .map((id) => byConcept.get(id))
-      .filter(Boolean) as Array<Record<string, unknown>>;
+      .filter(Boolean) as Array<Record<string, any>>;
 
     await supabase.from("session_events").insert({
       user_id: userId, unit_id: data.unitId, kind: "start",
