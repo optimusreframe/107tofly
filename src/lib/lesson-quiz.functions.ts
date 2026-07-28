@@ -249,6 +249,7 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         .update({ xp: newXp, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
       xp_awarded_now = quizXp;
+      await addWeeklyXp(supabase, userId, quizXp);
     }
     await touchDailyActivity(supabase, userId);
 
