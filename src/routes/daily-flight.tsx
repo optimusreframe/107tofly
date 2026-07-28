@@ -20,7 +20,7 @@ export const Route = createFileRoute("/daily-flight")({
 });
 
 type Ex = { id: string; concept_id: string; kind: string; payload: any; difficulty: number; unit_id: string | null };
-type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number };
+type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; alreadyCompleted?: boolean; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number };
 
 function DailyFlight() {
   const navigate = useNavigate();
@@ -100,7 +100,13 @@ function DailyFlight() {
           <Card className="p-6 space-y-3">
             <div className="text-4xl font-bold">{summary.score}%</div>
             <div className="text-sm text-muted-foreground">{summary.correct} / {summary.total} correct</div>
-            {summary.xpAwarded > 0 && <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>}
+            {summary.alreadyCompleted ? (
+              <div className="text-xs rounded-md border border-muted-foreground/30 bg-muted/40 px-3 py-2 text-muted-foreground">
+                Daily flight already completed — XP and streak were awarded on your first finish today.
+              </div>
+            ) : summary.xpAwarded > 0 ? (
+              <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>
+            ) : null}
             <div className="grid grid-cols-2 gap-3 pt-3 text-sm">
               <div className="rounded-md border p-3">
                 <div className="text-xs text-muted-foreground">Concepts practiced</div>
