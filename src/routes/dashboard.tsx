@@ -311,6 +311,12 @@ function Dashboard() {
           </Link>
         </div>
 
+        {/* Inventory (Sprint I2) */}
+        <div className="mt-4">
+          <InventoryCard />
+        </div>
+
+
         {/* Activity */}
         <div className="mt-4 glass rounded-3xl p-6">
           <div className="flex items-center justify-between">
