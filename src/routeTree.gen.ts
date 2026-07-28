@@ -20,6 +20,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MapLabRouteImport } from './routes/map-lab'
 import { Route as LessonRouteImport } from './routes/lesson'
+import { Route as LeaguesRouteImport } from './routes/leagues'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
 import { Route as FlightPathRouteImport } from './routes/flight-path'
@@ -100,6 +101,11 @@ const MapLabRoute = MapLabRouteImport.update({
 const LessonRoute = LessonRouteImport.update({
   id: '/lesson',
   path: '/lesson',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaguesRoute = LeaguesRouteImport.update({
+  id: '/leagues',
+  path: '/leagues',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/leagues': typeof LeaguesRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
@@ -285,6 +292,7 @@ export interface FileRoutesByTo {
   '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/leagues': typeof LeaguesRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/leagues': typeof LeaguesRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
+    | '/leagues'
     | '/lesson'
     | '/map-lab'
     | '/mission'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
+    | '/leagues'
     | '/lesson'
     | '/map-lab'
     | '/mission'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
+    | '/leagues'
     | '/lesson'
     | '/map-lab'
     | '/mission'
@@ -484,6 +496,7 @@ export interface RootRouteChildren {
   FlightPathRoute: typeof FlightPathRoute
   FlycoachRoute: typeof FlycoachRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LeaguesRoute: typeof LeaguesRoute
   LessonRoute: typeof LessonRoute
   MapLabRoute: typeof MapLabRoute
   MissionRoute: typeof MissionRoute
@@ -578,6 +591,13 @@ declare module '@tanstack/react-router' {
       path: '/lesson'
       fullPath: '/lesson'
       preLoaderRoute: typeof LessonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leagues': {
+      id: '/leagues'
+      path: '/leagues'
+      fullPath: '/leagues'
+      preLoaderRoute: typeof LeaguesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -806,6 +826,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlightPathRoute: FlightPathRoute,
   FlycoachRoute: FlycoachRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  LeaguesRoute: LeaguesRoute,
   LessonRoute: LessonRoute,
   MapLabRoute: MapLabRoute,
   MissionRoute: MissionRoute,
