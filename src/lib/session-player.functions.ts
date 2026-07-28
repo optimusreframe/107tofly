@@ -243,10 +243,16 @@ export const endSession = createServerFn({ method: "POST" })
           .update({ xp: newXp, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
         xpAwarded = xp;
+        await supabase.from("xp_events").insert({
+          user_id: userId, amount: xp, reason: "session_complete",
+          multiplier: preBoostXp > 0 ? xp / preBoostXp : 1,
+          source_id: data.unitId,
+          metadata: { comboBonus, boostActive, maxCombo, hintCount },
+        });
       }
     }
 
-    return { total, correct, score, passed, xpAwarded, alreadyCompleted, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon, masteryDeltas };
+    return { total, correct, score, passed, xpAwarded, alreadyCompleted, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon, masteryDeltas, comboBonus, boostActive, maxCombo };
   });
 
 export const reportExercise = createServerFn({ method: "POST" })
