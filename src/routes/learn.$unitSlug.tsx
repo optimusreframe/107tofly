@@ -135,7 +135,15 @@ function LearnUnit() {
                 Session already completed — XP and streak were awarded on your first finish.
               </div>
             ) : summary.xpAwarded > 0 ? (
-              <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>
+              <div className="space-y-1">
+                <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>
+                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  {summary.boostActive && <span className="rounded-full bg-orange-500/15 text-orange-300 px-2 py-0.5">🚀 2× Boost</span>}
+                  {summary.maxCombo && summary.maxCombo >= 3 && (
+                    <span className="rounded-full bg-primary/15 text-primary px-2 py-0.5">🔥 Combo x{summary.maxCombo}{summary.comboBonus ? ` (+${summary.comboBonus})` : ""}</span>
+                  )}
+                </div>
+              </div>
             ) : null}
             {summary.masteryDeltas && summary.masteryDeltas.length > 0 && (
               <div className="space-y-2 pt-2">
