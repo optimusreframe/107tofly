@@ -21,7 +21,7 @@ export const Route = createFileRoute("/learn/$unitSlug")({
 });
 
 type Ex = { id: string; concept_id: string; kind: string; payload: any; difficulty: number };
-type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number };
+type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; alreadyCompleted?: boolean; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number; masteryDeltas?: Array<{ conceptId: string; level: number }> };
 
 function LearnUnit() {
   const { unitSlug } = Route.useParams();
