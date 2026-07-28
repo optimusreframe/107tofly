@@ -6,9 +6,11 @@ import { getUnitBySlug } from "@/lib/learning-units.functions";
 import { startSession, submitExercise, endSession, reportExercise } from "@/lib/session-player.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Loader2, Flag, Lightbulb } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Flag, Lightbulb, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { ExerciseView } from "@/components/ExerciseView";
+import { Otto } from "@/components/Otto";
+import { celebrateCorrect, shakeWrong, celebrateSessionComplete, isMuted, setMuted } from "@/lib/feedback";
 
 export const Route = createFileRoute("/learn/$unitSlug")({
   head: ({ params }) => ({
