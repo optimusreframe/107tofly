@@ -8,6 +8,7 @@ import { touchDailyActivity } from "./streak.server";
 import { enforceRateLimit } from "./rate-limit.server";
 import { logger } from "./logger.server";
 import { computeXpMultipliers } from "./inventory.server";
+import { addWeeklyXp } from "./leagues.server";
 
 // Public DTO — never expose `answer` or `explanation` before submit.
 const PUBLIC_EXERCISE_COLS = "id,concept_id,kind,payload,difficulty,locale";
