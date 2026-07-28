@@ -96,7 +96,7 @@ function AdminUsersPage() {
         if (!hay.includes(q)) return false;
       }
       if (roleFilter !== "all" && !u.roles.includes(roleFilter)) return false;
-      if (planFilter !== "all" && u.membershipPlan !== planFilter) return false;
+      // planFilter disabled while memberships are "Coming soon"
       if (progressFilter !== "all") {
         const lc = u.lessonsCompleted;
         if (progressFilter === "not_started" && lc !== 0) return false;
@@ -169,13 +169,7 @@ function AdminUsersPage() {
                 {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={planFilter} onValueChange={(v) => setPlanFilter(v as typeof planFilter)}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Plan" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All plans</SelectItem>
-                {PLANS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {/* Plan filter — hidden while memberships/payments are "Coming soon" */}
             <Select value={progressFilter} onValueChange={(v) => setProgressFilter(v as typeof progressFilter)}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Progress" /></SelectTrigger>
               <SelectContent>
@@ -210,8 +204,7 @@ function AdminUsersPage() {
                       <div className="truncate text-xs text-muted-foreground">{u.email ?? "—"}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge variant="secondary" className="text-[10px]">{u.membershipPlan}</Badge>
-                      <span className="text-[10px] text-muted-foreground">{u.membershipStatus}</span>
+                      <Badge variant="outline" className="text-[10px] opacity-60">Plans · Coming soon</Badge>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1">
@@ -261,8 +254,7 @@ function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="secondary" className="text-[10px]">{u.membershipPlan}</Badge>
-                      <div className="mt-0.5 text-[10px] text-muted-foreground">{u.membershipStatus}</div>
+                      <Badge variant="outline" className="text-[10px] opacity-60">Coming soon</Badge>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">{u.xp}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{u.streak}</td>
@@ -455,18 +447,20 @@ function UserDetailDrawer({
               </div>
             </section>
 
-            {/* Membership */}
+            {/* Membership — Coming soon (payments/memberships/support paused) */}
             <section>
-              <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Membership</h3>
-              <div className="space-y-2 rounded-xl border border-border/60 bg-card/30 p-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <Select value={plan} onValueChange={(v) => setPlan(v as Plan)}>
+              <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Membership · <span className="text-primary">Próximamente</span>
+              </h3>
+              <div className="relative space-y-2 rounded-xl border border-dashed border-border/60 bg-card/20 p-3">
+                <div className="pointer-events-none grid grid-cols-2 gap-2 opacity-40">
+                  <Select value={plan} disabled onValueChange={() => {}}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {PLANS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
+                  <Select value={status} disabled onValueChange={() => {}}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -474,13 +468,14 @@ function UserDetailDrawer({
                   </Select>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Payments are not connected yet. Membership changes are manual admin overrides.
+                  Memberships, payments and support are on hold. This panel will be re-enabled when billing goes live.
                 </p>
-                <Button size="sm" disabled={saving} onClick={saveMembership}>
-                  <Save className="mr-1.5 h-3.5 w-3.5" /> Save membership
+                <Button size="sm" disabled className="opacity-60">
+                  <Save className="mr-1.5 h-3.5 w-3.5" /> Coming soon
                 </Button>
               </div>
             </section>
+
 
             {/* Certificates */}
             <section>
