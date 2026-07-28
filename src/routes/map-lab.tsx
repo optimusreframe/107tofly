@@ -2,6 +2,45 @@ import { createFileRoute } from "@tanstack/react-router";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useState } from "react";
 import { Sparkles, MapPin } from "lucide-react";
+import { LabChallenge, type LabItem } from "@/components/LabChallenge";
+
+const MAP_CHALLENGE: LabItem[] = [
+  {
+    id: "q1",
+    prompt: "Vuelas a 350 ft AGL bajo la shelf de Class B (piso 3,000 ft MSL). ¿Necesitas autorización LAANC?",
+    options: ["Sí, siempre bajo Class B", "No, estás por debajo del piso", "Solo si vuelas de noche", "Solo con visibilidad menor a 3 SM"],
+    correctIndex: 1,
+    explanation: "El piso de la shelf está a 3,000 ft MSL. A 400 ft AGL estás en Class G/E bajo la shelf.",
+  },
+  {
+    id: "q2",
+    prompt: "El anillo interno de Class B llega hasta la superficie (SFC). ¿Qué necesitas para operar ahí?",
+    options: ["Nada, es espacio libre", "Autorización ATC vía LAANC o waiver", "Solo notificar al aeropuerto", "Certificado médico Clase 2"],
+    correctIndex: 1,
+    explanation: "Cualquier operación en Class B requiere autorización ATC previa; LAANC agiliza el proceso.",
+  },
+  {
+    id: "q3",
+    prompt: "Clase G no controlada: ¿qué reglas Part 107 aplican?",
+    options: ["Ninguna", "Máx 400 ft AGL y VLOS", "Solo VLOS", "Solo altitud máxima"],
+    correctIndex: 1,
+    explanation: "Part 107 exige 400 ft AGL máx y VLOS incluso en Class G.",
+  },
+  {
+    id: "q4",
+    prompt: "Vuelas en Class C surface area. ¿Es suficiente notificar por radio?",
+    options: ["Sí, radio basta", "No, requiere autorización ATC", "Solo si es diurno", "Solo si el dron pesa <250g"],
+    correctIndex: 1,
+    explanation: "Class C exige autorización ATC como Class B. La radio no es autorización.",
+  },
+  {
+    id: "q5",
+    prompt: "Class E con piso a 700 ft AGL. Operando a 400 ft AGL, ¿en qué clase estás?",
+    options: ["Class E", "Class G debajo del piso", "Class B", "Class D"],
+    correctIndex: 1,
+    explanation: "Debajo del piso de Class E, el espacio es Class G — sin autorización ATC bajo Part 107.",
+  },
+];
 
 export const Route = createFileRoute("/map-lab")({
   head: () => ({
@@ -135,6 +174,10 @@ function MapLab() {
               <p className="text-muted-foreground">{selected.note}</p>
             </div>
           </div>
+        </div>
+
+        <div className="mt-8">
+          <LabChallenge labId="map-airspace" title="Airspace Challenge" items={MAP_CHALLENGE} />
         </div>
       </section>
     </StudentAppShell>

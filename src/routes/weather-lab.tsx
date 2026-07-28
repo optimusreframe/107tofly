@@ -2,6 +2,45 @@ import { createFileRoute } from "@tanstack/react-router";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
 import { useMemo, useState } from "react";
 import { CloudSun, Wind, Eye, Gauge, Thermometer } from "lucide-react";
+import { LabChallenge, type LabItem } from "@/components/LabChallenge";
+
+const WEATHER_CHALLENGE: LabItem[] = [
+  {
+    id: "w1",
+    prompt: "METAR: '27015G25KT'. ¿Qué significa?",
+    options: ["Viento 270° a 15 KT con ráfagas a 25 KT", "Visibilidad 27 SM, 15 nubes", "Temperatura 27°C", "Altímetro 27.15"],
+    correctIndex: 0,
+    explanation: "Formato dddffGggKT: dirección 270°, velocidad 15 KT, ráfagas 25 KT.",
+  },
+  {
+    id: "w2",
+    prompt: "Visibilidad reportada '2SM'. Bajo Part 107 diurno, ¿puedes volar?",
+    options: ["Sí", "No, mínimo 3 SM", "Solo con observador visual", "Solo bajo waiver"],
+    correctIndex: 1,
+    explanation: "Part 107 exige mínimo 3 SM de visibilidad desde la estación de control.",
+  },
+  {
+    id: "w3",
+    prompt: "'OVC008' — techo cubierto a 800 ft AGL. ¿Puedes operar a 400 ft AGL?",
+    options: ["Sí, cumples separación", "No, faltan 500 ft debajo de nubes", "Sí, si hay observador", "Solo VLOS extendido"],
+    correctIndex: 1,
+    explanation: "Separación mínima: 500 ft debajo. 800 − 400 = 400 ft, insuficiente.",
+  },
+  {
+    id: "w4",
+    prompt: "'BR' en METAR indica…",
+    options: ["Brisa fuerte", "Neblina (mist)", "Tormenta ligera", "Ráfaga"],
+    correctIndex: 1,
+    explanation: "BR = mist/neblina; visibilidad reducida entre 5/8 y 6 SM.",
+  },
+  {
+    id: "w5",
+    prompt: "Temp/Dewpoint '18/17'. ¿Qué riesgo hay?",
+    options: ["Ninguno", "Formación de niebla / techos bajos", "Turbulencia térmica", "Congelamiento"],
+    correctIndex: 1,
+    explanation: "Spread ≤ 3°C indica alta humedad relativa y potencial niebla.",
+  },
+];
 
 export const Route = createFileRoute("/weather-lab")({
   head: () => ({
@@ -130,6 +169,10 @@ function WeatherLab() {
             Bajo Part 107 necesitas mín. 3 SM de visibilidad y separación de nubes
             (500 ft debajo, 2,000 ft horizontal). Compara contra el METAR decodificado.
           </p>
+        </div>
+
+        <div className="mt-8">
+          <LabChallenge labId="weather-metar" title="METAR Challenge" items={WEATHER_CHALLENGE} />
         </div>
       </section>
     </StudentAppShell>
