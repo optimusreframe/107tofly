@@ -121,8 +121,12 @@ function LearnUnit() {
     return (
       <StudentAppShell>
         <section className="mx-auto max-w-2xl p-8">
-          <h1 className="text-2xl font-semibold mb-2">Session complete</h1>
-          <p className="text-muted-foreground mb-6">{unit?.title}</p>
+          <div className="mb-4 flex flex-col items-center">
+            <Otto mood={summary.score >= 70 ? "cheer" : summary.score >= 50 ? "happy" : "sad"} size={120}
+              label={summary.score >= 70 ? "Nailed it!" : summary.score >= 50 ? "Good work!" : "Let's try again"} />
+          </div>
+          <h1 className="text-2xl font-semibold mb-2 text-center">Session complete</h1>
+          <p className="text-muted-foreground mb-6 text-center">{unit?.title}</p>
           <Card className="p-6 space-y-4">
             <div className="text-4xl font-bold">{summary.score}%</div>
             <div className="text-sm text-muted-foreground">{summary.correct} / {summary.total} correct</div>
