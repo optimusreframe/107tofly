@@ -244,6 +244,7 @@ export const endSession = createServerFn({ method: "POST" })
           .update({ xp: newXp, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
         xpAwarded = xp;
+        await addWeeklyXp(supabase, userId, xp);
         await supabase.from("xp_events").insert({
           user_id: userId, amount: xp, reason: "session_complete",
           multiplier: preBoostXp > 0 ? xp / preBoostXp : 1,
