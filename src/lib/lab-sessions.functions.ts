@@ -71,6 +71,7 @@ export const completeLabChallenge = createServerFn({ method: "POST" })
         .update({ xp: newXp, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
       xpAwarded = LAB_XP;
+      await addWeeklyXp(supabase, userId, LAB_XP);
     }
 
     const score = Math.round((data.correct / data.total) * 100);
