@@ -999,6 +999,42 @@ export type Database = {
           },
         ]
       }
+      sim_sessions: {
+        Row: {
+          id: string
+          locale: string
+          picks: Json
+          question_ids: string[]
+          started_at: string
+          submitted: boolean
+          time_left_sec: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          locale?: string
+          picks?: Json
+          question_ids: string[]
+          started_at?: string
+          submitted?: boolean
+          time_left_sec: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          locale?: string
+          picks?: Json
+          question_ids?: string[]
+          started_at?: string
+          submitted?: boolean
+          time_left_sec?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

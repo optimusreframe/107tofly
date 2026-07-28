@@ -1,63 +1,76 @@
-# Sprint 2 — Learning Engine 2.0 (Foundation)
+# Plan
 
-Sprint 1 (Foundation Integrity) is closed. The plan doc explicitly deferred the new educational model to Sprint 2+. This sprint lays the DB + backend + minimal UI for it, without breaking the current lesson/quiz flow.
+## Parte A — Marcar Memberships / Payments / Support como "Próximamente"
 
-Guardrails:
-- No visual redesign (Duolingo-style comes later).
-- Current `lessons`, `questions`, `flashcards`, `progress`, certificates keep working unchanged.
-- Feature flag `features.session_player_enabled` (default OFF) gates the new UI.
+Actualmente **no hay UI pública** de pricing/support/upgrade en la Student App ni en la Landing; lo único vivo es el bloque de **Membership** dentro de `src/routes/admin.users.tsx` (override manual del admin) y las columnas `membership_plan` / `membership_status` en `profiles`. No se toca lógica de negocio ni pagos.
 
-## 1. Schema (single migration)
+Cambios:
 
-New tables in `public`, each with GRANTs + RLS + policies per project rules:
+1. `src/routes/admin.users.tsx`
+   - Ocultar/deshabilitar el bloque "Membership" (filas ~458-483) detrás de un estado `disabled` con overlay "Próximamente".
+   - Quitar el filtro por `membershipPlan` del listado y esconder los badges `membershipPlan`/`membershipStatus` en las tarjetas (líneas 213-214, 264-265).
+2. `src/routes/admin.tsx` (dashboard admin) — si aparecen KPIs de membership, marcarlos como "Próximamente" (verificar antes de tocar).
+3. **No** crear `/pricing`, `/upgrade` ni `/support` todavía.
+4. Documentar en `docs/ox/coming-soon-payments.md` que memberships/support/payments quedan en pausa oficial.
 
-- `learning_units` — canonical unit of study (id, slug, locale, title, summary, order_index, lesson_id nullable link, status, translation_group_id, timestamps). Public SELECT for `status='published'`; admin write via `has_role('admin')`.
-- `concepts` — atomic idea inside a unit (id, unit_id, order_index, title, body_md, locale). Public read when parent unit is published.
-- `exercises` — typed practice item bound to a concept (id, concept_id, kind enum: `mcq|cloze|order|match`, payload jsonb, answer jsonb, explanation, difficulty smallint, locale). Answer/explanation NEVER exposed to anon; only `id, concept_id, kind, payload, difficulty, locale` in public DTO.
-- `mastery` — per-user per-concept mastery (user_id, concept_id, level smallint 0–5, correct_streak, last_seen_at, next_due_at). RLS `auth.uid() = user_id`.
-- `session_events` — append-only log of Session Player events (user_id, unit_id, concept_id, exercise_id, kind, correct, latency_ms, created_at). Insert-own only.
+---
 
-Seed: none. Content authoring happens later in Admin.
+## Parte B — Roadmap "Superior a Duolingo": convertir 107toFly en app altamente interactiva
 
-## 2. Server functions (all under `src/lib/`)
+Duolingo compite en 4 ejes: **motivación diaria, feedback inmediato, social, y hábito**. Ya tienes buena base (SRS, mastery, XP, streak, flight-path, daily-flight, simulador). Lo que falta para superarlo, organizado en 6 sprints temáticos ejecutables uno por uno.
 
-- `learning-units.functions.ts`: `listPublishedUnits({locale})`, `getUnitBySlug({slug,locale})` with EN fallback (mirrors lesson pattern).
-- `session-player.functions.ts`:
-  - `startSession({unitId})` → picks next due concepts using `mastery.next_due_at` + SRS interval table, returns exercises with **safe DTO only**.
-  - `submitExercise({exerciseId, pick})` → server-side eval (reuses pattern from `quiz-eval.server.ts`), updates `mastery` (SM-2 lite: level±1, next_due_at = now + interval[level]), inserts `session_events`, awards XP via runtime-settings, creates flashcard on wrong answer.
-  - `endSession({unitId})` → summary (correct, xp, mastery deltas).
-- `admin-learning.functions.ts` (admin-gated): CRUD for units/concepts/exercises + AI translation reusing existing Gemini flow.
+### Sprint I1 — Feedback sensorial y microinteracciones
+Objetivo: que **cada acción se sienta viva** (donde Duolingo gana hoy).
+- Sonidos: correcto/incorrecto/level-up/streak (Web Audio, respetar `prefers-reduced-motion` y toggle en `/settings`).
+- Haptics móvil (`navigator.vibrate`).
+- Confetti + shake en respuestas, animación de barra de mastery llenándose, contador XP animado.
+- Mascota-copiloto "Otto" (drone SVG animado) con estados: idle, celebra, piensa, triste. Aparece en session player y summary.
+- Transiciones entre ejercicios (slide/fade), skeleton loaders unificados.
 
-Import-graph safety: any `client.server` load stays inside handlers, per Sprint 1 rules.
+### Sprint I2 — Sistema de vidas, combos y boosts (economía del hábito)
+- **Combo counter** dentro de sesión: aciertos consecutivos multiplican XP (x1.2, x1.5, x2). Se rompe con error.
+- **Streak Freeze** (1 gratis/semana) + **Streak Repair** (costoso) para no perder racha.
+- **XP Boost** de 15 min tras completar Daily Flight.
+- **Weekend Warrior** / **Perfect Lesson** achievements con recompensas concretas.
+- Tabla `user_inventory` (freezes, boosts) + `xp_events` para auditar.
 
-## 3. Minimal UI (behind flag)
+### Sprint I3 — Social y competición
+Aquí Duolingo tiene "Ligas". Lo replicamos y mejoramos con contexto de piloto.
+- **Leaderboards semanales** por XP (global + país + amigos), con promoción/descenso tipo liga (Bronze → Diamond → Ace Pilot).
+- **Duels asíncronos 1v1**: reto de 5 preguntas mismo topic, notificación cuando el oponente responde.
+- **Squadrons** (grupos de 5-10 pilotos) con misión semanal cooperativa.
+- **Perfil público** con badges, mastery ring, tiempo total volado.
+- Requiere: nuevas tablas `leagues`, `league_members`, `duels`, `squadrons`; jobs semanales vía `pg_cron` → server route en `/api/public/cron/*`.
 
-- `/learn/$unitSlug` route — Session Player MVP:
-  - Card stack, one exercise at a time, immediate feedback per exercise (this is Session Player semantics, distinct from lesson quiz).
-  - Progress bar, XP toast, end-of-session summary.
-- Dashboard: if flag ON and any published unit exists, show "Continue learning" card linking to next due unit; otherwise unchanged.
-- No admin UI in this sprint beyond raw list under `/admin/learning` (table only, create/edit deferred to Sprint 3).
+### Sprint I4 — AI conversacional y voz (diferenciador real vs Duolingo)
+Duolingo apenas empieza con conversación AI; aquí es donde 107toFly puede volar.
+- **FlyCoach Voice**: modo voz en `/flycoach` usando Web Speech API (STT) + Lovable AI TTS. El estudiante habla scenarios ATC ("N123AB, Denver Tower, cleared for takeoff…") y la AI responde en tiempo real.
+- **Radio Trainer**: transcripción evaluada contra frases estándar FAA.
+- **Scenario Branching**: historias interactivas ("Estás volando y aparece TFR; qué haces?") con ramas y consecuencias.
+- **AI Debrief** al terminar simulador: coach explica errores en lenguaje natural (Gemini 2.5 Flash, ya integrado).
 
-## 4. Tests
+### Sprint I5 — Contenido visual e inmersivo
+- **3D/2.5D Airspace Explorer**: vista interactiva de clases de espacio aéreo (Three.js o deck.gl); tocar una clase abre reglas + quiz.
+- **Sectional Chart Reader** con panning/zoom y hotspots interactivos (extensión de `/map-lab`).
+- **Real METAR/TAF live** de aeropuertos elegidos por el estudiante en `/weather-lab`.
+- **Video micro-lecciones** (30-60s) embed en lessons — CDN externo, no auto-hosted.
+- **Sim de vuelo simplificado**: mini-canvas donde practicas maniobras Part 107 (line-of-sight, altitude limits).
 
-- Vitest:
-  - `session-eval.test.ts` — server ignores client-sent correctness; wrong pick → mastery level decreases, right pick → increases and pushes `next_due_at`.
-  - `srs-schedule.test.ts` — interval table is monotonic and capped.
-- Playwright smoke: with flag ON and a seeded unit fixture, start session → answer 1 right / 1 wrong → summary renders, `session_events` rows exist.
+### Sprint I6 — Retención, PWA y notificaciones
+- **PWA**: manifest + service worker, instalable, offline para lecciones ya vistas y flashcards del día.
+- **Push notifications** (web push) para: streak en riesgo, nuevos duels, tarjetas por revisar hoy, misión semanal cerrando.
+- **Email digest** semanal (usar dominio propio ya configurado) con progreso, badge nuevos, liga actual.
+- **Referral program**: código único, +200 XP al invitador cuando el amigo completa 1 lección.
+- **Share cards** OG dinámicas: "Terminé mi primera Daily Flight con 92% — únete".
 
-## 5. Acceptance
+---
 
-- Migration applies cleanly; every new public table has GRANTs + RLS + policies.
-- Anon fetch of exercises never contains `answer` or `explanation`.
-- Existing dashboard, lessons, practice, simulator, certificate flows unchanged when flag is OFF.
-- CI green (typecheck, vitest, build, playwright smoke).
+## Prioridad recomendada
+`Parte A` (1 turno) → **I1** (sensorial, base para todo lo demás) → **I2** (economía) → **I3** (social) → **I4** (voz/AI) → **I5** (visual) → **I6** (retención).
 
-## Technical notes
+Cada sprint sigue el mismo patrón que S11-S18: implementar → validar `tsgo` → doc en `docs/ox/sprint-I<n>.md`.
 
-- SRS interval table (minutes): `[10, 60, 360, 1440, 4320, 10080]` indexed by level 0–5.
-- `mastery.level` clamps to `[0,5]`; on wrong, `level = max(0, level-1)` and `correct_streak = 0`.
-- Reuse `PUBLIC_*_COLS` pattern for exercise projection.
-- Feature flag read via existing `runtime-settings.server.ts` cache.
-- No changes to `lessons`, `questions`, `flashcards`, `progress`, certificates schemas.
-
-Out of scope: Daily Flight adaptive engine, Map/Weather Lab 2.0, Mission Engine, Readiness 2.0, Simulator 2.0, Duolingo visual redesign, admin authoring UI (Sprint 3).
+## Preguntas antes de arrancar
+1. ¿Ejecuto **Parte A** ahora y luego arrancamos **I1**, o prefieres que primero elijas los sprints I* que quieres priorizar?
+2. Para I3 (social/ligas): ¿nombres reales o handles/callsigns anónimos por defecto?
+3. Para I4 (voz): ¿OK con permiso de micrófono y usar Lovable AI para TTS/STT en Gemini?
