@@ -45,6 +45,8 @@ function LearnUnit() {
   const [submitting, setSubmitting] = useState(false);
   const [startedAt, setStartedAt] = useState<number>(Date.now());
   const [hintShown, setHintShown] = useState(false);
+  const [muted, setMutedState] = useState(false);
+  useEffect(() => { setMutedState(isMuted()); }, []);
 
   useEffect(() => {
     (async () => {
