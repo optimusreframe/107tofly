@@ -31,6 +31,7 @@ import { Route as DailyFlightRouteImport } from './routes/daily-flight'
 import { Route as CourseRouteImport } from './routes/course'
 import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as Airspace3dRouteImport } from './routes/airspace-3d'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
@@ -159,6 +160,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Airspace3dRoute = Airspace3dRouteImport.update({
+  id: '/airspace-3d',
+  path: '/airspace-3d',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/airspace-3d': typeof Airspace3dRoute
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/airspace-3d': typeof Airspace3dRoute
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/airspace-3d': typeof Airspace3dRoute
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -375,6 +384,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/airspace-3d'
     | '/auth'
     | '/certificate'
     | '/course'
@@ -416,6 +426,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/airspace-3d'
     | '/auth'
     | '/certificate'
     | '/course'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/airspace-3d'
     | '/auth'
     | '/certificate'
     | '/course'
@@ -499,6 +511,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
+  Airspace3dRoute: typeof Airspace3dRoute
   AuthRoute: typeof AuthRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
@@ -683,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/airspace-3d': {
+      id: '/airspace-3d'
+      path: '/airspace-3d'
+      fullPath: '/airspace-3d'
+      preLoaderRoute: typeof Airspace3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -837,6 +857,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
+  Airspace3dRoute: Airspace3dRoute,
   AuthRoute: AuthRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
