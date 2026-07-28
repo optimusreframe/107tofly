@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "@/lib/streak.server";
+import { addWeeklyXp } from "@/lib/leagues.server";
 
 const LAB_XP = 10;
 
