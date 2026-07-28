@@ -204,8 +204,7 @@ function AdminUsersPage() {
                       <div className="truncate text-xs text-muted-foreground">{u.email ?? "—"}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge variant="secondary" className="text-[10px]">{u.membershipPlan}</Badge>
-                      <span className="text-[10px] text-muted-foreground">{u.membershipStatus}</span>
+                      <Badge variant="outline" className="text-[10px] opacity-60">Plans · Coming soon</Badge>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1">
