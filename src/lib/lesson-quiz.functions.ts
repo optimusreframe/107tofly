@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
+import { addWeeklyXp } from "./leagues.server";
 import { getStudySettings } from "./runtime-settings.server";
 import { evaluateAttempt } from "./quiz-eval.server";
 
