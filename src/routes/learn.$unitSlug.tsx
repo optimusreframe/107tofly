@@ -209,12 +209,15 @@ function LearnUnit() {
           )}
 
           {feedback && (
-            <div className={`rounded-lg border p-3 text-sm ${feedback.correct ? "border-success/40 bg-success/10" : "border-destructive/40 bg-destructive/10"}`}>
-              <div className="flex items-center gap-2 font-medium">
-                {feedback.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                {feedback.correct ? "Correct" : "Incorrect"}
+            <div className={`rounded-lg border p-3 text-sm flex gap-3 items-start ${feedback.correct ? "border-success/40 bg-success/10" : "border-destructive/40 bg-destructive/10"}`}>
+              <Otto mood={feedback.correct ? "happy" : "sad"} size={56} />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 font-medium">
+                  {feedback.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                  {feedback.correct ? "Correct" : "Incorrect"}
+                </div>
+                {feedback.explanation && <p className="mt-2 text-muted-foreground">{feedback.explanation}</p>}
               </div>
-              {feedback.explanation && <p className="mt-2 text-muted-foreground">{feedback.explanation}</p>}
             </div>
           )}
 
