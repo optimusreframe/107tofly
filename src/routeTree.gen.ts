@@ -14,6 +14,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RadioLabRouteImport } from './routes/radio-lab'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -71,6 +72,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadioLabRoute = RadioLabRouteImport.update({
+  id: '/radio-lab',
+  path: '/radio-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgressRoute = ProgressRouteImport.update({
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
+  '/radio-lab': typeof RadioLabRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
+  '/radio-lab': typeof RadioLabRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
+  '/radio-lab': typeof RadioLabRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -382,6 +391,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/progress'
+    | '/radio-lab'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/progress'
+    | '/radio-lab'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/progress'
+    | '/radio-lab'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
   ProgressRoute: typeof ProgressRoute
+  RadioLabRoute: typeof RadioLabRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SimulatorRoute: typeof SimulatorRoute
@@ -549,6 +562,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radio-lab': {
+      id: '/radio-lab'
+      path: '/radio-lab'
+      fullPath: '/radio-lab'
+      preLoaderRoute: typeof RadioLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/progress': {
@@ -833,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
   ProgressRoute: ProgressRoute,
+  RadioLabRoute: RadioLabRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SimulatorRoute: SimulatorRoute,
