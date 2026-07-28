@@ -1083,6 +1083,30 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_xp: {
+        Row: {
+          tier: string
+          updated_at: string
+          user_id: string
+          week_start: string
+          xp: number
+        }
+        Insert: {
+          tier?: string
+          updated_at?: string
+          user_id: string
+          week_start: string
+          xp?: number
+        }
+        Update: {
+          tier?: string
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       xp_events: {
         Row: {
           amount: number
