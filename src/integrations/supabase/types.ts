@@ -1035,6 +1035,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_inventory: {
+        Row: {
+          active_until: string | null
+          created_at: string
+          item_key: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_until?: string | null
+          created_at?: string
+          item_key: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_until?: string | null
+          created_at?: string
+          item_key?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1052,6 +1079,39 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          metadata: Json
+          multiplier: number
+          reason: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          metadata?: Json
+          multiplier?: number
+          reason: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          metadata?: Json
+          multiplier?: number
+          reason?: string
+          source_id?: string | null
           user_id?: string
         }
         Relationships: []
