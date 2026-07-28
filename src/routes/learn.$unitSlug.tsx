@@ -75,7 +75,8 @@ function LearnUnit() {
         data: { exerciseId: current.id, unitId: unit!.id, pick, latencyMs: Date.now() - startedAt, usedHint: hintShown },
       });
       setFeedback({ correct: r.correct, explanation: r.explanation, answer: r.answer });
-      if (r.correct) toast.success("Correct"); else toast.error("Not quite");
+      if (r.correct) { celebrateCorrect(); toast.success("Correct"); }
+      else { shakeWrong(); toast.error("Not quite"); }
     } catch (e: any) { toast.error(e?.message ?? "Submit failed"); }
     finally { setSubmitting(false); }
   }
