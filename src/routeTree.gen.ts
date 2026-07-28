@@ -22,6 +22,7 @@ import { Route as MapLabRouteImport } from './routes/map-lab'
 import { Route as LessonRouteImport } from './routes/lesson'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
+import { Route as FlightPathRouteImport } from './routes/flight-path'
 import { Route as FlashcardsRouteImport } from './routes/flashcards'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DailyFlightRouteImport } from './routes/daily-flight'
@@ -109,6 +110,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const FlycoachRoute = FlycoachRouteImport.update({
   id: '/flycoach',
   path: '/flycoach',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlightPathRoute = FlightPathRouteImport.update({
+  id: '/flight-path',
+  path: '/flight-path',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlashcardsRoute = FlashcardsRouteImport.update({
@@ -237,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
+  '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/lesson': typeof LessonRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
+  '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/lesson': typeof LessonRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/daily-flight': typeof DailyFlightRoute
   '/dashboard': typeof DashboardRoute
   '/flashcards': typeof FlashcardsRoute
+  '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/lesson': typeof LessonRoute
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
+    | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
     | '/lesson'
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
+    | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
     | '/lesson'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/daily-flight'
     | '/dashboard'
     | '/flashcards'
+    | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
     | '/lesson'
@@ -469,6 +481,7 @@ export interface RootRouteChildren {
   DailyFlightRoute: typeof DailyFlightRoute
   DashboardRoute: typeof DashboardRoute
   FlashcardsRoute: typeof FlashcardsRoute
+  FlightPathRoute: typeof FlightPathRoute
   FlycoachRoute: typeof FlycoachRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LessonRoute: typeof LessonRoute
@@ -579,6 +592,13 @@ declare module '@tanstack/react-router' {
       path: '/flycoach'
       fullPath: '/flycoach'
       preLoaderRoute: typeof FlycoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flight-path': {
+      id: '/flight-path'
+      path: '/flight-path'
+      fullPath: '/flight-path'
+      preLoaderRoute: typeof FlightPathRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flashcards': {
@@ -783,6 +803,7 @@ const rootRouteChildren: RootRouteChildren = {
   DailyFlightRoute: DailyFlightRoute,
   DashboardRoute: DashboardRoute,
   FlashcardsRoute: FlashcardsRoute,
+  FlightPathRoute: FlightPathRoute,
   FlycoachRoute: FlycoachRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LessonRoute: LessonRoute,
@@ -804,12 +825,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
