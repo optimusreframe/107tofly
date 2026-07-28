@@ -170,6 +170,10 @@ function WeatherLab() {
             (500 ft debajo, 2,000 ft horizontal). Compara contra el METAR decodificado.
           </p>
         </div>
+
+        <div className="mt-8">
+          <LabChallenge labId="weather-metar" title="METAR Challenge" items={WEATHER_CHALLENGE} />
+        </div>
       </section>
     </StudentAppShell>
   );
