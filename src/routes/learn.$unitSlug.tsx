@@ -176,7 +176,14 @@ function LearnUnit() {
     <StudentAppShell>
       <section className="mx-auto max-w-2xl p-6 md:p-8">
         <div className="mb-6">
-          <div className="text-xs uppercase tracking-wider text-primary mb-1">{unit?.title}</div>
+          <div className="mb-1 flex items-center justify-between">
+            <div className="text-xs uppercase tracking-wider text-primary">{unit?.title}</div>
+            <button type="button" aria-label={muted ? "Unmute" : "Mute"}
+              onClick={() => { const v = !muted; setMuted(v); setMutedState(v); }}
+              className="text-muted-foreground hover:text-foreground transition">
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+          </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
           </div>
