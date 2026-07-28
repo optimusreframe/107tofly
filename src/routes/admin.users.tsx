@@ -96,7 +96,7 @@ function AdminUsersPage() {
         if (!hay.includes(q)) return false;
       }
       if (roleFilter !== "all" && !u.roles.includes(roleFilter)) return false;
-      if (planFilter !== "all" && u.membershipPlan !== planFilter) return false;
+      // planFilter disabled while memberships are "Coming soon"
       if (progressFilter !== "all") {
         const lc = u.lessonsCompleted;
         if (progressFilter === "not_started" && lc !== 0) return false;
