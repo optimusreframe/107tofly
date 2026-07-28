@@ -175,6 +175,10 @@ function MapLab() {
             </div>
           </div>
         </div>
+
+        <div className="mt-8">
+          <LabChallenge labId="map-airspace" title="Airspace Challenge" items={MAP_CHALLENGE} />
+        </div>
       </section>
     </StudentAppShell>
   );
