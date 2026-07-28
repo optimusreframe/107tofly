@@ -491,6 +491,17 @@ export const endDailyFlight = createServerFn({ method: "POST" })
       .maybeSingle();
     const since = (startEv?.created_at as string | undefined) ?? new Date(Date.now() - 60 * 60_000).toISOString();
 
+    // Idempotency guard for Daily Flight.
+    const { data: prevEnd } = await supabase
+      .from("session_events")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("kind", "end")
+      .eq("note", DAILY_FLIGHT_MARK)
+      .gte("created_at", since)
+      .limit(1)
+      .maybeSingle();
+
     const { data: answers } = await supabase
       .from("session_events")
       .select("correct,note,concept_id")
@@ -524,10 +535,23 @@ export const endDailyFlight = createServerFn({ method: "POST" })
       }
     }
 
-    await supabase.from("session_events").insert({
-      user_id: userId, unit_id: null, kind: "end", correct: passed, note: DAILY_FLIGHT_MARK,
-    });
-    if (total > 0) await touchDailyActivity(supabase, userId);
+    const alreadyCompleted = !!prevEnd;
+    let xpAwarded = 0;
+    if (!alreadyCompleted) {
+      await supabase.from("session_events").insert({
+        user_id: userId, unit_id: null, kind: "end", correct: passed, note: DAILY_FLIGHT_MARK,
+      });
+      if (total > 0) await touchDailyActivity(supabase, userId);
+      if (xp > 0) {
+        const { data: prog } = await supabase
+          .from("progress").select("xp").eq("user_id", userId).maybeSingle();
+        const newXp = Number(prog?.xp ?? 0) + xp;
+        await supabase.from("progress")
+          .update({ xp: newXp, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+        xpAwarded = xp;
+      }
+    }
 
-    return { total, correct, score, passed, xpAwarded: xp, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon };
+    return { total, correct, score, passed, xpAwarded, alreadyCompleted, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon };
   });
