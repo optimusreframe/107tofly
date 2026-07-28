@@ -30,6 +30,6 @@ export const getWeeklyLeaderboard = createServerFn({ method: "GET" })
       avatarUrl: profiles[r.user_id]?.avatar_url ?? null,
       isMe: r.user_id === userId,
     }));
-    const myEntry = entries.find((e) => e.isMe) ?? null;
+    const myEntry = entries.find((e: any) => e.isMe) ?? null;
     return { weekStart: week, entries, myEntry };
   });
