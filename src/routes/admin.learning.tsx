@@ -31,7 +31,7 @@ type Exercise = { id: string; concept_id: string; kind: string; payload: unknown
 
 const STATUSES = ["draft","review","published","archived"] as const;
 const LOCALES = ["en","es"] as const;
-const KINDS = ["mcq","cloze","order","match"] as const;
+const KINDS = ["mcq","cloze","order","match","multi_select","numeric","truefalse"] as const;
 
 function AdminLearningPage() {
   const { user, loading: authLoading } = useAuth();

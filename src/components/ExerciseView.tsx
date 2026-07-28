@@ -136,5 +136,87 @@ export function ExerciseView({ ex, pick, setPick, disabled }: { ex: Ex; pick: an
     );
   }
 
+  if (ex.kind === "multi_select") {
+    const prompt: string = p.prompt ?? p.question ?? "";
+    const options: string[] = Array.isArray(p.options) ? p.options : [];
+    const picked: number[] = Array.isArray(pick?.indices) ? pick.indices : [];
+    const toggle = (i: number) => {
+      if (disabled) return;
+      const set = new Set(picked);
+      if (set.has(i)) set.delete(i);
+      else set.add(i);
+      setPick({ indices: Array.from(set).sort((a, b) => a - b) });
+    };
+    return (
+      <div>
+        <div className="text-base font-medium mb-1">{prompt}</div>
+        <div className="mb-3 text-xs text-muted-foreground">Select all that apply.</div>
+        <div className="grid gap-2">
+          {options.map((opt, i) => {
+            const selected = picked.includes(i);
+            return (
+              <button key={i} type="button" disabled={disabled} onClick={() => toggle(i)}
+                className={`text-left rounded-lg border p-3 text-sm transition flex items-start gap-2 ${selected ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"} disabled:opacity-70`}>
+                <span className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
+                  {selected ? "✓" : ""}
+                </span>
+                <span className="flex-1">{opt}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (ex.kind === "numeric") {
+    const prompt: string = p.prompt ?? "";
+    const unit: string | undefined = typeof p.unit === "string" ? p.unit : undefined;
+    const value = pick && typeof pick === "object" ? (pick as { value?: unknown }).value : pick;
+    return (
+      <div>
+        <div className="text-base font-medium mb-3">{prompt}</div>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            step="any"
+            disabled={disabled}
+            value={value === undefined || value === null ? "" : String(value)}
+            onChange={(e) => setPick({ value: e.target.value === "" ? null : Number(e.target.value) })}
+            className="w-40 rounded-md border bg-background p-2 text-sm"
+            placeholder="Enter a number"
+          />
+          {unit ? <span className="text-sm text-muted-foreground">{unit}</span> : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (ex.kind === "truefalse") {
+    const prompt: string = p.prompt ?? p.question ?? "";
+    const current = pick && typeof pick === "object" ? (pick as { value?: unknown }).value : pick;
+    const choose = (v: boolean) => !disabled && setPick({ value: v });
+    return (
+      <div>
+        <div className="text-base font-medium mb-3">{prompt}</div>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { v: true, label: "True" },
+            { v: false, label: "False" },
+          ].map(({ v, label }) => {
+            const selected = current === v;
+            return (
+              <button key={label} type="button" disabled={disabled} onClick={() => choose(v)}
+                className={`rounded-lg border p-3 text-sm font-medium transition ${selected ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"} disabled:opacity-70`}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return <div className="text-sm text-muted-foreground">Unsupported exercise kind: {ex.kind}</div>;
 }

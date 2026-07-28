@@ -236,6 +236,99 @@ export function ExerciseFormEditor({
     );
   }
 
+  if (ex.kind === "multi_select") {
+    const options: string[] = Array.isArray(p.options) ? p.options : [];
+    const indices: number[] = Array.isArray(a.indices) ? a.indices : [];
+    const toggle = (i: number) => {
+      const set = new Set(indices);
+      if (set.has(i)) set.delete(i);
+      else set.add(i);
+      onChange({ answer: { indices: Array.from(set).sort((x, y) => x - y) } });
+    };
+    return (
+      <div className="space-y-2">
+        {header}
+        <label className="block text-xs text-muted-foreground">Question
+          <Textarea rows={2} value={p.prompt ?? ""}
+            onChange={(e) => onChange({ payload: { ...p, prompt: e.target.value } })} />
+        </label>
+        <label className="block text-xs text-muted-foreground">Hint (optional)
+          <Input value={p.hint ?? ""} onChange={(e) => onChange({ payload: { ...p, hint: e.target.value || undefined } })} />
+        </label>
+        <div className="text-xs text-muted-foreground">Options (check all correct answers)</div>
+        <div className="space-y-1">
+          {options.map((opt, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input type="checkbox" checked={indices.includes(i)} onChange={() => toggle(i)} />
+              <Input value={opt} onChange={(e) => {
+                const next = [...options]; next[i] = e.target.value;
+                onChange({ payload: { ...p, options: next } });
+              }} />
+              <Button size="sm" variant="ghost" onClick={() => {
+                const next = options.filter((_, j) => j !== i);
+                const nextIdx = indices
+                  .filter((x) => x !== i)
+                  .map((x) => (x > i ? x - 1 : x));
+                onChange({ payload: { ...p, options: next }, answer: { indices: nextIdx } });
+              }}><Trash2 className="h-3 w-3" /></Button>
+            </div>
+          ))}
+        </div>
+        <Button size="sm" variant="outline" onClick={() => onChange({ payload: { ...p, options: [...options, ""] } })}>
+          <Plus className="mr-1 h-3 w-3" /> Option
+        </Button>
+      </div>
+    );
+  }
+
+  if (ex.kind === "numeric") {
+    const value = a.value ?? "";
+    const tolerance = a.tolerance ?? 0;
+    return (
+      <div className="space-y-2">
+        {header}
+        <label className="block text-xs text-muted-foreground">Prompt
+          <Textarea rows={2} value={p.prompt ?? ""}
+            onChange={(e) => onChange({ payload: { ...p, prompt: e.target.value } })} />
+        </label>
+        <label className="block text-xs text-muted-foreground">Unit label (optional, e.g. ft, kt)
+          <Input value={p.unit ?? ""} onChange={(e) => onChange({ payload: { ...p, unit: e.target.value || undefined } })} />
+        </label>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs text-muted-foreground">Correct value
+            <Input type="number" step="any" value={value === "" ? "" : String(value)}
+              onChange={(e) => onChange({ answer: { ...a, value: e.target.value === "" ? null : Number(e.target.value) } })} />
+          </label>
+          <label className="block text-xs text-muted-foreground">± Tolerance
+            <Input type="number" min={0} step="any" value={String(tolerance)}
+              onChange={(e) => onChange({ answer: { ...a, tolerance: Math.max(0, Number(e.target.value) || 0) } })} />
+          </label>
+        </div>
+      </div>
+    );
+  }
+
+  if (ex.kind === "truefalse") {
+    const value = typeof a.value === "boolean" ? a.value : true;
+    return (
+      <div className="space-y-2">
+        {header}
+        <label className="block text-xs text-muted-foreground">Statement
+          <Textarea rows={2} value={p.prompt ?? ""}
+            onChange={(e) => onChange({ payload: { ...p, prompt: e.target.value } })} />
+        </label>
+        <div className="flex items-center gap-4 text-sm">
+          <label className="flex items-center gap-1">
+            <input type="radio" checked={value === true} onChange={() => onChange({ answer: { value: true } })} /> True
+          </label>
+          <label className="flex items-center gap-1">
+            <input type="radio" checked={value === false} onChange={() => onChange({ answer: { value: false } })} /> False
+          </label>
+        </div>
+      </div>
+    );
+  }
+
   return <RawJsonPair ex={ex} onChange={onChange} />;
 }
 
