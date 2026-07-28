@@ -169,13 +169,7 @@ function AdminUsersPage() {
                 {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={planFilter} onValueChange={(v) => setPlanFilter(v as typeof planFilter)}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Plan" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All plans</SelectItem>
-                {PLANS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {/* Plan filter — hidden while memberships/payments are "Coming soon" */}
             <Select value={progressFilter} onValueChange={(v) => setProgressFilter(v as typeof progressFilter)}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Progress" /></SelectTrigger>
               <SelectContent>
