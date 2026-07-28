@@ -7,6 +7,8 @@ import { getFeatureFlags, getStudySettings } from "./runtime-settings.server";
 import { touchDailyActivity } from "./streak.server";
 import { enforceRateLimit } from "./rate-limit.server";
 import { logger } from "./logger.server";
+import { computeXpMultipliers } from "./inventory.server";
+import { addWeeklyXp } from "./leagues.server";
 
 // Public DTO — never expose `answer` or `explanation` before submit.
 const PUBLIC_EXERCISE_COLS = "id,concept_id,kind,payload,difficulty,locale";
@@ -190,11 +192,12 @@ export const endSession = createServerFn({ method: "POST" })
 
     const { data: answers } = await supabase
       .from("session_events")
-      .select("correct,note,concept_id")
+      .select("correct,note,concept_id,created_at")
       .eq("user_id", userId)
       .eq("unit_id", data.unitId)
       .eq("kind", "answer")
-      .gte("created_at", since);
+      .gte("created_at", since)
+      .order("created_at", { ascending: true });
     const list = answers ?? [];
     const total = list.length;
     const correct = list.filter((a) => a.correct === true).length;
@@ -205,7 +208,10 @@ export const endSession = createServerFn({ method: "POST" })
     const passed = score >= Number(quizPassScore ?? 70);
     const baseXp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
     const penaltyFactor = Math.max(0, 1 - 0.25 * hintCount);
-    const xp = Math.round(baseXp * penaltyFactor);
+    const preBoostXp = Math.round(baseXp * penaltyFactor);
+    const { finalXp: xp, comboBonus, boostActive, maxCombo } = await computeXpMultipliers(
+      supabase, userId, preBoostXp, list.map((a) => ({ correct: a.correct as boolean | null }))
+    );
 
     const conceptIds = Array.from(new Set(list.map((a) => a.concept_id as string).filter(Boolean)));
     let conceptsDueSoon = 0;
@@ -238,10 +244,17 @@ export const endSession = createServerFn({ method: "POST" })
           .update({ xp: newXp, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
         xpAwarded = xp;
+        await addWeeklyXp(supabase, userId, xp);
+        await supabase.from("xp_events").insert({
+          user_id: userId, amount: xp, reason: "session_complete",
+          multiplier: preBoostXp > 0 ? xp / preBoostXp : 1,
+          source_id: data.unitId,
+          metadata: { comboBonus, boostActive, maxCombo, hintCount },
+        });
       }
     }
 
-    return { total, correct, score, passed, xpAwarded, alreadyCompleted, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon, masteryDeltas };
+    return { total, correct, score, passed, xpAwarded, alreadyCompleted, hintCount, conceptsPracticed: conceptIds.length, conceptsDueSoon, masteryDeltas, comboBonus, boostActive, maxCombo };
   });
 
 export const reportExercise = createServerFn({ method: "POST" })
@@ -550,6 +563,7 @@ export const endDailyFlight = createServerFn({ method: "POST" })
           .update({ xp: newXp, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
         xpAwarded = xp;
+        await addWeeklyXp(supabase, userId, xp);
       }
     }
 

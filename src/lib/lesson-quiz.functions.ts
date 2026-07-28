@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { touchDailyActivity } from "./streak.server";
+import { addWeeklyXp } from "./leagues.server";
 import { getStudySettings } from "./runtime-settings.server";
 import { evaluateAttempt } from "./quiz-eval.server";
 
@@ -248,6 +249,7 @@ export const submitLessonQuizAttempt = createServerFn({ method: "POST" })
         .update({ xp: newXp, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
       xp_awarded_now = quizXp;
+      await addWeeklyXp(supabase, userId, quizXp);
     }
     await touchDailyActivity(supabase, userId);
 

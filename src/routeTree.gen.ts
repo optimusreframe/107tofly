@@ -14,12 +14,14 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RadioLabRouteImport } from './routes/radio-lab'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MissionRouteImport } from './routes/mission'
 import { Route as MapLabRouteImport } from './routes/map-lab'
 import { Route as LessonRouteImport } from './routes/lesson'
+import { Route as LeaguesRouteImport } from './routes/leagues'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlycoachRouteImport } from './routes/flycoach'
 import { Route as FlightPathRouteImport } from './routes/flight-path'
@@ -29,6 +31,7 @@ import { Route as DailyFlightRouteImport } from './routes/daily-flight'
 import { Route as CourseRouteImport } from './routes/course'
 import { Route as CertificateRouteImport } from './routes/certificate'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as Airspace3dRouteImport } from './routes/airspace-3d'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
@@ -72,6 +75,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RadioLabRoute = RadioLabRouteImport.update({
+  id: '/radio-lab',
+  path: '/radio-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -100,6 +108,11 @@ const MapLabRoute = MapLabRouteImport.update({
 const LessonRoute = LessonRouteImport.update({
   id: '/lesson',
   path: '/lesson',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaguesRoute = LeaguesRouteImport.update({
+  id: '/leagues',
+  path: '/leagues',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -145,6 +158,11 @@ const CertificateRoute = CertificateRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Airspace3dRoute = Airspace3dRouteImport.update({
+  id: '/airspace-3d',
+  path: '/airspace-3d',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -237,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/airspace-3d': typeof Airspace3dRoute
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -246,12 +265,14 @@ export interface FileRoutesByFullPath {
   '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/leagues': typeof LeaguesRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
+  '/radio-lab': typeof RadioLabRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -276,6 +297,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/airspace-3d': typeof Airspace3dRoute
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -285,12 +307,14 @@ export interface FileRoutesByTo {
   '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/leagues': typeof LeaguesRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
+  '/radio-lab': typeof RadioLabRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -316,6 +340,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/airspace-3d': typeof Airspace3dRoute
   '/auth': typeof AuthRoute
   '/certificate': typeof CertificateRoute
   '/course': typeof CourseRoute
@@ -325,12 +350,14 @@ export interface FileRoutesById {
   '/flight-path': typeof FlightPathRoute
   '/flycoach': typeof FlycoachRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/leagues': typeof LeaguesRoute
   '/lesson': typeof LessonRoute
   '/map-lab': typeof MapLabRoute
   '/mission': typeof MissionRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
+  '/radio-lab': typeof RadioLabRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/simulator': typeof SimulatorRoute
@@ -357,6 +384,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/airspace-3d'
     | '/auth'
     | '/certificate'
     | '/course'
@@ -366,12 +394,14 @@ export interface FileRouteTypes {
     | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
+    | '/leagues'
     | '/lesson'
     | '/map-lab'
     | '/mission'
     | '/onboarding'
     | '/practice'
     | '/progress'
+    | '/radio-lab'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -396,6 +426,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/airspace-3d'
     | '/auth'
     | '/certificate'
     | '/course'
@@ -405,12 +436,14 @@ export interface FileRouteTypes {
     | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
+    | '/leagues'
     | '/lesson'
     | '/map-lab'
     | '/mission'
     | '/onboarding'
     | '/practice'
     | '/progress'
+    | '/radio-lab'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -435,6 +468,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/admin'
+    | '/airspace-3d'
     | '/auth'
     | '/certificate'
     | '/course'
@@ -444,12 +478,14 @@ export interface FileRouteTypes {
     | '/flight-path'
     | '/flycoach'
     | '/forgot-password'
+    | '/leagues'
     | '/lesson'
     | '/map-lab'
     | '/mission'
     | '/onboarding'
     | '/practice'
     | '/progress'
+    | '/radio-lab'
     | '/reset-password'
     | '/settings'
     | '/simulator'
@@ -475,6 +511,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
+  Airspace3dRoute: typeof Airspace3dRoute
   AuthRoute: typeof AuthRoute
   CertificateRoute: typeof CertificateRoute
   CourseRoute: typeof CourseRoute
@@ -484,12 +521,14 @@ export interface RootRouteChildren {
   FlightPathRoute: typeof FlightPathRoute
   FlycoachRoute: typeof FlycoachRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LeaguesRoute: typeof LeaguesRoute
   LessonRoute: typeof LessonRoute
   MapLabRoute: typeof MapLabRoute
   MissionRoute: typeof MissionRoute
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
   ProgressRoute: typeof ProgressRoute
+  RadioLabRoute: typeof RadioLabRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SimulatorRoute: typeof SimulatorRoute
@@ -538,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/radio-lab': {
+      id: '/radio-lab'
+      path: '/radio-lab'
+      fullPath: '/radio-lab'
+      preLoaderRoute: typeof RadioLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/progress': {
       id: '/progress'
       path: '/progress'
@@ -578,6 +624,13 @@ declare module '@tanstack/react-router' {
       path: '/lesson'
       fullPath: '/lesson'
       preLoaderRoute: typeof LessonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leagues': {
+      id: '/leagues'
+      path: '/leagues'
+      fullPath: '/leagues'
+      preLoaderRoute: typeof LeaguesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -641,6 +694,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/airspace-3d': {
+      id: '/airspace-3d'
+      path: '/airspace-3d'
+      fullPath: '/airspace-3d'
+      preLoaderRoute: typeof Airspace3dRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -797,6 +857,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
+  Airspace3dRoute: Airspace3dRoute,
   AuthRoute: AuthRoute,
   CertificateRoute: CertificateRoute,
   CourseRoute: CourseRoute,
@@ -806,12 +867,14 @@ const rootRouteChildren: RootRouteChildren = {
   FlightPathRoute: FlightPathRoute,
   FlycoachRoute: FlycoachRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  LeaguesRoute: LeaguesRoute,
   LessonRoute: LessonRoute,
   MapLabRoute: MapLabRoute,
   MissionRoute: MissionRoute,
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
   ProgressRoute: ProgressRoute,
+  RadioLabRoute: RadioLabRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SimulatorRoute: SimulatorRoute,

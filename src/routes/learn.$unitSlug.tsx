@@ -6,9 +6,11 @@ import { getUnitBySlug } from "@/lib/learning-units.functions";
 import { startSession, submitExercise, endSession, reportExercise } from "@/lib/session-player.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Loader2, Flag, Lightbulb } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Flag, Lightbulb, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { ExerciseView } from "@/components/ExerciseView";
+import { Otto } from "@/components/Otto";
+import { celebrateCorrect, shakeWrong, celebrateSessionComplete, isMuted, setMuted } from "@/lib/feedback";
 
 export const Route = createFileRoute("/learn/$unitSlug")({
   head: ({ params }) => ({
@@ -21,7 +23,7 @@ export const Route = createFileRoute("/learn/$unitSlug")({
 });
 
 type Ex = { id: string; concept_id: string; kind: string; payload: any; difficulty: number };
-type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; alreadyCompleted?: boolean; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number; masteryDeltas?: Array<{ conceptId: string; level: number }> };
+type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; alreadyCompleted?: boolean; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number; masteryDeltas?: Array<{ conceptId: string; level: number }>; comboBonus?: number; boostActive?: boolean; maxCombo?: number };
 
 function LearnUnit() {
   const { unitSlug } = Route.useParams();
@@ -43,6 +45,8 @@ function LearnUnit() {
   const [submitting, setSubmitting] = useState(false);
   const [startedAt, setStartedAt] = useState<number>(Date.now());
   const [hintShown, setHintShown] = useState(false);
+  const [muted, setMutedState] = useState(false);
+  useEffect(() => { setMutedState(isMuted()); }, []);
 
   useEffect(() => {
     (async () => {
@@ -71,7 +75,8 @@ function LearnUnit() {
         data: { exerciseId: current.id, unitId: unit!.id, pick, latencyMs: Date.now() - startedAt, usedHint: hintShown },
       });
       setFeedback({ correct: r.correct, explanation: r.explanation, answer: r.answer });
-      if (r.correct) toast.success("Correct"); else toast.error("Not quite");
+      if (r.correct) { celebrateCorrect(); toast.success("Correct"); }
+      else { shakeWrong(); toast.error("Not quite"); }
     } catch (e: any) { toast.error(e?.message ?? "Submit failed"); }
     finally { setSubmitting(false); }
   }
@@ -81,6 +86,7 @@ function LearnUnit() {
     if (idx + 1 >= exercises.length) {
       const s = await endFn({ data: { unitId: unit!.id } });
       setSummary(s as Summary);
+      if (!(s as Summary).alreadyCompleted) celebrateSessionComplete();
     } else {
       setIdx(idx + 1);
     }
@@ -115,8 +121,12 @@ function LearnUnit() {
     return (
       <StudentAppShell>
         <section className="mx-auto max-w-2xl p-8">
-          <h1 className="text-2xl font-semibold mb-2">Session complete</h1>
-          <p className="text-muted-foreground mb-6">{unit?.title}</p>
+          <div className="mb-4 flex flex-col items-center">
+            <Otto mood={summary.score >= 70 ? "cheer" : summary.score >= 50 ? "happy" : "sad"} size={120}
+              label={summary.score >= 70 ? "Nailed it!" : summary.score >= 50 ? "Good work!" : "Let's try again"} />
+          </div>
+          <h1 className="text-2xl font-semibold mb-2 text-center">Session complete</h1>
+          <p className="text-muted-foreground mb-6 text-center">{unit?.title}</p>
           <Card className="p-6 space-y-4">
             <div className="text-4xl font-bold">{summary.score}%</div>
             <div className="text-sm text-muted-foreground">{summary.correct} / {summary.total} correct</div>
@@ -125,7 +135,15 @@ function LearnUnit() {
                 Session already completed — XP and streak were awarded on your first finish.
               </div>
             ) : summary.xpAwarded > 0 ? (
-              <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>
+              <div className="space-y-1">
+                <div className="text-sm text-primary">+{summary.xpAwarded} XP{summary.hintCount > 0 ? ` (−${summary.hintCount * 25}% hint penalty)` : ""}</div>
+                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  {summary.boostActive && <span className="rounded-full bg-orange-500/15 text-orange-300 px-2 py-0.5">🚀 2× Boost</span>}
+                  {summary.maxCombo && summary.maxCombo >= 3 && (
+                    <span className="rounded-full bg-primary/15 text-primary px-2 py-0.5">🔥 Combo x{summary.maxCombo}{summary.comboBonus ? ` (+${summary.comboBonus})` : ""}</span>
+                  )}
+                </div>
+              </div>
             ) : null}
             {summary.masteryDeltas && summary.masteryDeltas.length > 0 && (
               <div className="space-y-2 pt-2">
@@ -166,7 +184,14 @@ function LearnUnit() {
     <StudentAppShell>
       <section className="mx-auto max-w-2xl p-6 md:p-8">
         <div className="mb-6">
-          <div className="text-xs uppercase tracking-wider text-primary mb-1">{unit?.title}</div>
+          <div className="mb-1 flex items-center justify-between">
+            <div className="text-xs uppercase tracking-wider text-primary">{unit?.title}</div>
+            <button type="button" aria-label={muted ? "Unmute" : "Mute"}
+              onClick={() => { const v = !muted; setMuted(v); setMutedState(v); }}
+              className="text-muted-foreground hover:text-foreground transition">
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+          </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
           </div>
@@ -192,12 +217,15 @@ function LearnUnit() {
           )}
 
           {feedback && (
-            <div className={`rounded-lg border p-3 text-sm ${feedback.correct ? "border-success/40 bg-success/10" : "border-destructive/40 bg-destructive/10"}`}>
-              <div className="flex items-center gap-2 font-medium">
-                {feedback.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                {feedback.correct ? "Correct" : "Incorrect"}
+            <div className={`rounded-lg border p-3 text-sm flex gap-3 items-start ${feedback.correct ? "border-success/40 bg-success/10" : "border-destructive/40 bg-destructive/10"}`}>
+              <Otto mood={feedback.correct ? "happy" : "sad"} size={56} />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 font-medium">
+                  {feedback.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                  {feedback.correct ? "Correct" : "Incorrect"}
+                </div>
+                {feedback.explanation && <p className="mt-2 text-muted-foreground">{feedback.explanation}</p>}
               </div>
-              {feedback.explanation && <p className="mt-2 text-muted-foreground">{feedback.explanation}</p>}
             </div>
           )}
 
