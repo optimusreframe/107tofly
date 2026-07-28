@@ -563,6 +563,7 @@ export const endDailyFlight = createServerFn({ method: "POST" })
           .update({ xp: newXp, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
         xpAwarded = xp;
+        await addWeeklyXp(supabase, userId, xp);
       }
     }
 
