@@ -20,7 +20,7 @@ export const Route = createFileRoute("/daily-flight")({
 });
 
 type Ex = { id: string; concept_id: string; kind: string; payload: any; difficulty: number; unit_id: string | null };
-type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number };
+type Summary = { total: number; correct: number; score: number; passed: boolean; xpAwarded: number; alreadyCompleted?: boolean; hintCount: number; conceptsPracticed: number; conceptsDueSoon: number };
 
 function DailyFlight() {
   const navigate = useNavigate();
