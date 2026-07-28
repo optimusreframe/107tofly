@@ -86,6 +86,7 @@ function LearnUnit() {
     if (idx + 1 >= exercises.length) {
       const s = await endFn({ data: { unitId: unit!.id } });
       setSummary(s as Summary);
+      if (!(s as Summary).alreadyCompleted) celebrateSessionComplete();
     } else {
       setIdx(idx + 1);
     }
