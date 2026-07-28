@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { StudentAppShell } from "@/components/layouts/StudentAppShell";
+import { InventoryCard } from "@/components/InventoryCard";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { getDashboardBundle, type DashboardBundle } from "@/lib/dashboard-bundle.functions";
