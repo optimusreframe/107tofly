@@ -191,11 +191,12 @@ export const endSession = createServerFn({ method: "POST" })
 
     const { data: answers } = await supabase
       .from("session_events")
-      .select("correct,note,concept_id")
+      .select("correct,note,concept_id,created_at")
       .eq("user_id", userId)
       .eq("unit_id", data.unitId)
       .eq("kind", "answer")
-      .gte("created_at", since);
+      .gte("created_at", since)
+      .order("created_at", { ascending: true });
     const list = answers ?? [];
     const total = list.length;
     const correct = list.filter((a) => a.correct === true).length;
@@ -206,7 +207,10 @@ export const endSession = createServerFn({ method: "POST" })
     const passed = score >= Number(quizPassScore ?? 70);
     const baseXp = passed ? Number(lessonQuizPassXp ?? 20) : 0;
     const penaltyFactor = Math.max(0, 1 - 0.25 * hintCount);
-    const xp = Math.round(baseXp * penaltyFactor);
+    const preBoostXp = Math.round(baseXp * penaltyFactor);
+    const { finalXp: xp, comboBonus, boostActive, maxCombo } = await computeXpMultipliers(
+      supabase, userId, preBoostXp, list.map((a) => ({ correct: a.correct as boolean | null }))
+    );
 
     const conceptIds = Array.from(new Set(list.map((a) => a.concept_id as string).filter(Boolean)));
     let conceptsDueSoon = 0;
