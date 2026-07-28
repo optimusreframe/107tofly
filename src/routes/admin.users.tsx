@@ -254,8 +254,7 @@ function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="secondary" className="text-[10px]">{u.membershipPlan}</Badge>
-                      <div className="mt-0.5 text-[10px] text-muted-foreground">{u.membershipStatus}</div>
+                      <Badge variant="outline" className="text-[10px] opacity-60">Coming soon</Badge>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">{u.xp}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{u.streak}</td>
